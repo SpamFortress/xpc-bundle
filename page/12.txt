@@ -1,0 +1,109 @@
+//~                            {!archiveReady && <div style={{ fontSize: 12.5, color: theme.text.tertiary, lineHeight: 1.45 }}>Appears once your archive loads.</div>}
+//~                            {topReplied.map((row) => {
+//~                              const onChip = rules.replyHandles.some((h) => handleOf(h) === handleOf(row.handle));
+//~                              return (
+//~                                <button key={row.handle} type="button" aria-pressed={onChip} onClick={() => { const next = onChip ? rules.replyHandles.filter((h) => handleOf(h) !== handleOf(row.handle)) : [...rules.replyHandles, row.handle]; upd({ replyHandles: next, ...(next.length > 0 ? { replies: true, posts: true } : {}) }); }} style={{ borderRadius: 999, padding: "5px 12px", background: onChip ? theme.fill.accentSubtle : theme.bg.base, border: `${onChip ? 1.5 : 1}px solid ${onChip ? theme.border.focus : theme.border.default}`, color: theme.text.primary, fontSize: 13, fontFamily: theme.font.family, cursor: "pointer" }}>{`@${row.handle} · ${row.count}`}</button>
+//~                              );
+//~                            })}
+//~                          </div>
+//~                          {rules.replyHandles.length > 0 && (
+//~                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+//~                              {rules.replyHandles.map((h) => chip(`@${h}`, () => upd({ replyHandles: rules.replyHandles.filter((x) => handleOf(x) !== handleOf(h)) }), h))}
+//~                            </div>
+//~                          )}
+//~                          <div style={{ fontSize: 12.5, color: theme.text.tertiary, marginTop: 8, lineHeight: 1.45 }}>Matches replies to these accounts and posts that @mention them.</div>
+//~                        </div>
+//~                        <div>
+//~                          <Input
+//~                            label="Undo my reposts of a specific account's posts (type their @handle)"
+//~                            value={rules.repostOf}
+//~                            onChange={(v: string) => {
+//~                              const handle = handleOf(v);
+//~                              upd({ repostOf: handle, ...(handle ? { reposts: true } : {}) });
+//~                            }}
+//~                            placeholder="@handle"
+//~                          />
+//~                          <div style={{ fontSize: 12.5, color: theme.text.tertiary, marginTop: 6, lineHeight: 1.45 }}>Undoing a repost only removes your repost. The original author's post stays public.</div>
+//~                        </div>
+//~                      </>
+//~                    )}
+//~                    {groupBox(
+//~                      "engage",
+//~                      "Likes",
+//~                      <>
+//~                        <LikesCapPicker
+//~                          postsCap={rules.postsLikesMax}
+//~                          repliesCap={rules.repliesLikesMax}
+//~                          focus={likesFocus}
+//~                          restore={likesLast}
+//~                          onFocus={setLikesFocus}
+//~                          onChange={setLikesCap}
+//~                          presets={ENGAGE_PRESETS}
+//~                        />
+//~                        <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.45, marginTop: 8 }}>Select Posts or Replies, then set the number. A dash means that type is left alone, which is different from 0. Checking one does not clear the other. Reposts are skipped because the like count is the original author's, not yours. Type a number, use + or −, or tap a shortcut below. The upper end is this archive's maximum likes, rounded up to 20,000.</div>
+//~                      </>
+//~                    )}
+//~                    {groupBox(
+//~                      "words",
+//~                      "Profanity, slurs and people",
+//~                      <>
+//~                        <div>
+//~                          <button
+//~                            type="button"
+//~                            aria-expanded={showFoundSwears}
+//~                            onClick={() => setShowFoundSwears(!showFoundSwears)}
+//~                            style={{ borderRadius: 999, padding: "6px 14px", background: showFoundSwears ? theme.fill.accentSubtle : theme.bg.base, border: `${showFoundSwears ? 1.5 : 1}px solid ${showFoundSwears ? theme.border.focus : theme.border.default}`, color: theme.text.primary, fontSize: 13, fontWeight: 600, fontFamily: theme.font.family, cursor: "pointer", marginBottom: 10 }}
+//~                          >
+//~                            {archiveReady ? `Found in your posts: ${swearFound.length} profanity/slur words` : "Profanity/slur words in your posts appear once your archive loads"}
+//~                          </button>
+//~                          <div style={{ fontSize: 12.5, color: theme.text.secondary, lineHeight: 1.45, marginBottom: 10 }}>{`Matching also catches endings and disguised spellings (fucking, f*ck, sh1t, #FuckMondays) and a list of ${SLUR_LIST_SIZE} slurs, without hitting words like class or cocktail.`}</div>
+//~                          {showFoundSwears && (
+//~                            <div style={{ marginBottom: 10, display: "flex", flexDirection: "column", gap: 8 }}>
+//~                              {swearFound.map((row) => {
+//~                                const added = rules.deleteWords.includes(row.word);
+//~                                return (
+//~                                  <div key={row.word} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+//~                                    <span style={{ fontSize: 13, color: theme.text.primary }}>{`${row.word} · ${row.count}`}</span>
+//~                                    <Button label={added ? "Added" : "Add"} variant="quiet" onClick={() => (added ? upd({ deleteWords: rules.deleteWords.filter((x) => x !== row.word) }) : !rules.deleteWords.includes(row.word) && upd({ deleteWords: [...rules.deleteWords, row.word] }))} />
+//~                                  </div>
+//~                                );
+//~                              })}
+//~                            </div>
+//~                          )}
+//~                          {rules.deleteWords.length > 0 && (
+//~                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>{rules.deleteWords.map((w) => chip(maskSsn(w), () => upd({ deleteWords: rules.deleteWords.filter((x) => x !== w) }), w))}</div>
+//~                          )}
+//~                          <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+//~                            <Input label="Add your own words or hashtags" value={deleteDraft} onChange={setDeleteDraft} placeholder="e.g. giveaway, #oldhashtag" />
+//~                            <Button label="Add" onClick={() => addWord("delete")} />
+//~                          </div>
+//~                        </div>
+//~                        {rules.deleteWords.length + ignoredWords.length > 0 && (
+//~                          <div>
+//~                            <div style={{ fontSize: 13, color: theme.text.secondary, marginBottom: 6 }}>Found in your posts</div>
+//~                            {!archiveReady ? (
+//~                              <div style={{ fontSize: 12.5, color: theme.text.tertiary, lineHeight: 1.45 }}>Found words appear once your archive is loaded.</div>
+//~                            ) : foundWordRows.length === 0 ? (
+//~                              <div style={{ fontSize: 12.5, color: theme.text.tertiary, lineHeight: 1.45 }}>None of the words we look for appear in these posts.</div>
+//~                            ) : (
+//~                              <>
+//~                                <div style={{ fontSize: 12.5, color: theme.text.tertiary, marginBottom: 8, lineHeight: 1.45 }}>Untick a word if it is a false hit. That word will not be used to delete.</div>
+//~                                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+//~                                  {foundWordRows.map((row) => (
+//~                                    <label key={row.word} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: theme.text.primary, fontFamily: theme.font.family, cursor: "pointer" }}>
+//~                                      <input type="checkbox" checked={row.checked} onChange={() => toggleFoundWord(row.word)} />
+//~                                      <span>
+//~                                        {maskSsn(row.word)} · {row.count} post{row.count === 1 ? "" : "s"}
+//~                                      </span>
+//~                                    </label>
+//~                                  ))}
+//~                                </div>
+//~                              </>
+//~                            )}
+//~                          </div>
+//~                        )}
+//~                        <div>
+//~                          <div style={{ fontSize: 13, color: theme.text.secondary, marginBottom: 8 }}>Never delete posts containing</div>
+//~                          {rules.keepWords.length > 0 && (
+//~                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>{rules.keepWords.map((w) => chip(w, () => upd({ keepWords: rules.keepWords.filter((x) => x !== w) }), w))}</div>
+//~@@XPC-NEXT@@

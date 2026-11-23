@@ -1,0 +1,216 @@
+//~        const re = new RegExp(`^${escapeRegExp(n.tok).replace(/\\\*/g, "[a-z]")}$`);
+//~        ok = WORD_ENDINGS.some((e: string) => re.test(wl + e));
+//~      }
+//~      if (!ok && n.hashtag && wl.length >= 4) ok = n.tok.startsWith(wl) || n.tok.endsWith(wl);
+//~      if (ok) return true;
+//~    }
+//~    return false;
+//~  }
+//~  try {
+//~    return new RegExp(`(?:^|[^A-Za-z0-9_])${escapeRegExp(w)}(?:[^A-Za-z0-9_]|$)`, "i").test(text);
+//~  } catch {
+//~    return text.toLowerCase().includes(w.toLowerCase());
+//~  }
+//~}
+//~
+//~function yearOptionList(extra: number[]): Array<{ value: string; label: string }> {
+//~  const set = new Set<number>();
+//~  const y0 = 2006;
+//~  for (let y = y0; y <= TODAY.getFullYear(); y++) set.add(y);
+//~  for (const y of extra) if (Number.isFinite(y) && y >= 2006) set.add(y);
+//~  return Array.from(set)
+//~    .sort((a, b) => a - b)
+//~    .map((y) => ({ value: String(y), label: String(y) }));
+//~}
+//~
+//~function handleOf(s: string): string {
+//~  return s.replace(/^@/, "").trim().toLowerCase();
+//~}
+//~
+//~function topicTokens(text: string, sourceText?: string): string[] {
+//~  const src = sourceText ?? text;
+//~  const wordRe = /[A-Za-z0-9_#@']+(?:-[A-Za-z0-9_#@']+)*/g;
+//~  const words = text.match(wordRe) || [];
+//~  const srcWords = src.match(wordRe) || [];
+//~  const endsEllipsis = /(?:\u2026|\.{3}|…)\s*$/.test(src);
+//~  if (endsEllipsis && srcWords.length > 0 && words.length > 0) {
+//~    const last = srcWords[srcWords.length - 1];
+//~    const letters = last.replace(/[^A-Za-z]/g, "");
+//~    if (letters.length <= 2 && words[words.length - 1].toLowerCase() === last.toLowerCase()) {
+//~      return words.slice(0, -1).map((w) => w.toLowerCase());
+//~    }
+//~  }
+//~  return words.map((w) => w.toLowerCase());
+//~}
+//~
+//~function topicHit(summary: string, topic: string, sourceText?: string): boolean {
+//~  const t = topic.trim().toLowerCase();
+//~  if (!t) return false;
+//~  const tokens = topicTokens(summary, sourceText);
+//~  if (t.includes(" ") || t.includes("-")) return tokens.join(" ").includes(t);
+//~  return tokens.includes(t);
+//~}
+//~
+//~function hasTypeFilter(r: Rules): boolean {
+//~  return r.posts || r.replies || r.reposts || (ARCHIVE_CAPS.hasQuoteFields && r.quotes) || r.community;
+//~}
+//~
+//~function hasMediaFilter(r: Rules): boolean {
+//~  return r.mediaPhotos || r.mediaVideos || r.mediaGifs || r.mediaText;
+//~}
+//~
+//~function allTypesOn(): Pick<Rules, "posts" | "replies" | "reposts" | "quotes" | "community"> {
+//~  return { posts: true, replies: true, reposts: true, quotes: ARCHIVE_CAPS.hasQuoteFields, community: true };
+//~}
+//~
+//~function hasDeleteScope(r: Rules): boolean {
+//~  return (
+//~    r.timeMode !== "none" ||
+//~    r.deleteWords.length > 0 ||
+//~    r.topic.trim() !== "" ||
+//~    handleOf(r.repostOf) !== "" ||
+//~    r.postsLikesMax >= 0 ||
+//~    r.repliesLikesMax >= 0 ||
+//~    (ARCHIVE_CAPS.hasReplyCount && r.repliesMax >= 0) ||
+//~    hasMediaFilter(r) ||
+//~    r.replyHandles.length > 0 ||
+//~    hasTypeFilter(r)
+//~  );
+//~}
+//~
+//~function hasActiveRules(r: Rules, qa: QAId | "", keptCount: number): boolean {
+//~  if (qa !== "") return true;
+//~  if (keptCount > 0) return true;
+//~  if (hasDeleteScope(r)) return true;
+//~  if (r.keepMedia || r.keepThreads || r.keepWords.length > 0) return true;
+//~  if (r.protectDays !== BASE.protectDays || r.protectDate !== "") return true;
+//~  return false;
+//~}
+//~
+//~function dailyCap(speed: Speed): number {
+//~  if (speed === "faster") return 200;
+//~  if (speed === "fastest") return 350;
+//~  return 100;
+//~}
+//~
+//~function usd(n: number): string {
+//~  return `$${n.toFixed(2)}`;
+//~}
+//~
+//~// No sample posts. The bot fills POOL from the owner's own archive after it loads.
+//~const POOL: Post[] = [];
+//~
+//~const BASE: Rules = {
+//~  timeMode: "none",
+//~  olderDays: 365,
+//~  olderDate: "",
+//~  yearFrom: 2023,
+//~  yearTo: 2026,
+//~  protectDays: 0,
+//~  protectDate: "",
+//~  posts: false,
+//~  replies: false,
+//~  reposts: false,
+//~  quotes: false,
+//~  community: false,
+//~  mediaPhotos: false,
+//~  mediaVideos: false,
+//~  mediaGifs: false,
+//~  mediaText: false,
+//~  postsLikesMax: -1,
+//~  repliesLikesMax: -1,
+//~  repliesMax: -1,
+//~  deleteWords: [],
+//~  keepWords: [],
+//~  replyHandles: [],
+//~  repostOf: "",
+//~  topic: "",
+//~  skipMentions: false,
+//~  keepThreads: false,
+//~  keepProfilePin: true,
+//~  keepMedia: false,
+//~};
+//~
+//~const QUICK: Array<{ id: QAId; title: string; detail: string; rules: Partial<Rules> }> = [
+//~  { id: "everything", title: "Delete everything", detail: "Every post, reply, quote post and repost, except posts you mark Keep.", rules: { timeMode: "all", protectDays: 0, protectDate: "", ...allTypesOn() } },
+//~  { id: "oldest", title: "Delete my oldest posts (older than 2 years)", detail: "Everything older than 2 years. Newer posts stay.", rules: { timeMode: "older", olderDays: 730, olderDate: "", protectDays: 0, protectDate: "", ...allTypesOn() } },
+//~  { id: "era", title: "Delete a past era", detail: "Starts with your oldest two years. Change the range on this card.", rules: { timeMode: "years", yearFrom: 2023, yearTo: 2024, protectDays: 0, protectDate: "", ...allTypesOn() } },
+//~  { id: "replies", title: "Delete all my replies", detail: "Removes your replies only. Your own posts, quote posts and reposts stay.", rules: { timeMode: "all", posts: false, replies: true, reposts: false, quotes: false, community: false, protectDays: 0, protectDate: "" } },
+//~  { id: "reposts", title: "Undo all reposts", detail: "Removes your reposts only.", rules: { timeMode: "all", posts: false, replies: false, reposts: true, quotes: false, community: false, protectDays: 0, protectDate: "" } },
+//~  { id: "best", title: "Delete posts and replies with few likes", detail: "Set a like cap for posts, replies, or both. A dash means that type is left alone. Reposts are not affected.", rules: { timeMode: "all", posts: false, replies: false, reposts: false, quotes: false, community: false, postsLikesMax: -1, repliesLikesMax: -1, keepThreads: false, protectDays: 0, protectDate: "" } },
+//~];
+//~
+//~function mergeQA(id: QAId, keepWords: string[]): Rules {
+//~  const q = QUICK.find((x) => x.id === id);
+//~  return { ...BASE, ...(q ? q.rules : {}), keepWords };
+//~}
+//~
+//~function keepWordHit(p: Post, r: Rules): string {
+//~  return r.keepWords.find((w) => wordHit(p.text, w)) || "";
+//~}
+//~
+//~function scopeParts(p: Post, r: Rules): string[] | null {
+//~  const topic = r.topic.trim();
+//~  const repostOf = handleOf(r.repostOf);
+//~  if (!hasDeleteScope(r)) return null;
+//~  const parts: string[] = [];
+//~  if (r.timeMode === "all") parts.push("everything");
+//~  if (r.timeMode === "older") {
+//~    const minDays = r.olderDate ? daysSinceDate(r.olderDate) : r.olderDays;
+//~    if (minDays < 0 || p.daysAgo < minDays) return null;
+//~    parts.push(r.olderDate ? `before ${formatIsoDate(r.olderDate)}` : `older than ${spanLabel(r.olderDays)}`);
+//~  }
+//~  if (r.timeMode === "years") {
+//~    const y = yearOf(p.daysAgo);
+//~    if (y < r.yearFrom || y > r.yearTo) return null;
+//~    parts.push(r.yearFrom === r.yearTo ? `from ${r.yearFrom}` : `${r.yearFrom}–${r.yearTo}`);
+//~  }
+//~  const typ = effectiveType(p);
+//~  const typeOk = p.community ? r.community : typ === "post" ? r.posts : typ === "reply" ? r.replies : typ === "quote" ? r.quotes : r.reposts;
+//~  if (!typeOk) return null;
+//~  if (!(r.posts && r.replies && r.reposts && r.quotes && r.community)) {
+//~    const t: string[] = [];
+//~    if (r.posts) t.push("posts");
+//~    if (r.replies) t.push("replies");
+//~    if (r.reposts) t.push("reposts");
+//~    if (r.quotes) t.push("quotes");
+//~    if (r.community) t.push("community");
+//~    parts.push(t.join(" + "));
+//~  }
+//~  if (hasMediaFilter(r)) {
+//~    const kind = p.mediaKind || (p.gif ? "animated_gif" : "");
+//~    const isText = kind === "";
+//~    const ok =
+//~      (r.mediaText && isText) ||
+//~      (r.mediaPhotos && kind === "photo") ||
+//~      (r.mediaVideos && kind === "video") ||
+//~      (r.mediaGifs && kind === "animated_gif");
+//~    if (!ok) return null;
+//~    const labels: string[] = [];
+//~    if (r.mediaPhotos) labels.push("photos");
+//~    if (r.mediaVideos) labels.push("videos");
+//~    if (r.mediaGifs) labels.push("GIFs");
+//~    if (r.mediaText) labels.push("text only");
+//~    parts.push(labels.join(" + "));
+//~  }
+//~  if (repostOf) {
+//~    if (p.type !== "repost" || handleOf(p.repostOf || "") !== repostOf) return null;
+//~    parts.push(`reposts of @${p.repostOf || repostOf}`);
+//~  }
+//~  if (r.replyHandles.length > 0) {
+//~    const hit = r.replyHandles.some((h) => {
+//~      const target = handleOf(h);
+//~      return handleOf(p.replyTo || "") === target || wordHit(p.text, `@${target}`);
+//~    });
+//~    if (!hit) return null;
+//~    parts.push(r.replyHandles.length === 1 ? `replies to or mentions of @${r.replyHandles[0]}` : `replies to or mentions of ${r.replyHandles.length} accounts`);
+//~  }
+//~  const likeCap = ownLikesCap(p, r);
+//~  if (likeCap >= 0) {
+//~    if (p.likes > likeCap) return null;
+//~    const kind = effectiveType(p) === "reply" ? "replies" : "posts";
+//~    parts.push(likeCap === 0 ? `${kind} with zero likes` : `${kind} with ${likeCap} or fewer likes`);
+//~  }
+//~  if (ARCHIVE_CAPS.hasReplyCount && r.repliesMax >= 0) {
+//~    if (p.replies > r.repliesMax) return null;
+//~@@XPC-NEXT@@

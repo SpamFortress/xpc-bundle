@@ -1,0 +1,182 @@
+//~    }));
+//~    if (exportFmt === "json") {
+//~      downloadText("xpc-delete-list.json", JSON.stringify({ scanned, kept, to_delete: matched, posts: rows }, null, 2), "application/json");
+//~      setExportNote(`Downloaded JSON with ${matched} posts.`);
+//~    } else {
+//~      const q = (s: string) => `"${s.replace(/"/g, '""')}"`;
+//~      const header = "id,status_url,posted,type,likes,replies,reply_to,matched_rule,about,text";
+//~      const safe = (s: string) => (/^[=+\-@\t\r]/.test(s) ? `'${s}` : s);
+//~      const lines = rows.map((r) => [`"=""${r.id}"""`, r.status_url, r.posted, r.type, r.likes, r.replies, r.reply_to, q(safe(r.matched_rule)), q(safe(r.about)), q(safe(r.text))].join(","));
+//~      downloadText("xpc-delete-list.csv", [header, ...lines].join("\n"), "text/csv");
+//~      setExportNote(`Downloaded CSV with ${matched} posts.`);
+//~    }
+//~  };
+//~
+//~  const doRetry = () => {
+//~    if (failedIds.length === 0) return;
+//~    const remaining = failedIds.slice(0, 1);
+//~    setFailedIds(remaining);
+//~    setShowFailed(true);
+//~    setRetryNote(`Retry cleared ${failedIds.length - remaining.length}. ${remaining.length} still need a manual tap.`);
+//~  };
+//~
+//~  const primary = ((): { label: string; action: () => void; disabled?: boolean } | null => {
+//~    if (step === "signin") return null;
+//~    if (step === "archive") {
+//~      if (phase === "choose") return null;
+//~      if (phase === "ready") return { label: "Next: choose what goes →", action: () => goStep("pick") };
+//~      return { label: "Next: choose what goes →", action: () => goStep("pick") };
+//~    }
+//~    if (step === "pick") return { label: "Next: review my list →", action: () => goStep("review"), disabled: !rulesActive };
+//~    if (step === "review") {
+//~      if (lane === "fast" && fastSetup !== "ready") {
+//~        return {
+//~          label: "Set it up for me",
+//~          action: () => {
+//~            setFastSetup(fastSetup === "manual" ? "manual" : "guide");
+//~            scrollToId("rev-pace");
+//~          },
+//~        };
+//~      }
+//~      return { label: "Approve this cleanup", action: approve, disabled: !archiveReady || matched === 0 || (isFullWipe && !wipeOk) };
+//~    }
+//~    if (failedCount > 0) return { label: "Open failure tray", action: () => scrollToId("run-tray") };
+//~    return null;
+//~  })();
+//~
+//~  const heading = step === "run" && runPhase === "done" ? "Done" : STEP_META[step].heading;
+//~  const hint = step === "run" && runPhase === "done" ? "Here is what was verified, plus optional cleanup on Google and Wayback." : STEP_META[step].hint;
+//~
+//~  const railItems: Array<[string, string]> =
+//~    step === "signin"
+//~      ? [["sig-start", "Sign in to X"], ["sig-data", "Where your data goes"]]
+//~      : step === "archive"
+//~      ? [["arc-get", "Get your archive"], ["arc-data", "Where your data goes"]]
+//~      : step === "pick"
+//~        ? [["pick-quick", "Quick cleanup"], ["pick-rules", "Adjust rules"], ["pick-posts", "Your posts"]]
+//~        : step === "review"
+//~          ? [["rev-totals", "Totals"], ["rev-pace", "How it runs"], ["rev-sample", "Summary"], ["rev-export", "Export and cooling-off"], ["rev-more", "More options"]]
+//~          : runPhase === "done"
+//~            ? [["run-progress", "Result"], ["run-proof", "Proof pass"], ["run-kit", "After-cleanup kit"], ["run-tray", "Failure tray"], ["run-more", "Maintenance"]]
+//~            : [["run-progress", "Progress"], ["run-tray", "Failure tray"], ["run-more", "Maintenance"]];
+//~
+//~  useEffect(() => {
+//~    const ids = railItems.map(([id]) => id);
+//~    setActiveRail(ids[0] || "");
+//~    const scrollerOf = (el: HTMLElement | null): HTMLElement | null => {
+//~      let n = el?.parentElement ?? null;
+//~      while (n) {
+//~        const style = window.getComputedStyle(n);
+//~        const overflowY = style.overflowY;
+//~        if ((overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") && n.scrollHeight > n.clientHeight + 4) return n;
+//~        n = n.parentElement;
+//~      }
+//~      return null;
+//~    };
+//~    const update = () => {
+//~      const els: Array<{ id: string; top: number }> = [];
+//~      for (const id of ids) {
+//~        const node = document.getElementById(id);
+//~        if (node) els.push({ id, top: node.getBoundingClientRect().top });
+//~      }
+//~      if (els.length === 0) return;
+//~      const firstNode = document.getElementById(ids[0] || "");
+//~      const box = scrollerOf(firstNode);
+//~      let remain = 0;
+//~      let viewH = window.innerHeight;
+//~      let canScroll = false;
+//~      if (box) {
+//~        viewH = box.clientHeight;
+//~        remain = box.scrollHeight - box.scrollTop - box.clientHeight;
+//~        canScroll = box.scrollHeight - box.clientHeight > 16;
+//~      } else {
+//~        const root = document.scrollingElement || document.documentElement;
+//~        const scrollMax = Math.max(0, root.scrollHeight - window.innerHeight);
+//~        remain = scrollMax - (window.scrollY || root.scrollTop || 0);
+//~        canScroll = scrollMax > 16;
+//~      }
+//~      if (canScroll && remain <= 48) {
+//~        setActiveRail(els[els.length - 1].id);
+//~        return;
+//~      }
+//~      let probe = 140;
+//~      if (canScroll && remain < viewH * 0.55) {
+//~        probe = Math.max(140, viewH - remain - 40);
+//~      }
+//~      let current = els[0].id;
+//~      for (const item of els) {
+//~        if (item.top <= probe) current = item.id;
+//~      }
+//~      setActiveRail(current);
+//~    };
+//~    const box = scrollerOf(document.getElementById(ids[0] || ""));
+//~    const opts: AddEventListenerOptions = { passive: true, capture: true };
+//~    window.addEventListener("scroll", update, opts);
+//~    document.addEventListener("scroll", update, opts);
+//~    window.addEventListener("resize", update);
+//~    if (box) box.addEventListener("scroll", update, opts);
+//~    const raf = window.requestAnimationFrame(update);
+//~    return () => {
+//~      window.cancelAnimationFrame(raf);
+//~      window.removeEventListener("scroll", update, opts);
+//~      document.removeEventListener("scroll", update, opts);
+//~      window.removeEventListener("resize", update);
+//~      if (box) box.removeEventListener("scroll", update, opts);
+//~    };
+//~  }, [step, runPhase]);
+//~
+//~  const panel: CSSProperties = {
+//~    borderRadius: 16,
+//~    border: `1px solid ${theme.border.default}`,
+//~    background: theme.bg.subtle,
+//~    padding: 24,
+//~  };
+//~  const subhead: CSSProperties = { fontSize: 17, fontWeight: 650, margin: "0 0 4px", color: theme.text.primary };
+//~  const subhint: CSSProperties = { fontSize: 13, color: theme.text.tertiary, margin: "0 0 14px", lineHeight: 1.45 };
+//~  const fortressRow = (key: "phone" | "email", name: string, what: string) => {
+//~    const open = fortressOpen[key];
+//~    return (
+//~      <div>
+//~        <button
+//~          type="button"
+//~          aria-expanded={open}
+//~          onClick={() => setFortressOpen((s) => ({ ...s, [key]: !s[key] }))}
+//~          style={{ background: "none", border: 0, padding: 0, color: theme.text.accent, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family, cursor: "pointer", textAlign: "left" }}
+//~        >
+//~          {`${name} ${open ? "▾" : "▸"}`}
+//~        </button>
+//~        {open && (
+//~          <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.45, marginTop: 6 }}>
+//~            <div>{what}</div>
+//~            <div style={{ marginTop: 6 }}>{`To open it, use the Grok Bot sidebar and choose ${name} from your bots.`}</div>
+//~          </div>
+//~        )}
+//~      </div>
+//~    );
+//~  };
+//~  const replyHint = (words: string) => (
+//~    <div style={{ fontSize: 13, color: theme.text.secondary, marginTop: 10, lineHeight: 1.45 }}>{`Reply "${words}" in chat. Taps on this page don't reach the bot.`}</div>
+//~  );
+//~  const recentOnlyOffer = (
+//~    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+//~      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Optional, while you wait for the archive: start with your recent posts only (about the last 3,200). This is not your full history, and it still needs a preview and one Approve.</div>
+//~      <div>
+//~        <Button
+//~          label="Start with recent posts only"
+//~          variant="quiet"
+//~          onClick={() => {}}
+//~        />
+//~        {replyHint("recent only")}
+//~      </div>
+//~    </div>
+//~  );
+//~  const fortressCard = (
+//~    <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 12, border: `1px solid ${theme.border.default}`, background: theme.bg.base, display: "flex", flexDirection: "column", gap: 10 }}>
+//~      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Want your name, phone and address off people-search sites too? Those listings are usually there for reasons that have nothing to do with X. Our bots can help.</div>
+//~      {fortressRow("phone", "Phone Fortress", "Data-broker opt-outs, Do Not Call, spam call and text cleanup, and breach watch.")}
+//~      {fortressRow("email", "Email Fortress", "Data-broker opt-outs, spam email cleanup, and breach watch.")}
+//~    </div>
+//~  );
+//~  const paceSafetyNote = (
+//~    <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14, color: theme.text.secondary, lineHeight: 1.45 }}>
+//~@@XPC-NEXT@@

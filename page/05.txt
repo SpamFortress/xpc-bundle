@@ -1,0 +1,225 @@
+//~    for (const w of SWEAR_STRONG) if (!next.includes(w)) next.push(w);
+//~    upd({ deleteWords: next });
+//~    setIgnoredWords(ignoredWords.filter((w) => !SWEAR_STRONG.includes(w)));
+//~  };
+//~  const toggleSwearMild = () => {
+//~    if (swearMildActive) {
+//~      upd({ deleteWords: rules.deleteWords.filter((w) => !SWEAR_MILD.includes(w)) });
+//~      setIgnoredWords(ignoredWords.filter((w) => !SWEAR_MILD.includes(w)));
+//~      return;
+//~    }
+//~    const next = [...rules.deleteWords];
+//~    for (const w of SWEAR_STRONG) if (!next.includes(w)) next.push(w);
+//~    for (const w of SWEAR_MILD) if (!next.includes(w)) next.push(w);
+//~    upd({ deleteWords: next });
+//~    setIgnoredWords(ignoredWords.filter((w) => !SWEAR_PRESET.includes(w)));
+//~  };
+//~
+//~  const qaUnchanged = activeQA !== "" && JSON.stringify(rules) === JSON.stringify(mergeQA(activeQA, rules.keepWords));
+//~  const qaTitle = qaUnchanged ? QUICK.find((q) => q.id === activeQA)?.title || "" : "";
+//~
+//~  const verdicts = useMemo(() => computeVerdicts(pool, rules, pins, qaTitle), [pool, rules, pins, qaTitle]);
+//~
+//~  const qaCounts = useMemo(() => {
+//~    const m: Record<string, number> = {};
+//~    for (const q of QUICK) {
+//~      const v = computeVerdicts(pool, mergeQA(q.id, rules.keepWords), pins, q.title);
+//~      let n = 0;
+//~      v.forEach((x) => {
+//~        if (x.kind === "delete") n += 1;
+//~      });
+//~      m[q.id] = n;
+//~    }
+//~    return m;
+//~  }, [pool, rules.keepWords, pins]);
+//~
+//~  const sortPosts = (list: Post[]): Post[] =>
+//~    [...list].sort((a, b) => {
+//~      if (order === "newest") return a.daysAgo - b.daysAgo;
+//~      if (order === "low") return a.likes - b.likes || b.daysAgo - a.daysAgo;
+//~      return b.daysAgo - a.daysAgo;
+//~    });
+//~
+//~  const doomed = useMemo(() => sortPosts(pool.filter((p) => verdicts.get(p.id)?.kind === "delete")), [pool, verdicts, order]);
+//~  const scanned = pool.length;
+//~  const matched = doomed.length;
+//~  const kept = scanned - matched;
+//~  const keptByRule = pool.filter((p) => verdicts.get(p.id)?.kind === "keep").length;
+//~  const fastCount = doomed.filter((p: Post) => effectiveType(p) !== "repost").length;
+//~  const fastReposts = matched - fastCount;
+//~  const daily = lane === "fast" ? 4000 : dailyCap(speed);
+//~  const days = matched === 0 ? 0 : (lane === "fast" ? Math.max(Math.ceil(fastCount / 4000), Math.ceil(fastReposts / dailyCap(speed))) : Math.ceil(matched / daily)) + (coolOn ? 1 : 0);
+//~  const fastCost = fastCount * 0.01;
+//~  const limitUsd = spendLimit === "" ? Math.ceil(fastCost) : Math.max(0, Number(spendLimit) || 0);
+//~  const failedCount = failedIds.length;
+//~  const deletedSoFar = runPhase === "done" ? Math.max(0, matched - failedCount) : Math.min(matched, 12);
+//~  const spentSoFar = deletedSoFar * 0.01;
+//~  const likesTotal = 0;
+//~  const likesDays = days + Math.ceil(likesTotal / dailyCap(speed));
+//~  const rulesActive = hasActiveRules(rules, activeQA, pins.length);
+//~
+//~  const foundWordRows = useMemo(() => {
+//~    const lookFor = Array.from(new Set([...rules.deleteWords, ...ignoredWords]));
+//~    return lookFor
+//~      .map((word) => ({
+//~        word,
+//~        count: pool.filter((p) => wordHit(p.text, word)).length,
+//~        checked: rules.deleteWords.includes(word),
+//~      }))
+//~      .filter((row) => row.count > 0)
+//~      .sort((a, b) => b.count - a.count || a.word.localeCompare(b.word));
+//~  }, [pool, rules.deleteWords, ignoredWords]);
+//~
+//~  const replyHandles = useMemo(() => {
+//~    const s = new Set<string>();
+//~    for (const p of pool) if (p.type === "reply" && p.replyTo) s.add(p.replyTo);
+//~    return Array.from(s).sort();
+//~  }, [pool]);
+//~
+//~  const topReplied = useMemo(() => {
+//~    const m = new Map<string, number>();
+//~    for (const p of pool) if (p.type === "reply" && p.replyTo) m.set(p.replyTo, (m.get(p.replyTo) || 0) + 1);
+//~    return Array.from(m.entries())
+//~      .map(([handle, count]) => ({ handle, count }))
+//~      .sort((a, b) => b.count - a.count || a.handle.localeCompare(b.handle))
+//~      .slice(0, 20);
+//~  }, [pool]);
+//~
+//~  const swearFound = useMemo(
+//~    () =>
+//~      SWEAR_PRESET.map((word) => ({ word, count: pool.filter((p) => wordHit(p.text, word)).length }))
+//~        .filter((row) => row.count > 0)
+//~        .sort((a, b) => b.count - a.count || a.word.localeCompare(b.word)),
+//~    [pool]
+//~  );
+//~
+//~  const oldestYear = pool.length > 0 ? yearOf(pool.reduce((mx, p) => Math.max(mx, p.daysAgo), 0)) : TODAY.getFullYear();
+//~
+//~  const knownPinCount = pins.length + (ARCHIVE_CAPS.hasPinFlag && rules.keepProfilePin ? pool.filter((p) => p.profilePin && !pins.includes(p.id)).length : 0);
+//~  const everythingBlocked = knownPinCount === 0;
+//~  const threadExtraKept = pool.filter((p) => verdicts.get(p.id)?.reason === "Keep rule: part of a kept thread").length;
+//~
+//~  const isFullWipe = archiveReady && matched > 0 && (activeQA === "everything" || matched >= 10000 || matched / Math.max(1, scanned) > 0.5);
+//~  const wipePhrase = `DELETE ${matched.toLocaleString("en-US")} POSTS`;
+//~  const wipeMatch = /^DELETE ([\d, ]+) POSTS?$/.exec(wipeConfirm.trim().toUpperCase().replace(/\s+/g, " "));
+//~  const wipeOk = !!wipeMatch && Number(wipeMatch[1].replace(/[, ]/g, "")) === matched;
+//~  useEffect(() => {
+//~    setWipeConfirm("");
+//~  }, [matched]);
+//~
+//~  const applyQuick = (id: QAId) => {
+//~    if (activeQA === id) {
+//~      setActiveQA("");
+//~      setRules({ ...BASE, keepWords: rules.keepWords });
+//~      return;
+//~    }
+//~    const next = mergeQA(id, rules.keepWords);
+//~    if (id === "era") {
+//~      next.yearFrom = rules.timeMode === "years" ? rules.yearFrom : oldestYear;
+//~      next.yearTo = rules.timeMode === "years" ? rules.yearTo : TODAY.getFullYear();
+//~    }
+//~    setActiveQA(id);
+//~    setRules(next);
+//~    if (id === "everything") setOrder("newest");
+//~    setListView("all");
+//~  };
+//~
+//~  const toggleGroup = (g: GroupId) => setOpenGroups(openGroups.includes(g) ? openGroups.filter((x) => x !== g) : [...openGroups, g]);
+//~  const togglePin = (id: string) => setPins(pins.includes(id) ? pins.filter((x) => x !== id) : [...pins, id]);
+//~
+//~  const toggleFoundWord = (word: string) => {
+//~    if (rules.deleteWords.includes(word)) {
+//~      upd({ deleteWords: rules.deleteWords.filter((x) => x !== word) });
+//~      if (!ignoredWords.includes(word)) setIgnoredWords([...ignoredWords, word]);
+//~    } else {
+//~      setIgnoredWords(ignoredWords.filter((x) => x !== word));
+//~      if (!rules.deleteWords.includes(word)) upd({ deleteWords: [...rules.deleteWords, word] });
+//~    }
+//~  };
+//~
+//~  const addWord = (kind: "keep" | "delete") => {
+//~    const raw = (kind === "keep" ? keepDraft : deleteDraft).trim();
+//~    if (!raw) return;
+//~    const list = kind === "keep" ? rules.keepWords : rules.deleteWords;
+//~    if (!list.includes(raw)) upd(kind === "keep" ? { keepWords: [...list, raw] } : { deleteWords: [...list, raw] });
+//~    if (kind === "keep") setKeepDraft("");
+//~    else {
+//~      setDeleteDraft("");
+//~      setIgnoredWords(ignoredWords.filter((w) => w !== raw));
+//~    }
+//~  };
+//~  const addPinByLink = () => {
+//~    const m = pinDraft.match(/(\d{6,})/);
+//~    if (!m) return;
+//~    if (!pins.includes(m[1])) setPins([...pins, m[1]]);
+//~    setPinDraft("");
+//~  };
+//~
+//~  const scrollPageTop = () => {
+//~    const zero = (el: { scrollTop: number } | null) => {
+//~      if (el) el.scrollTop = 0;
+//~    };
+//~    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+//~    zero(document.scrollingElement);
+//~    zero(document.documentElement);
+//~    zero(document.body);
+//~    const wrap = document.querySelector(".xpc-wrap");
+//~    if (wrap instanceof HTMLElement) {
+//~      let n: HTMLElement | null = wrap;
+//~      while (n) {
+//~        n.scrollTop = 0;
+//~        n = n.parentElement;
+//~      }
+//~    }
+//~  };
+//~
+//~  const scrollToId = (id: string) => {
+//~    const el = document.getElementById(id);
+//~    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+//~  };
+//~
+//~  const jumpToAlwaysKeep = () => {
+//~    setOpenGroups((g) => (g.includes("keep") ? g : [...g, "keep"]));
+//~    window.setTimeout(() => scrollToId("rules-keep"), 0);
+//~  };
+//~
+//~  const goStep = (id: Step) => {
+//~    setStep(id);
+//~  };
+//~
+//~  // A Page tap is never Approve. The owner approves by replying "approve" in chat.
+//~  const approve = () => {
+//~    scrollToId("rev-approve");
+//~  };
+//~
+//~  useEffect(() => {
+//~    let cancelled = false;
+//~    const run = () => {
+//~      if (!cancelled) scrollPageTop();
+//~    };
+//~    run();
+//~    const raf = window.requestAnimationFrame(() => {
+//~      run();
+//~      window.requestAnimationFrame(run);
+//~    });
+//~    const t = window.setTimeout(run, 80);
+//~    return () => {
+//~      cancelled = true;
+//~      window.cancelAnimationFrame(raf);
+//~      window.clearTimeout(t);
+//~    };
+//~  }, [step]);
+//~
+//~  const doExport = () => {
+//~    const rows = doomed.map((p) => ({
+//~      id: p.id,
+//~      status_url: `https://x.com/you/status/${p.id}`,
+//~      posted: monthYear(p.daysAgo),
+//~      type: p.community ? `community ${p.type}` : p.type,
+//~      likes: p.likes,
+//~      replies: p.replies,
+//~      reply_to: p.replyTo || "",
+//~      matched_rule: verdicts.get(p.id)?.reason || "",
+//~      about: maskSsn(p.summary),
+//~      text: maskSsn(p.text),
+//~@@XPC-NEXT@@

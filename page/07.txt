@@ -1,0 +1,132 @@
+//~      <li style={{ marginBottom: 6 }}>Soft stops (rate limits, cooldowns) restart on their own, with nothing deleted twice. If that happens twice in one day, the run continues the next day one pace slower.</li>
+//~      <li style={{ marginBottom: 6 }}>But every limit or warning adds to X's record of your account. Repeated ones can turn into temporary locks, phone or ID checks, or a suspension.</li>
+//~      <li style={{ marginBottom: 6 }}>A lock or verification check needs you to step in. We'll tell you right away, and the run resumes after you clear it. A suspension can't be undone by us.</li>
+//~      <li style={{ marginBottom: 6 }}>That's why steady is usually faster overall than fast with stops.</li>
+//~      <li>Pace options: Steady 100/day (default), Faster 200/day, Fastest ~350/day (higher chance of limits and checks).</li>
+//~    </ul>
+//~  );
+//~  const markStyle: CSSProperties = {
+//~    background: theme.fill.accentSubtle,
+//~    color: theme.text.primary,
+//~    borderRadius: 3,
+//~    padding: "0 2px",
+//~    fontWeight: 650,
+//~  };
+//~
+//~  const chip = (label: string, onRemove: () => void, key?: string) => (
+//~    <button
+//~      key={key || label}
+//~      type="button"
+//~      onClick={onRemove}
+//~      title="Remove"
+//~      style={{ borderRadius: 999, padding: "5px 12px", background: theme.bg.base, border: `1px solid ${theme.border.default}`, color: theme.text.secondary, fontSize: 13, fontFamily: theme.font.family, cursor: "pointer" }}
+//~    >
+//~      {label} ×
+//~    </button>
+//~  );
+//~
+//~  const timeSummary =
+//~    rules.timeMode === "none"
+//~      ? "No time range picked"
+//~      : rules.timeMode === "all"
+//~        ? "From the beginning"
+//~        : rules.timeMode === "older"
+//~          ? rules.olderDate
+//~            ? `Before ${formatIsoDate(rules.olderDate)}`
+//~            : `Older than ${spanLabel(rules.olderDays)}`
+//~          : `${rules.yearFrom}–${rules.yearTo}`;
+//~  const typeList = [rules.posts ? "Posts" : "", rules.replies ? "Replies" : "", rules.reposts ? "Reposts" : "", ARCHIVE_CAPS.hasQuoteFields && rules.quotes ? "Quotes" : "", rules.community ? "Community" : ""].filter(Boolean);
+//~  const allTypesCount = ARCHIVE_CAPS.hasQuoteFields ? 5 : 4;
+//~  const groupSummary: Record<GroupId, string> = {
+//~    when: `${timeSummary}${rules.protectDate ? ` · never touch on or after ${formatIsoDate(rules.protectDate)}` : rules.protectDays > 0 ? ` · never the last ${spanLabel(rules.protectDays)}` : ""}`,
+//~    kind: `${typeList.length === allTypesCount ? "All types" : typeList.join(", ") || "No types"}${[rules.mediaPhotos ? "photos" : "", rules.mediaVideos ? "videos" : "", rules.mediaGifs ? "GIFs" : "", rules.mediaText ? "text only" : ""].filter(Boolean).join(", ") ? ` · ${[rules.mediaPhotos ? "photos" : "", rules.mediaVideos ? "videos" : "", rules.mediaGifs ? "GIFs" : "", rules.mediaText ? "text only" : ""].filter(Boolean).join(", ")}` : ""}${rules.repostOf.trim() ? ` · undo my reposts of @${handleOf(rules.repostOf)}` : ""}`,
+//~    engage:
+//~      [rules.postsLikesMax >= 0 ? (rules.postsLikesMax === 0 ? "posts with zero likes" : `posts with at most ${rules.postsLikesMax.toLocaleString("en-US")} likes`) : "", rules.repliesLikesMax >= 0 ? (rules.repliesLikesMax === 0 ? "replies with zero likes" : `replies with at most ${rules.repliesLikesMax.toLocaleString("en-US")} likes`) : "", rules.replyHandles.length === 1 ? `replies to or mentions of @${rules.replyHandles[0]}` : rules.replyHandles.length > 1 ? `replies to or mentions of ${rules.replyHandles.length} accounts` : ""].filter(Boolean).join(" · ") || "No likes rule",
+//~    words:
+//~      [rules.deleteWords.length ? `${rules.deleteWords.length} delete word${rules.deleteWords.length > 1 ? "s" : ""}` : "", rules.keepWords.length ? `${rules.keepWords.length} keep word${rules.keepWords.length > 1 ? "s" : ""}` : "", rules.topic.trim() ? `topic "${rules.topic.trim()}"` : ""].filter(Boolean).join(" · ") || "None set",
+//~    keep: `${pins.length} kept by you${ARCHIVE_CAPS.hasPinFlag && rules.keepProfilePin ? " · profile post" : ""}${rules.keepThreads ? (threadExtraKept ? ` · whole threads (${threadExtraKept} extra)` : " · whole threads") : ""}${rules.keepMedia ? " · photos/art" : ""}`,
+//~    more: [ARCHIVE_CAPS.hasReplyCount && rules.repliesMax >= 0 ? (rules.repliesMax === 0 ? "no replies received" : `${rules.repliesMax} or fewer replies received`) : "", rules.skipMentions ? "skip extra @mentions" : ""].filter(Boolean).join(" · ") || (!ARCHIVE_CAPS.hasReplyCount ? "Replies received not available from this archive" : "None set"),
+//~  };
+//~
+//~  const packed: Partial<Record<GroupId, ReturnType<typeof Text>>> = {};
+//~  const groupBox = (id: GroupId, title: string, body: ReturnType<typeof Text>) => {
+//~    const open = openGroups.includes(id);
+//~    packed[id] = (
+//~      <div key={id} id={`rules-${id}`} style={{ borderRadius: 14, border: `1px solid ${theme.border.default}`, background: theme.bg.subtle, overflow: "hidden" }}>
+//~        <button
+//~          type="button"
+//~          onClick={() => toggleGroup(id)}
+//~          aria-expanded={open}
+//~          style={{ display: "flex", width: "100%", alignItems: "center", gap: 12, padding: "14px 18px", background: "transparent", border: 0, cursor: "pointer", textAlign: "left", fontFamily: theme.font.family, color: theme.text.primary }}
+//~        >
+//~          <span style={{ fontSize: 13, color: theme.text.tertiary, width: 12 }}>{open ? "▾" : "▸"}</span>
+//~          <span style={{ flex: 1, minWidth: 0 }}>
+//~            <span style={{ display: "block", fontSize: 15, fontWeight: 600 }}>{title}</span>
+//~            <span style={{ display: "block", fontSize: 13, color: theme.text.secondary, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{groupSummary[id]}</span>
+//~          </span>
+//~        </button>
+//~        {open && <div style={{ padding: "4px 18px 18px 42px", display: "flex", flexDirection: "column", gap: 14 }}>{body}</div>}
+//~      </div>
+//~    );
+//~    return null;
+//~  };
+//~
+//~  const renderRow = (p: Post, i: number) => {
+//~    const v = verdicts.get(p.id) || { kind: "none", reason: "" };
+//~    const pinned = pins.includes(p.id);
+//~    const shownType = effectiveType(p);
+//~    const typeLabel = p.community ? `community ${shownType}` : shownType === "quote" ? (p.quoteOf ? `quote of @${p.quoteOf}` : "quote") : shownType;
+//~    const mediaLabel = p.gif && !p.media ? "GIF" : p.gif ? "photo/video/GIF" : p.media ? "photo/video" : "";
+//~    const meta = [`${ageLabel(p.daysAgo)} (${monthYear(p.daysAgo)})`, typeLabel, p.replyTo ? `to @${p.replyTo}` : "", p.repostOf ? `of @${p.repostOf}` : "", mediaLabel, `${p.likes} likes`, ARCHIVE_CAPS.hasReplyCount ? `${p.replies} replies` : "", ARCHIVE_CAPS.hasPinFlag && p.profilePin ? "pinned on profile" : ""].filter(Boolean).join("  ·  ");
+//~    const foundHere = rules.deleteWords.filter((w) => wordHit(p.text, w));
+//~    return (
+//~      <div key={p.id} className="xpc-row" style={{ borderTop: i === 0 ? "none" : `1px solid ${theme.border.subtle}`, background: pinned ? theme.fill.successSubtle : "transparent" }}>
+//~        <button
+//~          type="button"
+//~          className="xpc-keep"
+//~          aria-pressed={pinned}
+//~          onClick={() => togglePin(p.id)}
+//~          title={pinned ? "Kept. Click to undo." : "Kept posts are never deleted"}
+//~          style={
+//~            pinned
+//~              ? { background: theme.text.success, color: theme.text.onColor, border: `1.5px solid ${theme.text.success}` }
+//~              : { background: theme.fill.successSubtle, color: theme.text.successDeep, border: `1.5px solid ${theme.text.success}` }
+//~          }
+//~        >
+//~          <span aria-hidden="true">{pinned ? "✓" : ""}</span>
+//~          <span>{pinned ? "Kept" : "Keep"}</span>
+//~        </button>
+//~        <div style={{ minWidth: 0 }}>
+//~          <div className="xpc-text" style={{ color: theme.text.primary }}>
+//~            <HighlightedText text={p.text} words={foundHere} markStyle={markStyle} />
+//~          </div>
+//~          {foundHere.length > 0 && (
+//~            <div style={{ fontSize: 12.5, color: theme.text.secondary, marginTop: 4, lineHeight: 1.4 }}>{`Found in this post: ${foundHere.map((w) => maskSsn(w)).join(", ")}`}</div>
+//~          )}
+//~          <div className="xpc-about" style={{ color: theme.text.secondary }}>
+//~            <span style={{ color: theme.text.tertiary }}>About: </span>
+//~            {clampWords(maskSsn(p.summary), 18)}
+//~          </div>
+//~          <div style={{ fontSize: 12.5, color: theme.text.tertiary, marginTop: 6, lineHeight: 1.45 }}>{meta}</div>
+//~        </div>
+//~        <div className="xpc-verdict">
+//~          {v.kind === "delete" && (
+//~            <>
+//~              <Status tone="warning">Will delete</Status>
+//~              <div style={{ fontSize: 12.5, color: theme.text.secondary, marginTop: 6, lineHeight: 1.4 }}>{v.reason}</div>
+//~            </>
+//~          )}
+//~          {v.kind === "keep" && (
+//~            <>
+//~              <Status tone="success">Kept</Status>
+//~              <div style={{ fontSize: 12.5, color: theme.text.secondary, marginTop: 6, lineHeight: 1.4 }}>{v.reason}</div>
+//~            </>
+//~          )}
+//~        </div>
+//~      </div>
+//~    );
+//~  };
+//~
+//~  const visiblePosts = sortPosts(
+//~    pool.filter((p) => {
+//~@@XPC-NEXT@@
