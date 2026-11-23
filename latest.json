@@ -1,6 +1,6 @@
 {
- "version": "1.1.0",
- "tag": "xpc-v1.1.0",
- "manifest_sha256": "5d3f31ed0dcdada33f9162903abdc326ef1c6a5efa65dfb6e3c9c4958bffe19d",
- "notes": "Bundle now carries the helper script, word lists and card settings, so a new bot needs nothing else."
+ "version": "1.1.1",
+ "tag": "xpc-v1.1.1",
+ "manifest_sha256": "7a227e6e94dcaad48d55799e9777ce6eb3e99d0cf2416b95f991c2702d74e2f7",
+ "notes": "The page now builds in small steps, so it publishes reliably on a brand-new bot. The page looks and works the same."
 }
