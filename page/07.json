@@ -1,0 +1,37 @@
+[
+{
+"old_string": "if(step===\"archive\")return null;/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "locked||id===\"pick\"/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "{null/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "\n/*@@Ac*/}",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "\n/*@@A*/",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "\n//~",
+"new_string": "",
+"replace_all": true
+}
+]

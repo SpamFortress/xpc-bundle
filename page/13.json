@@ -1,0 +1,47 @@
+[
+{
+"old_string": "(id===\"run\"||id===\"review\")/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "{return null as any/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "{return new Map()/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "{null/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "true/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "\n/*@@Bc*/}",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "\n/*@@B*/",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "\n//^",
+"new_string": "",
+"replace_all": true
+}
+]

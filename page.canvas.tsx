@@ -15,6 +15,7 @@ import {
   Segmented,
   Floating,
   BackToTop,
+  TextLink,
   useState,
   useMemo,
   useEffect,
@@ -1104,7 +1105,7 @@ export default function App() {
     setStep(id);
   };
 
-  // A Page tap is never Approve. The owner approves by replying "approve" in chat.
+  // A Page tap is never Approve. Only the owner's chat reply (typed or a widget tap) is Approve.
   const approve = () => {
     scrollToId("rev-approve");
   };
@@ -1295,8 +1296,13 @@ export default function App() {
       </div>
     );
   };
-  const replyHint = (words: string) => (
-    <div style={{ fontSize: 13, color: theme.text.secondary, marginTop: 10, lineHeight: 1.45 }}>{`Reply "${words}" in chat. Taps on this page don't reach the bot.`}</div>
+  const chatNote = (
+    <div style={{ fontSize: 13, color: theme.text.secondary, marginTop: 10, lineHeight: 1.45 }}>Opens in the chat</div>
+  );
+  const xDownloadLink = (
+    <div style={{ fontSize: 13, color: theme.text.secondary, marginTop: 10, lineHeight: 1.45 }}>
+      Or request it yourself on <TextLink href="https://x.com/settings/download_your_data">X's Download your data page</TextLink> (opens in your own browser).
+    </div>
   );
   const recentOnlyOffer = (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1307,7 +1313,7 @@ export default function App() {
           variant="quiet"
           onClick={() => {}}
         />
-        {replyHint("recent only")}
+        {chatNote}
       </div>
     </div>
   );
@@ -1687,7 +1693,7 @@ export default function App() {
                   />
                   <div style={{ marginTop: 18 }}>
                     <Button label="Sign in to X" variant="primary" onClick={() => {}} />
-                    {replyHint("sign in")}
+                    {chatNote}
                   </div>
                 </div>
 
@@ -1721,7 +1727,8 @@ export default function App() {
                         />
                         <div style={{ marginTop: 18 }}>
                           <Button label="Have the bot grab it" variant="primary" onClick={() => {}} />
-                          {replyHint("grab my archive")}
+                          {chatNote}
+                          {xDownloadLink}
                         </div>
                       </div>
                       <div
@@ -1780,7 +1787,7 @@ export default function App() {
                               setRecentOnly(false);
                               setPhase("waiting");
                             }}
-                          />
+                          />{chatNote}
                         </div>
                       )}
                     </>
@@ -2395,14 +2402,14 @@ export default function App() {
                           <div style={{ fontSize: 14, fontWeight: 600 }}>Set it up for me: about 2 minutes of your time (sign in, accept X's terms, add credits)</div>
                           <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>The bot does the clicking in its browser: open the X developer console, create the project and app, set read and write permissions, create the user access token, and save the keys to your vault.</div>
                           <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>You step in only to sign in (and 2FA), accept X's developer terms, and add your card or credits on X.</div>
-                          {replyHint("set it up for me")}
+                          {chatNote}
                         </div>
                       )}
                       {fastSetup === "manual" && (
                         <div style={{ ...panel, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
                           <div style={{ fontSize: 14, fontWeight: 600 }}>I'll do it myself: about 10–15 minutes</div>
                           <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>1. Open console.x.com and sign in. 2. Accept X's developer terms. 3. Create a project and app with read and write access, then a user access token. 4. Add a card or credits on X. 5. Tell the bot you're done — it saves the keys to your vault. Never paste keys in chat.</div>
-                          {replyHint("I'm done")}
+                          {chatNote}
                         </div>
                       )}
                     </div>
@@ -2506,7 +2513,7 @@ export default function App() {
 
                 <div id="rev-approve" style={{ paddingTop: 4 }}>
                   <Button label="Approve this cleanup" variant="primary" disabled={!archiveReady || matched === 0 || (isFullWipe && !wipeOk)} onClick={approve} />
-                  {replyHint("approve")}
+                  {chatNote}
                 </div>
               </div>
             )}
@@ -2563,7 +2570,7 @@ export default function App() {
                         <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>Remove outdated results</div>
                         <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5, flex: 1 }}>The bot files Google's Remove Outdated Content requests for deleted post URLs. You sign in to Google once. Removal isn't guaranteed.</div>
                         <div style={{ fontSize: 13, color: theme.text.secondary }}>Bot files the requests after you sign in to Google.</div>
-                        <Button label={kitGoogle ? "Requests queued" : "File removal requests"} onClick={() => setKitGoogle(true)} />
+                        <Button label={kitGoogle ? "Requests queued" : "File removal requests"} onClick={() => setKitGoogle(true)} />{chatNote}
                         {kitGoogle && <div style={{ fontSize: 13, color: theme.text.success }}>Sign in to Google once, then the bot files the requests. Removal isn't guaranteed.</div>}
                         <Toggle label="Recheck in 30 days" value={kitGoogleRecheck} onChange={setKitGoogleRecheck} />
                       </div>
@@ -2573,7 +2580,7 @@ export default function App() {
                         <div style={{ fontSize: 13, color: theme.text.tertiary }}>Links to archived copies appear here after the run.</div>
                         {kitWayback && <div style={{ fontSize: 13, color: theme.text.secondary }}>Short links to archived copies of your deleted posts.</div>}
                         <div style={{ fontSize: 13, color: theme.text.secondary }}>Bot finds the copies and drafts the email. You review it and press Send.</div>
-                        <Button label={kitWaybackDraft ? "Draft ready" : "Prepare removal email"} onClick={() => setKitWaybackDraft(true)} />
+                        <Button label={kitWaybackDraft ? "Draft ready" : "Prepare removal email"} onClick={() => setKitWaybackDraft(true)} />{chatNote}
                         {kitWaybackDraft && <div style={{ fontSize: 13, color: theme.text.primary, lineHeight: 1.5 }}>Draft to info@archive.org, subject "Removal request for archived copies of deleted posts," with the short links above. You review it and press Send.</div>}
                         <Toggle label="Recheck in 30 days" value={kitWaybackRecheck} onChange={setKitWaybackRecheck} />
                       </div>
@@ -2583,7 +2590,7 @@ export default function App() {
                       </div>
                     </div>
                     <div>
-                      <Button label="Delete the archive copy from the bot's computer" onClick={() => setArchiveNote("This deletes the archive and parsed copies from the bot's computer after you confirm.")} />
+                      <Button label="Delete the archive copy from the bot's computer" onClick={() => setArchiveNote("This deletes the archive and parsed copies from the bot's computer after you confirm.")} />{chatNote}
                     </div>
                     {archiveNote !== "" && <Text>{archiveNote}</Text>}
                     {!maintOn ? (
@@ -2615,6 +2622,7 @@ export default function App() {
                         <Button label={showFailed ? "Hide links" : "Show links"} onClick={() => setShowFailed(!showFailed)} />
                         <Button label="One retry pass" onClick={doRetry} />
                       </div>
+                      {chatNote}
                       {showFailed && (
                         <Table
                           columns={["Link", "Why"]}
