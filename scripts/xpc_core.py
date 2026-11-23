@@ -11,13 +11,16 @@ CLI (all local, read-only on the archive):
   python3 xpc_core.py parse <archive.zip|folder|tweets.js ...> --own-id <numeric id> --out /workspace/xpc/state
   python3 xpc_core.py mask < text        # mask SSN-shaped numbers
   python3 xpc_core.py selftest
+  python3 xpc_core.py page-steps            # list the Page build steps (WriteCanvas + EditCanvas)
+  python3 xpc_core.py page-steps --show N   # print step N's exact text to pass, nothing else
+  python3 xpc_core.py page-verify <file>    # check a ReadCanvas result equals page.canvas.tsx
 """
 from __future__ import annotations
-import csv, glob, io, json, math, os, re, struct, unicodedata, zlib
+import csv, glob, hashlib, io, json, math, os, re, struct, unicodedata, zlib
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 
 
 def owner_tz():
@@ -556,6 +559,131 @@ def risk_rank(p):
     return (tier, p.get("favorite_count") or 0, dt.timestamp() if dt else 0)
 
 
+# ---------------------------------------------------------------- Page build in steps
+# One WriteCanvas call cannot carry the whole Page, and a half-written module does not
+# compile. So the Page is built inside line comments: the skeleton is a tiny Page that
+# compiles, followed by a marker line. Each step replaces the marker with the next slice
+# of the real source, every line prefixed "//~" (a comment, so every step compiles), plus
+# the marker again. The finish step removes the skeleton, the marker and every "//~"
+# prefix in one EditCanvas call, which leaves exactly page.canvas.tsx.
+PAGE_PREFIX = "//~"
+PAGE_MARKER = "//~@@XPC-NEXT@@"
+PAGE_SKELETON = 'import { Page } from "grok/canvas"; export default function XpcBuilding() { return <Page title="X Post Cleaner" width="full" />; }'
+PAGE_CHUNK_MAX = 9500  # bytes per step: small enough that one Shell or Read view shows it whole
+BUNDLE_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+
+
+def page_chunks(src, limit=PAGE_CHUNK_MAX):
+    """Split the source on line boundaries into prefixed slices of at most `limit` bytes."""
+    lines = src.split("\n")
+    if lines and lines[-1] == "":
+        lines = lines[:-1]
+    out, cur, size = [], [], 0
+    for ln in lines:
+        piece = PAGE_PREFIX + ln + "\n"
+        n = len(piece.encode("utf-8"))
+        if cur and size + n > limit:
+            out.append("".join(cur)); cur, size = [], 0
+        cur.append(piece); size += n
+    if cur:
+        out.append("".join(cur))
+    return out
+
+
+def page_finish_edits():
+    return [
+        {"old_string": PAGE_SKELETON + "\n" + PAGE_PREFIX, "new_string": ""},
+        {"old_string": "\n" + PAGE_MARKER, "new_string": ""},
+        {"old_string": "\n" + PAGE_PREFIX, "new_string": "\n", "replace_all": True},
+    ]
+
+
+def page_simulate(skeleton, chunk_texts, edits):
+    """Apply the steps exactly as WriteCanvas/EditCanvas would; returns the final source."""
+    cur = skeleton
+    for t in chunk_texts:
+        assert cur.count(PAGE_MARKER) == 1
+        cur = cur.replace(PAGE_MARKER, t, 1)
+    for e in edits:
+        if e.get("replace_all"):
+            cur = cur.replace(e["old_string"], e["new_string"])
+        else:
+            assert cur.count(e["old_string"]) == 1, e["old_string"][:40]
+            cur = cur.replace(e["old_string"], e["new_string"], 1)
+    return cur
+
+
+def page_build_files(bundle_dir=BUNDLE_DIR, limit=PAGE_CHUNK_MAX):
+    """Release-time: write page/00-skeleton.tsx, page/NN.txt and page/99-finish.json from
+    page.canvas.tsx, and prove the steps rebuild it byte for byte."""
+    src = open(os.path.join(bundle_dir, "page.canvas.tsx"), encoding="utf-8").read()
+    for bad in ("\n" + PAGE_PREFIX, "XPC-NEXT", "XpcBuilding", "\u2028", "\u2029", "\r"):
+        assert bad not in src, f"page source contains {bad!r}"
+    d = os.path.join(bundle_dir, "page")
+    os.makedirs(d, exist_ok=True)
+    for f in glob.glob(os.path.join(d, "*")):
+        os.remove(f)
+    skel = PAGE_SKELETON + "\n" + PAGE_MARKER + "\n"
+    texts = [c + PAGE_MARKER for c in page_chunks(src, limit)]
+    open(os.path.join(d, "00-skeleton.tsx"), "w", encoding="utf-8", newline="").write(skel)
+    for i, t in enumerate(texts, 1):
+        open(os.path.join(d, f"{i:02d}.txt"), "w", encoding="utf-8", newline="").write(t)
+    json.dump({"edits": page_finish_edits()}, open(os.path.join(d, "99-finish.json"), "w", encoding="utf-8"), indent=1)
+    assert page_simulate(skel, texts, page_finish_edits()) == src
+    return len(texts)
+
+
+def page_steps(bundle_dir=BUNDLE_DIR):
+    d = os.path.join(bundle_dir, "page")
+    parts = sorted(glob.glob(os.path.join(d, "[0-9][0-9].txt")))
+    steps = [{"step": 0, "tool": "WriteCanvas", "title": "X Post Cleaner", "contents_file": os.path.join(d, "00-skeleton.tsx")}]
+    for p in parts:
+        steps.append({"step": int(os.path.basename(p)[:2]), "tool": "EditCanvas", "old_string": PAGE_MARKER,
+                      "new_string_file": p, "bytes": os.path.getsize(p)})
+    steps.append({"step": len(parts) + 1, "tool": "EditCanvas", "edits": page_finish_edits()})
+    return steps
+
+
+def _canvas_source(raw):
+    """Source text from a saved ReadCanvas result (tool wrapper and header stripped) or a plain file."""
+    i = raw.find("import {")
+    if i < 0:
+        return None
+    src = raw[i:]
+    j = src.rfind("</cursor_untrusted")
+    if j >= 0:
+        src = src[:j]
+    return src.rstrip()
+
+
+def page_expected(after=None, bundle_dir=BUNDLE_DIR):
+    """Exact source the canvas should hold after step `after` (None = finished page)."""
+    d = os.path.join(bundle_dir, "page")
+    if after is None:
+        return open(os.path.join(bundle_dir, "page.canvas.tsx"), encoding="utf-8").read()
+    cur = open(os.path.join(d, "00-skeleton.tsx"), encoding="utf-8").read()
+    for k in range(1, after + 1):
+        cur = cur.replace(PAGE_MARKER, open(os.path.join(d, f"{k:02d}.txt"), encoding="utf-8").read(), 1)
+    return cur
+
+
+def page_verify(path, after=None, bundle_dir=BUNDLE_DIR):
+    """(ok, detail). ok when the saved ReadCanvas result at `path` holds exactly the source
+    expected after step `after` (default: the finished page.canvas.tsx). On a mismatch the
+    detail names the first differing line, so only that step needs redoing."""
+    want = page_expected(after, bundle_dir).rstrip()
+    got = _canvas_source(open(path, encoding="utf-8").read())
+    if got is None:
+        return False, "no canvas source found in file"
+    if got == want:
+        return True, hashlib.sha256(page_expected(after, bundle_dir).encode()).hexdigest()
+    n = 0
+    m = min(len(got), len(want))
+    while n < m and got[n] == want[n]:
+        n += 1
+    line = want[:n].count("\n") + 1
+    return False, f"first difference at line {line}: expected {want[n:n+60]!r}, canvas has {got[n:n+60]!r}"
+
 # ---------------------------------------------------------------- CLI
 def _post_row(p):
     r = dict(p)
@@ -574,7 +702,25 @@ def _cli(argv=None):
     pa.add_argument("--out", default="/workspace/xpc/state")
     sub.add_parser("mask", help="mask SSN-shaped numbers in stdin")
     sub.add_parser("selftest")
+    ps = sub.add_parser("page-steps", help="the Page build steps")
+    ps.add_argument("--show", type=int, help="print only this step's exact text")
+    pv = sub.add_parser("page-verify", help="check a ReadCanvas result")
+    pv.add_argument("file")
+    pv.add_argument("--after", type=int, help="check the state after this build step instead of the finished page")
+    sub.add_parser("page-build", help="release-time: regenerate page/ from page.canvas.tsx")
     a = ap.parse_args(argv)
+    if a.cmd == "page-build":
+        print(f"{page_build_files()} chunk steps written"); return 0
+    if a.cmd == "page-steps":
+        steps = page_steps()
+        if a.show is None:
+            print(json.dumps(steps, indent=1)); return 0
+        st = steps[a.show]
+        f = st.get("contents_file") or st.get("new_string_file")
+        sys.stdout.write(open(f, encoding="utf-8").read() if f else json.dumps(st["edits"], indent=1)); return 0
+    if a.cmd == "page-verify":
+        ok, detail = page_verify(a.file, a.after)
+        print(f"page-verify ok {detail}" if ok else f"page-verify MISMATCH {detail}"); return 0 if ok else 1
     if a.cmd == "mask":
         sys.stdout.write(mask_ssn(sys.stdin.read())); return 0
     if a.cmd == "selftest":

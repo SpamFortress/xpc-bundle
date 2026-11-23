@@ -1,0 +1,124 @@
+//~                  <div style={{ fontSize: 14, color: theme.text.secondary, marginTop: 12, lineHeight: 1.5 }}>
+//~                    Want to save specific posts? Find them under{" "}
+//~                    <button
+//~                      type="button"
+//~                      onClick={jumpToAlwaysKeep}
+//~                      style={{ background: "none", border: 0, padding: 0, color: theme.text.accent, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family, cursor: "pointer", textDecoration: "underline" }}
+//~                    >
+//~                      Always keep
+//~                    </button>
+//~                    {" "}at the bottom of the rules and tap the green Keep button.
+//~                  </div>
+//~                </div>
+//~
+//~                <div id="pick-rules">
+//~                  <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+//~                    <div style={subhead}>Adjust rules</div>
+//~                    {(activeQA !== "" || JSON.stringify(rules) !== JSON.stringify({ ...BASE, keepWords: rules.keepWords })) && (
+//~                      <Button
+//~                        label="Clear all rules"
+//~                        variant="quiet"
+//~                        onClick={() => {
+//~                          setActiveQA("");
+//~                          setIgnoredWords([]);
+//~                          setRules({ ...BASE, keepWords: rules.keepWords });
+//~                        }}
+//~                      />
+//~                    )}
+//~                  </div>
+//~                  <div style={subhint}>Optional. Fine-tune a quick cleanup or build your own. Keep rules always win over delete rules.</div>
+//~                  <div className="xpc-groups">
+//~                    {groupBox(
+//~                      "when",
+//~                      "When it was posted",
+//~                      <>
+//~                        <Select
+//~                          label="Time range"
+//~                          value={rules.timeMode as string}
+//~                          onChange={(v: string) => upd({ timeMode: v as TimeMode })}
+//~                          options={[
+//~                            { value: "none", label: "Not set" },
+//~                            { value: "all", label: "From the beginning" },
+//~                            { value: "older", label: "Older than…" },
+//~                            { value: "years", label: "Between years…" },
+//~                          ]}
+//~                        />
+//~                        {rules.timeMode === "older" && (
+//~                          <>
+//~                            <Select
+//~                              label="Older than"
+//~                              value={rules.olderDate ? "custom" : String(rules.olderDays)}
+//~                              onChange={(v: string) => {
+//~                                if (v === "custom") upd({ olderDate: rules.olderDate || "2023-01-01" });
+//~                                else upd({ olderDays: Number(v), olderDate: "" });
+//~                              }}
+//~                              options={[
+//~                                ...AGE_DAY_OPTIONS.map((d) => ({ value: String(d), label: `${spanLabel(d)} (${beforeCutoff(d)})` })),
+//~                                { value: "custom", label: "Custom date" },
+//~                              ]}
+//~                            />
+//~                            {rules.olderDate !== "" && <Input label="Custom date" value={rules.olderDate} onChange={(v: string) => upd({ olderDate: v })} placeholder="YYYY-MM-DD" />}
+//~                          </>
+//~                        )}
+//~                        {rules.timeMode === "years" && (
+//~                          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+//~                            <Select label="From" value={String(rules.yearFrom)} onChange={(v: string) => upd({ yearFrom: Math.min(Number(v), rules.yearTo) })} options={yearOptionList([rules.yearFrom, rules.yearTo])} />
+//~                            <Select label="To" value={String(rules.yearTo)} onChange={(v: string) => upd({ yearTo: Math.max(Number(v), rules.yearFrom) })} options={yearOptionList([rules.yearFrom, rules.yearTo])} />
+//~                          </div>
+//~                        )}
+//~                        <Select
+//~                          label="Never touch the last"
+//~                          value={rules.protectDate ? "custom" : String(rules.protectDays)}
+//~                          onChange={(v: string) => {
+//~                            if (v === "custom") upd({ protectDate: rules.protectDate || "2026-10-15", protectDays: 0 });
+//~                            else upd({ protectDays: Number(v), protectDate: "" });
+//~                          }}
+//~                          options={[
+//~                            { value: "0", label: "Off" },
+//~                            ...AGE_DAY_OPTIONS.map((d) => ({ value: String(d), label: `${spanLabel(d)} (${sinceCutoff(d)})` })),
+//~                            { value: "custom", label: "Custom date" },
+//~                          ]}
+//~                        />
+//~                        {rules.protectDate !== "" && <Input label="Custom date" value={rules.protectDate} onChange={(v: string) => upd({ protectDate: v, protectDays: 0 })} placeholder="YYYY-MM-DD" />}
+//~                      </>
+//~                    )}
+//~                    {groupBox(
+//~                      "kind",
+//~                      "What kind of post",
+//~                      <>
+//~                        <div className="xpc-kinds-grid">
+//~                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+//~                            <Toggle label="Posts" value={rules.posts} onChange={(v: boolean) => upd({ posts: v })} />
+//~                            <Toggle label="Replies" value={rules.replies} onChange={(v: boolean) => upd({ replies: v })} />
+//~                            <Toggle label="Reposts" value={rules.reposts} onChange={(v: boolean) => upd({ reposts: v })} />
+//~                            {ARCHIVE_CAPS.hasQuoteFields ? (
+//~                              <Toggle label="Quote posts" value={rules.quotes} onChange={(v: boolean) => upd({ quotes: v })} />
+//~                            ) : (
+//~                              <div style={{ fontSize: 13, color: theme.text.tertiary, lineHeight: 1.45, padding: "6px 0" }}>Your archive doesn't mark which posts are quotes, so any quotes are handled by your other rules like regular posts.</div>
+//~                            )}
+//~                          </div>
+//~                          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+//~                            <Toggle label="Photos" value={rules.mediaPhotos} onChange={(v: boolean) => upd({ mediaPhotos: v })} />
+//~                            <Toggle label="Videos" value={rules.mediaVideos} onChange={(v: boolean) => upd({ mediaVideos: v })} />
+//~                            <Toggle label="GIFs" value={rules.mediaGifs} onChange={(v: boolean) => upd({ mediaGifs: v })} />
+//~                            <Toggle label="Text only" value={rules.mediaText} onChange={(v: boolean) => upd({ mediaText: v })} />
+//~                          </div>
+//~                        </div>
+//~                        <Toggle label="Community posts" value={rules.community} onChange={(v: boolean) => upd({ community: v })} />
+//~                        <div style={{ fontSize: 13, color: theme.text.secondary, marginTop: -6, lineHeight: 1.45 }}>Community posts means posts made inside X Communities (groups), not Community Notes.</div>
+//~                        <div>
+//~                          <div style={{ fontSize: 13, color: theme.text.secondary, marginBottom: 8 }}>Replies to or mentions of these accounts</div>
+//~                          <Input label="Search handles" value={replyQuery} onChange={setReplyQuery} placeholder="Type an @handle" />
+//~                          {replyQuery.trim() !== "" && (
+//~                            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+//~                              {replyHandles
+//~                                .filter((h) => h.toLowerCase().includes(replyQuery.replace(/^@/, "").trim().toLowerCase()))
+//~                                .slice(0, 8)
+//~                                .map((h) => (
+//~                                  <button key={`sug-${h}`} type="button" onClick={() => { const next = rules.replyHandles.some((x) => handleOf(x) === handleOf(h)) ? rules.replyHandles : [...rules.replyHandles, h]; upd({ replyHandles: next, replies: true, posts: true }); setReplyQuery(""); }} style={{ borderRadius: 999, padding: "5px 12px", background: theme.bg.base, border: `1px solid ${theme.border.default}`, color: theme.text.primary, fontSize: 13, fontFamily: theme.font.family, cursor: "pointer" }}>{`@${h}`}</button>
+//~                                ))}
+//~                            </div>
+//~                          )}
+//~                          <div style={{ fontSize: 13, color: theme.text.secondary, margin: "10px 0 8px" }}>Most replied-to in your archive</div>
+//~                          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+//~@@XPC-NEXT@@

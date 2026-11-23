@@ -1,0 +1,141 @@
+//~          display: flex;
+//~          flex-direction: column;
+//~          gap: 8px;
+//~          min-width: 0;
+//~        }
+//~        h1 {
+//~          color: #8BE9FF !important;
+//~          text-shadow: 0 0 6px rgba(110, 193, 255, 0.95), 0 0 18px rgba(74, 163, 224, 0.55), 0 0 36px rgba(110, 193, 255, 0.35);
+//~        }
+//~        @media (max-width: 760px) {
+//~          .xpc-kinds-grid, .xpc-tiers { grid-template-columns: minmax(0, 1fr); }
+//~        }
+//~      `}</style>
+//~
+//~      <div className={narrow && primary && step !== "review" ? "xpc-wrap xpc-wrap-pickbar" : "xpc-wrap"} style={{ fontFamily: theme.font.family, color: theme.text.primary }}>
+//~        <div className="xpc-stepper" role="navigation" aria-label="Cleanup steps">
+//~          {(["signin", "archive", "pick", "review", "run"] as Step[]).map((id, i) => {
+//~            const meta = STEP_META[id];
+//~            const active = step === id;
+//~            const locked = id === "run" && runPhase === "idle";
+//~            const label = id === "run" && runPhase === "done" ? "Done" : meta.label;
+//~            return (
+//~              <div key={id} style={{ display: "flex", alignItems: "center", gap: 6, flex: i < 4 ? 1 : "0 0 auto", minWidth: 0 }}>
+//~                <button type="button" className="xpc-step" disabled={locked} onClick={() => goStep(id)} aria-current={active ? "step" : undefined}>
+//~                  <span className="xpc-num" style={{ background: active ? theme.fill.primary : theme.fill.secondary, color: active ? theme.text.onPrimary : theme.text.secondary }}>{meta.n}</span>
+//~                  <span className="xpc-step-label" style={{ color: active ? theme.text.primary : theme.text.secondary }}>{label}</span>
+//~                </button>
+//~                {i < 4 && <div style={{ flex: 1, height: 1, background: theme.border.default, minWidth: 12 }} />}
+//~              </div>
+//~            );
+//~          })}
+//~        </div>
+//~
+//~        <div className="xpc-shell">
+//~          <aside className="xpc-rail" aria-label="Sections on this step">
+//~            <div style={{ fontSize: 12, color: theme.text.tertiary, marginBottom: 10, letterSpacing: 0.04, textTransform: "uppercase" }}>On this step</div>
+//~            {railItems.map(([id, label]) => (
+//~              <button
+//~                key={id}
+//~                type="button"
+//~                onClick={() => { setActiveRail(id); scrollToId(id); }}
+//~                style={{ display: "block", width: "100%", textAlign: "left", background: "transparent", border: 0, borderLeft: `2px solid ${activeRail === id ? theme.border.focus : theme.border.default}`, padding: "8px 12px", cursor: "pointer", fontFamily: theme.font.family, fontSize: 14, fontWeight: activeRail === id ? 650 : 400, color: activeRail === id ? theme.text.accent : theme.text.secondary }}
+//~              >
+//~                {label}
+//~              </button>
+//~            ))}
+//~          </aside>
+//~
+//~          <main style={{ minWidth: 0 }}>
+//~            <div style={{ marginBottom: 22 }}>
+//~              <h2 style={{ margin: 0, fontSize: theme.font.heading2.fontSize, lineHeight: theme.font.heading2.lineHeight, fontFamily: theme.font.family, color: theme.text.primary, fontWeight: 650 }}>{heading}</h2>
+//~              <p style={{ margin: "6px 0 0", fontSize: 15, lineHeight: 1.5, color: theme.text.secondary }}>{hint}</p>
+//~              {step === "review" && (
+//~                <button
+//~                  type="button"
+//~                  onClick={() => scrollToId("rev-approve")}
+//~                  style={{ marginTop: 8, background: "none", border: 0, padding: 0, color: theme.text.accent, fontSize: 13, fontWeight: 600, fontFamily: theme.font.family, cursor: "pointer", textDecoration: "underline" }}
+//~                >
+//~                  Jump to Approve
+//~                </button>
+//~              )}
+//~            </div>
+//~
+//~            {step === "signin" && (
+//~              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+//~                <div id="sig-start" style={{ ...panel, background: theme.fill.accentSubtle, padding: "28px 28px" }}>
+//~                  <Rows
+//~                    rows={[
+//~                      { title: "1. Open", detail: "The bot opens X's sign-in page in its own browser." },
+//~                      { title: "2. Sign in", detail: "You type your password and any 2FA code yourself. The bot never sees them." },
+//~                      { title: "3. Next", detail: "The bot reads your handle from X and moves you on to your archive." },
+//~                    ]}
+//~                  />
+//~                  <div style={{ marginTop: 18 }}>
+//~                    <Button label="Sign in to X" variant="primary" onClick={() => {}} />
+//~                    {replyHint("sign in")}
+//~                  </div>
+//~                </div>
+//~
+//~                <div id="sig-data">
+//~                  <div style={subhead}>Where your data goes</div>
+//~                  <Properties
+//~                    items={[
+//~                      { label: "Sign-in", value: "To fetch your archive and later delete posts, you sign in to X once, yourself, in the bot's own browser. The bot never sees your password, and you can sign out of X anytime." },
+//~                      { label: "Your archive", value: "A copy is stored on the bot's computer so it can build your list and carry out the deletes you approve. Media files in the ZIP (the photos and videos themselves) are not imported. Posts that include photos or videos can still be in your cleanup list." },
+//~                      { label: "Sharing", value: "None of your data or information is sold, or shared with third parties or anyone else." },
+//~                      { label: "Deletes", value: "Deletes happen only after you approve your cleanup list." },
+//~                      { label: "After the run", value: "Taking posts off X does not take them off the rest of the internet. After the run, we offer to delete the archive copy from the bot's computer, and we can help with leftover copies on Google and the Wayback Machine." },
+//~                    ]}
+//~                  />
+//~                </div>
+//~              </div>
+//~            )}
+//~
+//~            {step === "archive" && (
+//~              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+//~                <div id="arc-get" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+//~                  {phase === "choose" && (
+//~                    <>
+//~                      <div style={{ ...panel, background: theme.fill.accentSubtle, padding: "28px 28px" }}>
+//~                        <Rows
+//~                          rows={[
+//~                            { title: "1. Request", detail: "The bot taps Download your data on X, in its own signed-in browser." },
+//~                            { title: "2. Wait", detail: "X emails a link, usually in 1–3 days. While you wait, choose what to delete: old posts, replies with few likes, reposts, and more." },
+//~                            { title: "3. Load", detail: "The bot downloads the file and loads it here. You never handle the ZIP." },
+//~                          ]}
+//~                        />
+//~                        <div style={{ marginTop: 18 }}>
+//~                          <Button label="Have the bot grab it" variant="primary" onClick={() => {}} />
+//~                          {replyHint("grab my archive")}
+//~                        </div>
+//~                      </div>
+//~                      <div
+//~                        role="button"
+//~                        tabIndex={0}
+//~                        onClick={() => setPhase("manual")}
+//~                        style={{ ...panel, minHeight: 80, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", borderStyle: "dashed" }}
+//~                      >
+//~                        <span style={{ fontSize: 15, color: theme.text.secondary }}>Already have the file? Drop your archive here</span>
+//~                        <span style={{ fontSize: 13, color: theme.text.tertiary }}>ZIP or tweets.js · read on the bot's computer</span>
+//~                      </div>
+//~                      {recentOnlyOffer}
+//~                    </>
+//~                  )}
+//~                  {(phase === "grabbing" || phase === "waiting") && (
+//~                    <>
+//~                      <Callout tone="info" lead={phase === "grabbing" ? "Requesting your archive" : "Archive building, usually 1–3 days"}>
+//~                        {phase === "grabbing"
+//~                          ? "The bot is opening X settings and starting the official download. Nothing is deleted at this stage."
+//~                          : "X is preparing your file. The bot watches for the email and loads it when it lands."}
+//~                      </Callout>
+//~                      <div>
+//~                        <Button label="I'll drop the file myself" variant="quiet" onClick={() => setPhase("manual")} />
+//~                      </div>
+//~                      {recentOnlyOffer}
+//~                    </>
+//~                  )}
+//~                  {phase === "manual" && (
+//~                    <>
+//~                      <div style={{ ...panel, minHeight: 100, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, borderStyle: "dashed" }}>
+//~@@XPC-NEXT@@
