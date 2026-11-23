@@ -1,0 +1,6 @@
+{
+ "version": "1.1.0",
+ "tag": "xpc-v1.1.0",
+ "manifest_sha256": "5d3f31ed0dcdada33f9162903abdc326ef1c6a5efa65dfb6e3c9c4958bffe19d",
+ "notes": "Bundle now carries the helper script, word lists and card settings, so a new bot needs nothing else."
+}

@@ -1,0 +1,103 @@
+{
+ "_about": "The six Quick cleanup cards on the Pick step, in Page order, and the default pace and confirm settings. Keep always wins over every card. Cards only build a cleanup list; nothing is deleted without the owner's Approve.",
+ "version": "1.1.0",
+ "quick_cleanups": [
+  {
+   "id": "delete_everything",
+   "title": "Delete everything",
+   "detail": "Every post, reply, quote post and repost, except posts you mark Keep.",
+   "rule": {
+    "types": [
+     "post",
+     "reply",
+     "self_reply",
+     "quote",
+     "repost",
+     "community"
+    ]
+   },
+   "requires_one_kept": true
+  },
+  {
+   "id": "oldest_2y",
+   "title": "Delete my oldest posts (older than 2 years)",
+   "detail": "Everything older than 2 years. Newer posts stay.",
+   "rule": {
+    "older_than_days": 730
+   }
+  },
+  {
+   "id": "past_era",
+   "title": "Delete a past era",
+   "detail": "Starts with your oldest two years. Change the range on this card.",
+   "rule": {
+    "year_from": "oldest",
+    "year_to": "oldest+1"
+   }
+  },
+  {
+   "id": "all_replies",
+   "title": "Delete all my replies",
+   "detail": "Removes your replies only. Your own posts, quote posts and reposts stay.",
+   "rule": {
+    "types": [
+     "reply",
+     "self_reply"
+    ]
+   }
+  },
+  {
+   "id": "undo_reposts",
+   "title": "Undo all reposts",
+   "detail": "Removes your reposts only.",
+   "rule": {
+    "types": [
+     "repost"
+    ]
+   }
+  },
+  {
+   "id": "few_likes",
+   "title": "Delete posts and replies with few likes",
+   "detail": "Set a like cap for posts, replies, or both. A dash means that type is left alone. Reposts are not affected.",
+   "rule": {
+    "likes_at_most": {
+     "post": null,
+     "reply": null
+    }
+   },
+   "like_cap_presets": [
+    0,
+    5,
+    10,
+    25,
+    50,
+    100
+   ]
+  }
+ ],
+ "rolling_windows_days": [
+  30,
+  90,
+  365
+ ],
+ "daily_actions": {
+  "steady": 100,
+  "faster": 200,
+  "fastest": 350
+ },
+ "default_pace": "steady",
+ "fast_lane_per_day": 4000,
+ "fast_lane_usd_per_delete": 0.01,
+ "typed_confirm": {
+  "share_over": 0.5,
+  "count_at_least": 10000,
+  "phrase": "DELETE {n} POSTS"
+ },
+ "proof_pass_days": [
+  0,
+  2,
+  7
+ ],
+ "soft_fail_limit": 3
+}
