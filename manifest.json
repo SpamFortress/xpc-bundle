@@ -6,10 +6,10 @@
  "page_build": {
   "source": "page.canvas.tsx",
   "result": "page.min.tsx",
-  "result_sha256": "a49a108e1b6068a69ee3f877c7850ba12c6750b6e810804ee17bb974a8e8dc23",
+  "result_sha256": "f056770f6b0f0142a481244bdbe06b5b4b80283c87d717c17aa27ada2b53c568",
   "first_page": "page/01-first.tsx",
-  "first_page_bytes": 34809,
-  "first_page_sha256": "e39d54197063e784091f026a81d50d8f653e7dc82f7d93fa44012a14bfe0e132",
+  "first_page_bytes": 34442,
+  "first_page_sha256": "b7613f7486936a6d909ce212ad005efce3a673f6628ae3b0796806c1f00e7fdb",
   "steps": [
    "page/02.json",
    "page/03.json",
@@ -30,20 +30,20 @@
  "files": [
   {
    "path": "page.min.tsx",
-   "bytes": 106311,
-   "sha256": "a49a108e1b6068a69ee3f877c7850ba12c6750b6e810804ee17bb974a8e8dc23",
+   "bytes": 105968,
+   "sha256": "f056770f6b0f0142a481244bdbe06b5b4b80283c87d717c17aa27ada2b53c568",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page.min.tsx"
   },
   {
    "path": "page.canvas.tsx",
-   "bytes": 150761,
-   "sha256": "745c8f59ee199d137d36a40e9203b060b8d5e749d600821fcc658a6acf732637",
+   "bytes": 150197,
+   "sha256": "ed9504abd108d0e72c5a424a96bc886f10c33d6075271b78f8c2e03475b2b70d",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page.canvas.tsx"
   },
   {
    "path": "page/01-first.tsx",
-   "bytes": 34809,
-   "sha256": "e39d54197063e784091f026a81d50d8f653e7dc82f7d93fa44012a14bfe0e132",
+   "bytes": 34442,
+   "sha256": "b7613f7486936a6d909ce212ad005efce3a673f6628ae3b0796806c1f00e7fdb",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page/01-first.tsx"
   },
   {
@@ -55,25 +55,25 @@
   {
    "path": "page/03.json",
    "bytes": 9397,
-   "sha256": "e4a0fbcbf6926df0328bd24ad53dc1c455094b4f26f529a50be98e2d613e79bc",
+   "sha256": "b0fac4620072946f235a2c7301822594c94aa5f9210a6cae08a7bee770487317",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page/03.json"
   },
   {
    "path": "page/04.json",
    "bytes": 9457,
-   "sha256": "41de32ece03e86ed1da9136e6eaac2723b5b126fa9a0e4d6f7524a012e1acb4f",
+   "sha256": "6ac89f5e6f627162dea62aa6cd728b20ef0fb27678707ffbece70251d26cb342",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page/04.json"
   },
   {
    "path": "page/05.json",
    "bytes": 9465,
-   "sha256": "674bda279242b4d50a1349f9dbcad6b4e9c9a9a72967a186445170588af30cf1",
+   "sha256": "2d4ab7c06b75c4cb1c56a11f84c3e9d5de903c84e240fdc20d97c59f57326390",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page/05.json"
   },
   {
    "path": "page/06.json",
    "bytes": 5511,
-   "sha256": "1c592c8865845f83cadb003a0e86ac284e6fbebe120767438eceb5f97f5e894e",
+   "sha256": "c28fbf74fcdc327d439b221a6c7a982cf4f0296b8d4ad899c1a6e678158bd799",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page/06.json"
   },
   {
@@ -90,20 +90,20 @@
   },
   {
    "path": "page/09.json",
-   "bytes": 9377,
-   "sha256": "1949d0c5f936409666ab41801e6d7f7baaa76e3280832f941ddf5fea279617b3",
+   "bytes": 9381,
+   "sha256": "383e191ababc3dcf2ec283f9db628a78c7d1aa471d8e8dd7989284c7bf8181c1",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page/09.json"
   },
   {
    "path": "page/10.json",
    "bytes": 9465,
-   "sha256": "4f368ab0676dc734b6d9257d8ee22fbd8e977da0c8153ba1afde7800164ea9f8",
+   "sha256": "54fa12e509921a9c18962cafabf66b54fb733605116057f21639075c41b5dcea",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page/10.json"
   },
   {
    "path": "page/11.json",
-   "bytes": 8998,
-   "sha256": "f702774bc0d7d3bebd31b8292cd9751b81b4a5160b45d0800ad7a4eb95d1f263",
+   "bytes": 8942,
+   "sha256": "d187b061608ff286a92fd614202e4f3b6f6d1f7402f78e2521e84d67dac24371",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page/11.json"
   },
   {
@@ -115,19 +115,19 @@
   {
    "path": "page/plan.json",
    "bytes": 3283,
-   "sha256": "2e4d057bf929b539c7ac54a7c886cdd3a93bc5992ac1e038ef6aaab6fdc02544",
+   "sha256": "cf2be0244b220fc52f1b98f4418b62dfe331116acb4e670d0193b6dc44059d46",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page/plan.json"
   },
   {
    "path": "page/regions.json",
-   "bytes": 15116,
-   "sha256": "a118b88f1e70abe5180bce84715da0e8bf0cd47e7c47fc7004e5247cf3c24614",
+   "bytes": 14993,
+   "sha256": "a7565caefb2d2d4bf2bfb7f0a4e3392f490700734775744284b19b72fb1e476d",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/page/regions.json"
   },
   {
    "path": "scripts/xpc_core.py",
-   "bytes": 52529,
-   "sha256": "c036897490b84b44f5ab84739feea908e64919cc94d08d6cf7c199d7ac360075",
+   "bytes": 53713,
+   "sha256": "ac40edab196b819fc53cca47743c2436d64e35de65119080cbc63d6557e46e64",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/scripts/xpc_core.py"
   },
   {
@@ -150,8 +150,8 @@
   },
   {
    "path": "README.md",
-   "bytes": 7444,
-   "sha256": "038a99d9cdaa4ad2c47bf2a388591f54773114c37c9c1039c8a5b801dd249254",
+   "bytes": 8287,
+   "sha256": "a7ec6ff61db36695e4f595eac94475772e80b07f34c892298274148f000e1209",
    "url": "https://raw.githubusercontent.com/SpamFortress/xpc-bundle/xpc-v1.1.5/README.md"
   },
   {

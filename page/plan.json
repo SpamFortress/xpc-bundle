@@ -1,15 +1,15 @@
 {
  "result": "page.min.tsx",
- "result_sha256": "a49a108e1b6068a69ee3f877c7850ba12c6750b6e810804ee17bb974a8e8dc23",
- "first_page_bytes": 34809,
+ "result_sha256": "f056770f6b0f0142a481244bdbe06b5b4b80283c87d717c17aa27ada2b53c568",
+ "first_page_bytes": 34442,
  "steps": [
   {
    "step": 1,
    "tool": "WriteCanvas",
    "stage": "first page",
    "file": "page/01-first.tsx",
-   "bytes": 34809,
-   "sha256_after": "e39d54197063e784091f026a81d50d8f653e7dc82f7d93fa44012a14bfe0e132"
+   "bytes": 34442,
+   "sha256_after": "b7613f7486936a6d909ce212ad005efce3a673f6628ae3b0796806c1f00e7fdb"
   },
   {
    "step": 2,
@@ -20,7 +20,7 @@
    "file": "page/02.json",
    "bytes": 9215,
    "edits": 21,
-   "sha256_after": "94e9beb39d885cbecd1476f251a16b78e073538d2efde7173135c1038e18a8b4"
+   "sha256_after": "01249534d9c3a86f5d61fbcdbb43ae9d95a39218d27a5a646677e5281a173ce8"
   },
   {
    "step": 3,
@@ -31,7 +31,7 @@
    "file": "page/03.json",
    "bytes": 9397,
    "edits": 18,
-   "sha256_after": "c19ec2c8d9a5c9f3ace56be6b86da467cc8faa78a1a5f39a89da1ea8920c27e5"
+   "sha256_after": "a6cc6cfeb3f1888acc494596c81e6a0e00d99f0c928a4d239950081b7c4cb8bc"
   },
   {
    "step": 4,
@@ -42,7 +42,7 @@
    "file": "page/04.json",
    "bytes": 9457,
    "edits": 3,
-   "sha256_after": "d595ce499b2117aa424628c949c8c3f665f98198ab6b9e7dcba4494eef9881f3"
+   "sha256_after": "923734356b984ff11b3e5baeefe87bcd1aa5f236b8cddbcc51d247702535c9ee"
   },
   {
    "step": 5,
@@ -53,7 +53,7 @@
    "file": "page/05.json",
    "bytes": 9465,
    "edits": 1,
-   "sha256_after": "1851711330a6a24bc73392b383934ebc9f186e3f6521be8ccbe1cf870a9b487a"
+   "sha256_after": "6bc4d8a58d7e6c7a87c2350df29a8cc10f6cbc1265c861df8bbff8590b0a7108"
   },
   {
    "step": 6,
@@ -64,7 +64,7 @@
    "file": "page/06.json",
    "bytes": 5511,
    "edits": 1,
-   "sha256_after": "1f5895e10bc4c4db8543037291104e4c1ab7cb7b4a98b100d19bcf2771ea08e9"
+   "sha256_after": "00d17ba23e3eb27a4b7f2bef4e3aaa28ed2601ba35e5a573132f2f4ee18978b1"
   },
   {
    "step": 7,
@@ -75,7 +75,7 @@
    "file": "page/07.json",
    "bytes": 558,
    "edits": 7,
-   "sha256_after": "99e17f53cc2171ea5275933fa253f4e07d8c4e589b2f2705832765c0a63d3633"
+   "sha256_after": "c039ea27f50b12b753262c16577e0f1df400a9d891dd88fcca93a200e6e485ad"
   },
   {
    "step": 8,
@@ -86,7 +86,7 @@
    "file": "page/08.json",
    "bytes": 9385,
    "edits": 21,
-   "sha256_after": "8813298be259335f119b43370d153eb154c93c24c0f0cfa82e68f3998a9602a1"
+   "sha256_after": "03f0522a5aad703a6fc2f7db59de36211812a6a42379ea2124a34f480f0e67e0"
   },
   {
    "step": 9,
@@ -95,9 +95,9 @@
    "phase": "B",
    "kind": "fill",
    "file": "page/09.json",
-   "bytes": 9377,
-   "edits": 23,
-   "sha256_after": "018aa36b21edd2b371eb81326050dea88c16ce3a8fac6bd5287efea62309f7a2"
+   "bytes": 9381,
+   "edits": 22,
+   "sha256_after": "0ac6cda209c073a9d3bb57ba914d45432ba7d3490a946e7139a6e9a315771569"
   },
   {
    "step": 10,
@@ -108,7 +108,7 @@
    "file": "page/10.json",
    "bytes": 9465,
    "edits": 1,
-   "sha256_after": "213af7b04fe0ff6d5f2685667943b473e0947ba740e110031b8d17ecaac22adb"
+   "sha256_after": "cf00775e4dea9bbfad23a6e165ef034bf57ea1ce1cf3c43e3ad53cf4028e7dc5"
   },
   {
    "step": 11,
@@ -117,9 +117,9 @@
    "phase": "B",
    "kind": "fill",
    "file": "page/11.json",
-   "bytes": 8998,
+   "bytes": 8942,
    "edits": 2,
-   "sha256_after": "1bf422028819c5dcce06d6ceb1f22fccde284c8372fc97da3f8f2b4d3bdbbd30"
+   "sha256_after": "401234220952a95761e5f9dc4a1c6ebf2ab449f05c6736b778826af7fb3986aa"
   },
   {
    "step": 12,
@@ -130,7 +130,7 @@
    "file": "page/12.json",
    "bytes": 718,
    "edits": 9,
-   "sha256_after": "a49a108e1b6068a69ee3f877c7850ba12c6750b6e810804ee17bb974a8e8dc23"
+   "sha256_after": "f056770f6b0f0142a481244bdbe06b5b4b80283c87d717c17aa27ada2b53c568"
   }
  ],
  "pick_ready_after": 7,

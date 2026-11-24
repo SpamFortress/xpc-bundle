@@ -389,22 +389,13 @@
    "why": "HighlightedText"
   },
   {
-   "start": 24732,
-   "end": 24822,
-   "kind": "stmt",
-   "phase": "B",
-   "stub": "",
-   "tail": "",
-   "why": "const _s0:CSSProperties={fontSize:13,fon"
-  },
-  {
-   "start": 24902,
+   "start": 24812,
    "end": 24980,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
    "tail": "",
-   "why": "const _s2:CSSProperties={fontSize:16,fon"
+   "why": "const _s1:CSSProperties={fontSize:13,fon,const _s2:CSSProperties={fontSize:16,fon"
   },
   {
    "start": 24980,
@@ -740,8 +731,8 @@
    "why": "step===\"review\""
   },
   {
-   "start": 66584,
-   "end": 85482,
+   "start": 66243,
+   "end": 85141,
    "kind": "jsx",
    "phase": "A",
    "stub": "{null",
@@ -749,8 +740,8 @@
    "why": "step===\"pick\""
   },
   {
-   "start": 85482,
-   "end": 98062,
+   "start": 85141,
+   "end": 97721,
    "kind": "jsx",
    "phase": "B",
    "stub": "{null",
@@ -758,8 +749,8 @@
    "why": "step===\"review\""
   },
   {
-   "start": 98062,
-   "end": 103948,
+   "start": 97721,
+   "end": 103607,
    "kind": "jsx",
    "phase": "B",
    "stub": "{null",
