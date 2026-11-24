@@ -1,6 +1,6 @@
 [
 {
-"old_string": "//~@@99@@",
-"new_string": "//~ange={(v:string)=>setOrder(v as Order)} options={[{value:\"oldest\",label:\"Oldest first\"},{value:\"newest\",label:\"Newest first\"},{value:\"low\",label:\"Fewest likes first\"},]}/></div><div className=\"xpc-list\" style={{border:`1px solid ${theme.border.default}`,background:theme.bg.elevated}}>{visiblePosts.map((p,i)=>renderRow(p,i))}{visiblePosts.length===0&&<div style={{padding:20,fontSize:14,color:theme.text.tertiary}}>Nothing here for this search or view.</div>}</div></div>)}</div>)}"
+"old_string": "//~@@100@@",
+"new_string": "//~ed value={listView} onChange={(v:ListView)=>setListView(v)} options={[{value:\"all\",label:\"All\",count:scanned},{value:\"delete\",label:\"Will delete\",count:matched},{value:\"keep\",label:\"Staying\",count:kept},]}/><Select label=\"Run order\" value={order as string} onChange={(v:string)=>setOrder(v as Order)} options={[{value:\"oldest\",label:\"Oldest first\"},{value:\"newest\",label:\"Newest first\"},{value:\"low\",label:\"Fewest likes first\"},]}/></div><div className=\"xpc-list\" style={{border:`1px solid ${theme.border.default}`,background:theme.bg.elevated}}>{visiblePosts.map((p,i)=>renderRow(p,i))}{visiblePosts.length===0&&<div style={{padding:20,fontSize:14,color:theme.text.tertiary}}>Nothing here for this search or view.</div>}</div></div>)}</div>)}"
 }
 ]

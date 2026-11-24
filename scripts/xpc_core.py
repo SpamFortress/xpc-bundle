@@ -34,7 +34,7 @@ CLI (all local, read-only on the archive):
 """
 from __future__ import annotations
 import csv, glob, hashlib, io, json, math, os, re, struct, unicodedata, zlib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 __version__ = "1.1.6"
@@ -252,7 +252,10 @@ def normalize_records(items, src, own_id, seen, report, today):
             if not ID_RE.match(tid):
                 report["skipped"].append({"where": f"{src} #{n}", "why": f"bad id {tid[:24]!r}"}); continue
             if tid in seen:
-                report["duplicates"] += 1; continue
+                report["duplicates"] += 1
+                if not str(src).startswith("community"):
+                    report["tweet_duplicates"] = report.get("tweet_duplicates", 0) + 1
+                continue
             dt = parse_date(t.get("created_at"))
             date_note = None
             if dt is None:
@@ -270,6 +273,7 @@ def normalize_records(items, src, own_id, seen, report, today):
                 "favorite_count": likes, "in_reply_to": str(t.get("in_reply_to_status_id_str") or t.get("in_reply_to_status_id") or "") or None,
                 "in_reply_to_screen_name": t.get("in_reply_to_screen_name"), "typed_mentions": typed_mentions(t),
                 "repost_of": (re.match(r"^RT @(\w{1,15}):", text_of(t)) or [None, None])[1] if typ == "repost" else None,
+                "quote_fields": typ == "quote",
                 "src": src,
             })
             if date_note:
@@ -285,7 +289,7 @@ def parse_archive(paths, own_id, today=None, manifest_count=None):
     or the parsed count doesn't match the manifest."""
     today = today or datetime.now(TZ)
     src = collect_sources(paths)
-    report = {"files": {}, "skipped": [], "duplicates": 0, "fixed_fields": [], "date_issues": [],
+    report = {"files": {}, "skipped": [], "duplicates": 0, "tweet_duplicates": 0, "fixed_fields": [], "date_issues": [],
               "partial": [], "manifest_count": manifest_count, "notes": {}}
     seen, posts = set(), []
     for name in tweet_files(src):
@@ -315,7 +319,7 @@ def parse_archive(paths, own_id, today=None, manifest_count=None):
     skipped_tweets = sum(1 for s in report["skipped"] if not str(s.get("where") or "").startswith("community"))
     report["skipped_counted"] = skipped_tweets
     report["unreadable"] = len(report["date_issues"]) + skipped_tweets
-    accounted = n_tweets + report["duplicates"] + skipped_tweets
+    accounted = n_tweets + report.get("tweet_duplicates", 0) + skipped_tweets
     report["accounted"] = accounted
     report["count_mismatch"] = manifest_count is not None and manifest_count != accounted
     report["ready_for_review"] = not report["partial"] and not report["count_mismatch"] and bool(tweet_files(src))
@@ -427,7 +431,7 @@ FIGHTY = list(_WL["fighty"])
 GIVEAWAY = list(_WL["giveaway"])
 SUFFIXES = list(_WL["suffixes"])
 LEET = {"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "!": "i", "|": "i"}
-TOKEN_RE = re.compile(r"#?[\w@$!|*']+", re.U)
+TOKEN_RE = re.compile(r"#?[\w@$!|*']+(?:-[\w@$!|*']+)*", re.U)
 
 
 def _collapse(s):
@@ -921,7 +925,7 @@ PAGE_DATA_CONSTS = (
     "POOL", "ARCHIVE_CAPS", "ARCHIVE_POST_COUNT", "PROFILE_POST_COUNT_LABEL",
     "LOADED_RULES", "LOADED_QA", "LOADED_KEPT", "LOADED_LANE", "LOADED_PACE",
     "LOADED_COOLING", "LOADED_FAILED", "LOADED_DELETED", "LOADED_VERIFIED",
-    "LOADED_LEFT", "LOADED_UNCHECKED", "LOADED_LIKES", "LOADED_TOTALS",
+    "LOADED_LEFT", "LOADED_UNCHECKED", "LOADED_LIKES", "LOADED_TOTALS", "LOADED_PROOF",
 )
 
 
@@ -1015,9 +1019,15 @@ def _const_edit(src, name, expr):
 
 def page_state_edits(start=None, handle=None, phase=None, run=None, rules=None, qa=None, kept=None,
                      lane=None, pace=None, cooling=None, failed=None, deleted=None, verified=None,
-                     left=None, unchecked=None, likes=None, totals=None, bundle_dir=BUNDLE_DIR):
-    """Exact one-line edits for boot lines and the loadable data constants."""
-    src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
+                     left=None, unchecked=None, likes=None, totals=None, proof=None, posts=None,
+                     today=None, src=None, bundle_dir=BUNDLE_DIR):
+    """Exact one-line edits for boot lines and the loadable data constants.
+    src is the current canvas (so a second edit matches the line the first edit wrote).
+    --qa also sets LOADED_RULES to that card."""
+    if src is None:
+        src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
+    if qa and rules is None:
+        rules = card_rules(qa, posts or [], today or datetime.now(TZ))
     edits = []
     if start:
         edits.append(_const_edit(src, "START_STEP", '"' + start + '"'))
@@ -1053,7 +1063,19 @@ def page_state_edits(start=None, handle=None, phase=None, run=None, rules=None, 
         edits.append(_const_edit(src, "LOADED_LIKES", str(int(likes))))
     if totals is not None:
         edits.append(_const_edit(src, "LOADED_TOTALS", _ts_value(totals)))
+    if proof is not None:
+        edits.append(_const_edit(src, "LOADED_PROOF", _ts_value(proof)))
     return edits
+
+
+def apply_const_edits(src, edits):
+    """Apply EditCanvas edits. Each old_string must match the current text once."""
+    for e in edits:
+        n = src.count(e["old_string"])
+        if n != 1:
+            raise ValueError(f"{e.get('name', 'edit')} matched {n} times")
+        src = src.replace(e["old_string"], e["new_string"], 1)
+    return src
 
 
 def apply_page_status(src, tone=None, lead="", text=""):
@@ -1120,7 +1142,7 @@ QUICK_IDS = ("everything", "oldest", "era", "replies", "reposts", "best")
 def base_rules():
     """The Page's BASE. Clear all rules returns here. Loaded rules are a separate constant."""
     return {
-        "timeMode": "none", "olderDays": 365, "olderDate": "", "yearFrom": 2023, "yearTo": 2026,
+        "timeMode": "none", "olderDays": 365, "olderDate": "", "yearFrom": 0, "yearTo": 0,
         "protectDays": 0, "protectDate": "", "posts": False, "replies": False, "selfReplies": False,
         "reposts": False, "quotes": False, "community": False, "mediaPhotos": False, "mediaVideos": False,
         "mediaGifs": False, "mediaText": False, "postsLikesMax": -1, "repliesLikesMax": -1, "repliesMax": -1,
@@ -1134,6 +1156,15 @@ def _handle(s):
     return re.sub(r"^@", "", (s or "").strip()).lower()
 
 
+def _utc_date(dt):
+    """Calendar date of the instant in UTC, so a +00:00 midnight stays that year in every zone."""
+    if not isinstance(dt, datetime):
+        return None
+    if dt.tzinfo is None:
+        return dt.date()
+    return dt.astimezone(timezone.utc).date()
+
+
 def _post_days(p, today):
     if p.get("daysAgo") is not None and p.get("daysAgo") != "":
         return int(p["daysAgo"])
@@ -1142,13 +1173,26 @@ def _post_days(p, today):
     dt = p.get("created_at_dt") or p.get("created_at")
     if isinstance(dt, str):
         dt = parse_date(dt)
-    if not isinstance(dt, datetime):
+    post_d = _utc_date(dt)
+    today_d = _utc_date(today) if isinstance(today, datetime) else today
+    if post_d is None or today_d is None:
         return -1
-    return (today.date() - dt.astimezone(TZ).date()).days
+    return (today_d - post_d).days
 
 
 def _year_of(days, today):
-    return (today.date() - timedelta(days=max(0, int(days)))).year
+    today_d = _utc_date(today) if isinstance(today, datetime) else today
+    return (today_d - timedelta(days=max(0, int(days)))).year
+
+
+def _post_date(p):
+    if p.get("date_note"):
+        return ""
+    dt = p.get("created_at_dt") or p.get("created_at")
+    if isinstance(dt, str):
+        dt = parse_date(dt)
+    d = _utc_date(dt)
+    return d.isoformat() if d else ""
 
 
 def normalize_post(p, today):
@@ -1162,6 +1206,7 @@ def normalize_post(p, today):
     return {
         "id": str(p.get("id") or ""),
         "daysAgo": _post_days(p, today),
+        "date": _post_date(p),
         "type": typ,
         "likes": int(p.get("likes") if p.get("likes") is not None else (p.get("favorite_count") or 0)),
         "replies": int(p.get("replies") or p.get("reply_count") or 0),
@@ -1192,8 +1237,8 @@ def card_rules(qa, posts, today):
     elif qa == "era":
         dated = [normalize_post(p, today)["daysAgo"] for p in posts]
         dated = [d for d in dated if d >= 0]
-        oldest = _year_of(max(dated), today) if dated else today.year
-        r.update(timeMode="years", yearFrom=oldest, yearTo=oldest + 1, posts=True, replies=True, selfReplies=True, reposts=True, quotes=True, community=True, protectDays=0, protectDate="")
+        oldest = _year_of(max(dated), today) if dated else 0
+        r.update(timeMode="years", yearFrom=oldest, yearTo=(oldest + 1 if dated else 0), posts=True, replies=True, selfReplies=True, reposts=True, quotes=True, community=True, protectDays=0, protectDate="")
     elif qa == "replies":
         r.update(timeMode="all", posts=False, replies=True, selfReplies=False, reposts=False, quotes=False, community=False, protectDays=0, protectDate="")
     elif qa == "reposts":
@@ -1285,12 +1330,69 @@ def _scope_parts(p, r, handle, today):
     return parts or ["match"]
 
 
+def _thread_key(p, by_id):
+    """Same walk as the Page's threadGroupKey: follow parents that are in the pool, then stop."""
+    cur = p
+    seen = set()
+    while cur.get("inReplyToId") and cur["inReplyToId"] in by_id and cur["id"] not in seen:
+        seen.add(cur["id"])
+        cur = by_id[cur["inReplyToId"]]
+    if cur.get("thread"):
+        return "thread:" + str(cur["thread"])
+    if cur.get("inReplyToId"):
+        return "parent:" + str(cur["inReplyToId"])
+    return "id:" + str(cur["id"])
+
+
+def _keep_word(p, r):
+    for w in r.get("keepWords") or []:
+        if find_words(p["text"], [w]):
+            return w
+    return ""
+
+
+def _strong_keep(p, r, pins):
+    if p["id"] in pins:
+        return True
+    if _keep_word(p, r):
+        return True
+    if r.get("keepMedia") and p.get("media"):
+        return True
+    return False
+
+
 def _keep_reason(p, r, pins):
     if p["id"] in pins:
         return "Kept by you"
-    if (r.get("keepWords") or []) and any(find_words(p["text"], [w]) for w in r["keepWords"]):
-        return "keep word"
+    word = _keep_word(p, r)
+    if word:
+        return f'Keep rule: keep word "{word}"'
+    if r.get("keepMedia") and p.get("media"):
+        return "Keep rule: your photos/art"
     return ""
+
+
+def _delete_reason(p, r, qa):
+    words = list(r.get("deleteWords") or [])
+    hit = next((w for w in words if find_words(p["text"], [w])), "")
+    if hit:
+        return f"Word: {hit}"
+    if r.get("deleteSlurs") and find_words(p["text"], SLURS):
+        return "Word: slur"
+    replies_only = r.get("replies") and not r.get("posts") and not r.get("reposts") and not r.get("quotes") and not r.get("selfReplies")
+    if qa == "replies" or replies_only:
+        return "Reply to others"
+    if qa == "reposts" or (r.get("reposts") and not r.get("posts") and not r.get("replies") and not r.get("quotes")):
+        return "Reposts"
+    if r.get("timeMode") == "older":
+        days = int(r.get("olderDays") or 0)
+        return "Older than 2 years" if days == 730 else f"Older than {days} days"
+    if r.get("timeMode") == "years":
+        a, b = int(r.get("yearFrom") or 0), int(r.get("yearTo") or 0)
+        return f"{a}-{b}" if a != b else f"From {a}"
+    if qa == "everything" or r.get("timeMode") == "all":
+        return "Delete everything"
+    return "Matches"
 
 
 def compute_verdicts(posts, rules=None, pins=None, qa="", today=None, handle=""):
@@ -1309,9 +1411,8 @@ def compute_verdicts(posts, rules=None, pins=None, qa="", today=None, handle="")
     kept_threads = set()
     if rules.get("keepThreads"):
         for p in norm:
-            if p["id"] in pins or _keep_reason(p, rules, pins):
-                key = p.get("thread") or p.get("inReplyToId") or p["id"]
-                kept_threads.add(key)
+            if _strong_keep(p, rules, pins):
+                kept_threads.add(_thread_key(p, by_id))
     out = {}
     for p in norm:
         if p["daysAgo"] < 0:
@@ -1328,11 +1429,10 @@ def compute_verdicts(posts, rules=None, pins=None, qa="", today=None, handle="")
         if why:
             out[p["id"]] = {"kind": "keep", "reason": why}
             continue
-        key = p.get("thread") or p.get("inReplyToId") or p["id"]
-        if rules.get("keepThreads") and key in kept_threads and p["id"] not in pins:
-            out[p["id"]] = {"kind": "keep", "reason": "part of a kept thread"}
+        if rules.get("keepThreads") and _thread_key(p, by_id) in kept_threads:
+            out[p["id"]] = {"kind": "keep", "reason": "Keep rule: part of a kept thread"}
             continue
-        out[p["id"]] = {"kind": "delete", "reason": "Matches"}
+        out[p["id"]] = {"kind": "delete", "reason": _delete_reason(p, rules, qa)}
     no_date = sum(1 for p in norm if p["daysAgo"] < 0)
     matched = [p for p in norm if out[p["id"]]["kind"] == "delete"]
     kept = len(norm) - len(matched)
@@ -1350,12 +1450,19 @@ def compute_verdicts(posts, rules=None, pins=None, qa="", today=None, handle="")
     }
 
 
+def _shown_type(p, caps):
+    """Quotes fold into posts when the archive has no quote fields, matching the Page."""
+    if p["type"] == "quote" and not caps.get("hasQuoteFields"):
+        return "post"
+    return p["type"]
+
+
 def verdict_totals(result, caps):
     groups = [
-        ("Posts", lambda p: not p["community"] and p["type"] == "post"),
-        ("Replies", lambda p: not p["community"] and p["type"] == "reply"),
-        ("Reposts", lambda p: p["type"] == "repost"),
-        ("Quotes", lambda p: not p["community"] and p["type"] == "quote"),
+        ("Posts", lambda p: not p["community"] and _shown_type(p, caps) == "post"),
+        ("Replies", lambda p: not p["community"] and _shown_type(p, caps) == "reply"),
+        ("Reposts", lambda p: _shown_type(p, caps) == "repost"),
+        ("Quotes", lambda p: not p["community"] and _shown_type(p, caps) == "quote"),
         ("Community", lambda p: p["community"]),
     ]
     rows = []
@@ -1383,18 +1490,24 @@ def _worst_key(p):
 
 
 def _compact_post(p, text_cap):
+    """Every field the Page's Post type requires. Optional fields stay off unless set."""
     text = mask_ssn(p.get("text") or "")
     if len(text) > text_cap:
         text = text[:text_cap].rstrip() + "…"
-    row = {"id": p["id"], "daysAgo": p["daysAgo"], "type": p["type"], "likes": p["likes"], "text": text, "summary": mask_ssn((p.get("summary") or text)[:60])}
+    summary = mask_ssn((p.get("summary") or text)[:60])
+    typ = p["type"] if p.get("type") in ("post", "reply", "repost", "quote") else "post"
+    row = {
+        "id": p["id"], "daysAgo": int(p["daysAgo"]), "type": typ, "likes": int(p.get("likes") or 0),
+        "replies": int(p.get("replies") or 0), "text": text, "summary": summary, "media": bool(p.get("media")),
+    }
     if p.get("selfReply"):
         row["selfReply"] = True
     if p.get("replyTo"):
         row["replyTo"] = p["replyTo"]
+    if p.get("inReplyToId"):
+        row["inReplyToId"] = p["inReplyToId"]
     if p.get("community"):
         row["community"] = True
-    if p.get("media"):
-        row["media"] = True
     if p.get("repostOf"):
         row["repostOf"] = p["repostOf"]
     return row
@@ -1422,19 +1535,21 @@ def load_rules_file(path, qa, posts, today):
     return {**base_rules(), **raw.get("rules", raw)}, ""
 
 
-def page_pool_payloads(posts, rules, qa="", handle="", today=None, bundle_dir=BUNDLE_DIR):
-    """Edits that load a capped sample plus full-archive totals. Each edit is <= PAGE_POOL_MAX bytes."""
+def page_pool_payloads(posts, rules, qa="", handle="", pins=None, today=None, src=None, bundle_dir=BUNDLE_DIR):
+    """Edits that load a capped sample plus full-archive totals. Each edit is <= PAGE_POOL_MAX bytes.
+    Kept ids are excluded from the sample and from the delete totals. src is the current canvas."""
     today = today or datetime.now(TZ)
-    result = compute_verdicts(posts, rules if not qa else None, qa=qa, today=today, handle=handle)
+    result = compute_verdicts(posts, rules if not qa else None, pins=pins, qa=qa, today=today, handle=handle)
     caps = {
         "hasPinFlag": any(p.get("profilePin") for p in result["posts"]),
         "hasReplyCount": any(p.get("replies") for p in result["posts"]),
-        "hasQuoteFields": any(p["type"] == "quote" for p in result["posts"]),
+        "hasQuoteFields": any(p.get("quote_fields") or p.get("quoteOf") for p in posts),
     }
     totals = verdict_totals(result, caps)
     doomed = [p for p in result["posts"] if result["verdicts"][p["id"]]["kind"] == "delete"]
     doomed.sort(key=_worst_key)
-    src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
+    if src is None:
+        src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
     count = sum(1 for p in result["posts"] if not p["community"])
     sample_n, text_cap = PAGE_SAMPLE_CAP, 80
     edits = []
@@ -1458,9 +1573,13 @@ def page_pool_payloads(posts, rules, qa="", handle="", today=None, bundle_dir=BU
             "needs_typed_confirm": result["needs_typed_confirm"], "confirm_phrase": result["confirm_phrase"]}
 
 
-def doomed_rows(posts, rules, qa="", handle="", today=None):
+EXPORT_FIELDS = ["id", "status_url", "date", "type", "community", "likes", "text", "matched_rule"]
+
+
+def doomed_rows(posts, rules, qa="", handle="", pins=None, today=None):
+    """Kept posts are not exported. Same verdict path as page-pool and verdict."""
     today = today or datetime.now(TZ)
-    result = compute_verdicts(posts, None if qa else rules, qa=qa, today=today, handle=handle)
+    result = compute_verdicts(posts, None if qa else rules, pins=pins, qa=qa, today=today, handle=handle)
     h = _handle(handle)
     rows = []
     for p in result["posts"]:
@@ -1468,9 +1587,9 @@ def doomed_rows(posts, rules, qa="", handle="", today=None):
             continue
         url = f"https://x.com/{h}/status/{p['id']}" if h else f"https://x.com/i/web/status/{p['id']}"
         rows.append({
-            "id": p["id"], "status_url": url, "type": p["type"], "likes": p["likes"],
-            "about": p.get("summary") or "", "text": p.get("text") or "",
-            "matched_rule": result["verdicts"][p["id"]]["reason"],
+            "id": p["id"], "status_url": url, "date": p.get("date") or "", "type": p["type"],
+            "community": "true" if p.get("community") else "false", "likes": p["likes"],
+            "text": p.get("text") or "", "matched_rule": result["verdicts"][p["id"]]["reason"],
         })
     return rows, result
 
@@ -1487,8 +1606,8 @@ def unwrap_export_id(cell):
     return s
 
 
-def export_check(path):
-    """Doomed export: row count, ids exact, ids unwrapped from =\"...\"."""
+def export_check(path, include_ids=False):
+    """Row count and sha256 of the sorted unwrapped ids. --ids adds the full list."""
     with open(path, newline="", encoding="utf-8") as f:
         rows = list(csv.DictReader(f))
     ids = []
@@ -1496,14 +1615,80 @@ def export_check(path):
         raw = row.get("id") or ""
         uid = unwrap_export_id(raw)
         if not re.fullmatch(r"\d{1,20}", uid):
-            return {"ok": False, "rows": len(rows), "ids": ids, "error": f"bad id {raw!r}"}
+            out = {"ok": False, "rows": len(rows), "error": f"bad id {raw!r}"}
+            if include_ids:
+                out["ids"] = ids
+            return out
         ids.append(uid)
         for key, val in row.items():
             if key == "id" or not val:
                 continue
             if SSN_RE.search(val):
-                return {"ok": False, "rows": len(rows), "ids": ids, "error": f"unmasked number in {key}"}
-    return {"ok": True, "rows": len(rows), "ids": ids}
+                out = {"ok": False, "rows": len(rows), "error": f"unmasked number in {key}"}
+                if include_ids:
+                    out["ids"] = ids
+                return out
+    digest = hashlib.sha256("\n".join(sorted(ids)).encode()).hexdigest()
+    out = {"ok": True, "rows": len(rows), "ids_sha256": digest}
+    if include_ids:
+        out["ids"] = ids
+    return out
+
+
+SELFTEST_ZONES = ("America/Los_Angeles", "America/New_York", "UTC", "Asia/Tokyo")
+
+
+def _run_tz_selftests():
+    """Re-run the fast selftest in each zone. The date math must not depend on the process TZ."""
+    if os.environ.get("XPC_SELFTEST_TZ_CHILD"):
+        return
+    import subprocess, sys
+    for zone in SELFTEST_ZONES:
+        env = os.environ.copy()
+        env["TZ"] = zone
+        env["XPC_TZ"] = zone
+        env["XPC_SELFTEST_TZ_CHILD"] = "1"
+        env["PYTHONDONTWRITEBYTECODE"] = "1"
+        proc = subprocess.run([sys.executable, os.path.abspath(__file__), "selftest", "--no-typecheck"], env=env, capture_output=True, text=True)
+        assert proc.returncode == 0, (zone, proc.stdout, proc.stderr)
+
+
+def _page_fixture_verdicts(posts, rules, pins, qa_title=""):
+    """Run the Page's computeVerdicts on one fixture. Returns {id: {kind, reason}} or None if Node is missing."""
+    import subprocess, sys, tempfile
+    tools = os.environ.get("XPC_NODE_TOOLS") or NODE_TOOLS_DEFAULT
+    esbuild = os.path.join(tools, "node_modules", "esbuild")
+    if not os.path.isdir(esbuild):
+        return None
+    page = open(os.path.join(BUNDLE_DIR, "page.canvas.tsx"), encoding="utf-8").read()
+    src = page + "\nglobalThis.__xpc={computeVerdicts,threadGroupKey};\n"
+    fixture = json.dumps({"posts": posts, "rules": rules, "pins": pins, "qaTitle": qa_title})
+    script = r"""
+const esbuild = require(process.env.XPC_NODE_TOOLS + "/node_modules/esbuild");
+const fs = require("fs");
+const fixture = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
+let src = fs.readFileSync(process.argv[2], "utf8");
+src = src.replace(/import\s*\{[\s\S]*?\}\s*from\s*"grok\/canvas";/, "");
+src = src.replace(/import type \{ CSSProperties \} from "grok\/canvas";/, "type CSSProperties = any;");
+src = "const useState=()=>[null,()=>{}];const useMemo=(f)=>f();const useEffect=()=>{};const useGrokTheme=()=>new Proxy({},{get:()=>new Proxy({},{get:()=>''})});const C=()=>null;const Page=C,Section=C,Text=C,Callout=C,Select=C,Input=C,Button=C,Toggle=C,Table=C,Rows=C,Properties=C,BulletList=C,Status=C,Segmented=C,Floating=C,BackToTop=C,TextLink=C;\n" + src;
+const out = esbuild.transformSync(src, { loader: "tsx", format: "cjs" });
+const sandbox = { exports: {} };
+new Function("exports", "require", "module", out.code)(sandbox.exports, require, sandbox);
+const v = global.__xpc.computeVerdicts(fixture.posts, fixture.rules, fixture.pins, fixture.qaTitle || "");
+const got = {};
+v.forEach((val, id) => { got[id] = val; });
+process.stdout.write(JSON.stringify(got));
+"""
+    tmp = tempfile.mkdtemp(prefix="xpc-fix-")
+    open(os.path.join(tmp, "run.cjs"), "w", encoding="utf-8").write(script)
+    open(os.path.join(tmp, "page.tsx"), "w", encoding="utf-8").write(src)
+    open(os.path.join(tmp, "fix.json"), "w", encoding="utf-8").write(fixture)
+    env = os.environ.copy()
+    env["XPC_NODE_TOOLS"] = tools
+    proc = subprocess.run(["node", os.path.join(tmp, "run.cjs"), os.path.join(tmp, "page.tsx"), os.path.join(tmp, "fix.json")], capture_output=True, text=True, env=env)
+    if proc.returncode != 0:
+        raise AssertionError(proc.stderr or proc.stdout)
+    return json.loads(proc.stdout)
 
 
 # ---------------------------------------------------------------- CLI
@@ -1549,6 +1734,10 @@ def _cli(argv=None):
     pstate.add_argument("--unchecked", type=int)
     pstate.add_argument("--likes", type=int)
     pstate.add_argument("--totals", help="JSON LoadedTotals object")
+    pstate.add_argument("--proof", help='JSON {"recheck","final"} proof-pass dates')
+    pstate.add_argument("--posts", help="posts.jsonl, so --qa era uses the archive years")
+    pstate.add_argument("--canvas", help="read old_string from this canvas instead of the shipped page")
+    pstate.add_argument("--apply", action="store_true", help="write the edits into --canvas")
     for name, help_ in (
         ("verdict", "full-archive counts using the Page's rules"),
         ("page-pool", "compact Page edits, each payload <= 20000 bytes"),
@@ -1560,10 +1749,17 @@ def _cli(argv=None):
         sp.add_argument("--qa", choices=list(QUICK_IDS))
         sp.add_argument("--handle", default="")
         sp.add_argument("--pins", default="")
+        sp.add_argument("--canvas", help="read old_string from this canvas instead of the shipped page")
+        if name == "page-pool":
+            sp.add_argument("--apply", action="store_true", help="write the edits into --canvas")
         if name == "export":
             sp.add_argument("--out", required=True)
-    chk = sub.add_parser("export-check", help="count doomed-export rows and unwrap ids")
+    chk = sub.add_parser("export-check", help="row count and sha256 of sorted ids")
     chk.add_argument("file")
+    chk.add_argument("--ids", action="store_true", help="also print every unwrapped id")
+    rr = sub.add_parser("rules", help="print one quick card's rules JSON")
+    rr.add_argument("--qa", required=True, choices=list(QUICK_IDS))
+    rr.add_argument("--posts", help="posts.jsonl, used for the past-era years")
     pv = sub.add_parser("page-verify", help="check a ReadCanvas result")
     pv.add_argument("file")
     pv.add_argument("--after", type=int, help="check the state after this build step instead of the finished page")
@@ -1593,19 +1789,31 @@ def _cli(argv=None):
         if a.show < 1 or a.show > nsteps:
             print(f"the plan has {nsteps} steps"); return 1
         sys.stdout.write(page_show(a.show, a.part, start=a.start, handle=a.handle or None, phase=a.phase)); return 0
+    if a.cmd == "rules":
+        posts = _read_posts(a.posts) if a.posts else []
+        print(json.dumps(card_rules(a.qa, posts, datetime.now(TZ)), ensure_ascii=False))
+        return 0
     if a.cmd == "page-state":
         rules = json.loads(a.rules) if a.rules else None
         failed = json.loads(a.failed) if a.failed else None
         totals = json.loads(a.totals) if a.totals else None
+        proof = json.loads(a.proof) if a.proof else None
         kept = [x for x in a.kept.split(",") if x] if a.kept else None
-        if not any([a.start, a.handle, a.phase, a.run, rules, a.qa is not None, kept, a.lane, a.pace, a.cooling, failed, a.deleted is not None, a.verified is not None, a.left is not None, a.unchecked is not None, a.likes is not None, totals]):
+        posts = _read_posts(a.posts) if a.posts else None
+        if a.apply and not a.canvas:
+            print("page-state --apply needs --canvas"); return 1
+        if not any([a.start, a.handle, a.phase, a.run, rules, a.qa is not None, kept, a.lane, a.pace, a.cooling, failed, a.deleted is not None, a.verified is not None, a.left is not None, a.unchecked is not None, a.likes is not None, totals, proof]):
             print("page-state needs a flag"); return 1
+        canvas_src = open(a.canvas, encoding="utf-8").read() if a.canvas else None
         edits = page_state_edits(
             a.start, a.handle or None, a.phase, run=a.run, rules=rules, qa=a.qa, kept=kept,
             lane=a.lane, pace=a.pace, cooling=(a.cooling == "on") if a.cooling else None,
             failed=failed, deleted=a.deleted, verified=a.verified, left=a.left,
-            unchecked=a.unchecked, likes=a.likes, totals=totals,
+            unchecked=a.unchecked, likes=a.likes, totals=totals, proof=proof, posts=posts,
+            src=canvas_src,
         )
+        if a.apply:
+            open(a.canvas, "w", encoding="utf-8", newline="").write(apply_const_edits(canvas_src, edits))
         print(json.dumps(edits, ensure_ascii=False)); return 0
     if a.cmd in ("verdict", "page-pool", "export"):
         posts = _read_posts(a.posts)
@@ -1614,23 +1822,27 @@ def _cli(argv=None):
         pins = [x for x in (a.pins or "").split(",") if x]
         if a.cmd == "verdict":
             result = compute_verdicts(posts, rules, pins=pins, qa=qa, today=today, handle=a.handle)
-            caps = {"hasQuoteFields": any(p["type"] == "quote" for p in result["posts"]), "hasPinFlag": False, "hasReplyCount": False}
+            caps = {"hasQuoteFields": any(p.get("quote_fields") or p.get("quoteOf") for p in posts), "hasPinFlag": False, "hasReplyCount": False}
             print(json.dumps({**verdict_totals(result, caps), "needs_typed_confirm": result["needs_typed_confirm"], "confirm_phrase": result["confirm_phrase"]}, ensure_ascii=False))
             return 0
         if a.cmd == "page-pool":
-            payload = page_pool_payloads(posts, rules, qa=qa, handle=a.handle, today=today)
+            canvas_src = open(a.canvas, encoding="utf-8").read() if a.canvas else None
+            if a.apply and not a.canvas:
+                print("page-pool --apply needs --canvas"); return 1
+            payload = page_pool_payloads(posts, rules, qa=qa, handle=a.handle, pins=pins, today=today, src=canvas_src)
             if any(n > PAGE_POOL_MAX for n in payload["bytes"]):
                 print(json.dumps({"ok": False, "error": "payload over 20000 bytes", "bytes": payload["bytes"]}))
                 return 1
+            if a.apply:
+                open(a.canvas, "w", encoding="utf-8", newline="").write(apply_const_edits(canvas_src, payload["edits"]))
             print(json.dumps(payload, ensure_ascii=False))
             return 0
-        rows, result = doomed_rows(posts, rules, qa=qa, handle=a.handle, today=today)
-        fields = ["id", "status_url", "type", "likes", "about", "text", "matched_rule"]
-        write_export_csv(a.out, rows, fields)
+        rows, result = doomed_rows(posts, rules, qa=qa, handle=a.handle, pins=pins, today=today)
+        write_export_csv(a.out, rows, EXPORT_FIELDS)
         print(json.dumps({"rows": len(rows), "out": a.out, "needs_typed_confirm": result["needs_typed_confirm"]}))
         return 0
     if a.cmd == "export-check":
-        report = export_check(a.file)
+        report = export_check(a.file, include_ids=a.ids)
         print(json.dumps(report, ensure_ascii=False))
         return 0 if report["ok"] else 1
     if a.cmd == "page-verify":
@@ -1654,8 +1866,12 @@ def _cli(argv=None):
     if a.cmd == "mask":
         sys.stdout.write(mask_ssn(sys.stdin.read())); return 0
     if a.cmd == "selftest":
+        if not os.environ.get("XPC_SELFTEST_TZ_CHILD"):
+            _run_tz_selftests()
         assert mask_ssn("id 123-45-6789 / 123 45 6789 / 123456789") == "id ***-**-6789 / ***-**-6789 / ***-**-6789"
         assert find_words("sh1t happens", STRONG) and not find_words("classic assassin cocktail", STRONG)
+        assert find_words("a well-known spot", ["well-known"]) == ["well-known"]
+        assert find_words("well known spot", ["well-known"]) == []
         assert typed_ok("delete 1,234 posts", 1234) and not typed_ok("yes", 1234)
         shipped = page_status_edit(None)["old_string"]
         assert shipped.startswith("const PAGE_STATUS:") and shipped.endswith("=null;")
@@ -1728,14 +1944,50 @@ def _cli(argv=None):
         assert wiped["verdicts"]["13"]["kind"] == "none" and wiped["no_date"] == 1 and wiped["needs_typed_confirm"] is True
         assert wiped["verdicts"]["10"]["kind"] == "delete" and wiped["verdicts"]["12"]["kind"] == "delete"
         era_v = compute_verdicts(sample, qa="era", today=fixed)
-        assert era_v["rules"]["yearFrom"] == 2020 and era_v["rules"]["yearTo"] == 2021
+        assert era_v["rules"]["yearFrom"] == 2020 and era_v["rules"]["yearTo"] == 2021, (str(TZ), era_v["rules"])
         assert era_v["verdicts"]["13"]["kind"] == "none"
+        assert era_v["verdicts"]["10"]["reason"] == "2020-2021"
+        oldest = compute_verdicts(sample, qa="oldest", today=fixed)
+        assert oldest["verdicts"]["10"]["reason"] == "Older than 2 years"
+        assert replied["verdicts"]["11"]["reason"] == "Reply to others"
+        wordy = compute_verdicts([{"id": "40", "type": "post", "text": "a well-known spot", "daysAgo": 10}], rules={**base_rules(), "timeMode": "all", "posts": True, "deleteWords": ["well-known"]}, today=fixed)
+        assert wordy["verdicts"]["40"]["reason"] == "Word: well-known"
         assert needs_typed_confirm(3, 100, True) and not needs_typed_confirm(3, 100, False)
+        pinned = compute_verdicts(sample, qa="everything", pins=["10"], today=fixed)
+        assert pinned["verdicts"]["10"]["kind"] == "keep" and pinned["verdicts"]["10"]["reason"] == "Kept by you"
+        chain = [
+            {"id": "1", "type": "post", "text": "root", "daysAgo": 100, "inReplyToId": ""},
+            {"id": "2", "type": "reply", "text": "mid", "daysAgo": 90, "inReplyToId": "1"},
+            {"id": "3", "type": "reply", "text": "deep", "daysAgo": 80, "inReplyToId": "2"},
+        ]
+        chain_rules = {**base_rules(), "timeMode": "all", "posts": True, "replies": True, "selfReplies": True, "reposts": True, "quotes": True, "community": True, "keepThreads": True}
+        chain_v = compute_verdicts(chain, rules=chain_rules, pins=["1"], today=fixed)
+        assert chain_v["verdicts"]["1"]["reason"] == "Kept by you"
+        assert chain_v["verdicts"]["2"]["reason"] == "Keep rule: part of a kept thread"
+        assert chain_v["verdicts"]["3"]["reason"] == "Keep rule: part of a kept thread"
+        page_chain = _page_fixture_verdicts(
+            [{"id": "1", "daysAgo": 100, "type": "post", "likes": 0, "replies": 0, "text": "root", "summary": "", "media": False},
+             {"id": "2", "daysAgo": 90, "type": "reply", "likes": 0, "replies": 0, "text": "mid", "summary": "", "media": False, "inReplyToId": "1"},
+             {"id": "3", "daysAgo": 80, "type": "reply", "likes": 0, "replies": 0, "text": "deep", "summary": "", "media": False, "inReplyToId": "2"}],
+            chain_rules, ["1"], "")
+        if page_chain is not None:
+            assert page_chain["1"]["reason"] == chain_v["verdicts"]["1"]["reason"]
+            assert page_chain["2"]["reason"] == chain_v["verdicts"]["2"]["reason"]
+            assert page_chain["3"]["reason"] == chain_v["verdicts"]["3"]["reason"]
+        rows, _ = doomed_rows(sample, None, qa="everything", pins=["10"], today=fixed)
+        assert all(r["id"] != "10" for r in rows) and any(r["id"] == "11" for r in rows)
+        assert set(rows[0]) == set(EXPORT_FIELDS) and "about" not in rows[0]
         loaded = _set_const_initializer(base, "LOADED_DELETED", "4")
-        loaded = _set_const_initializer(loaded, "POOL", "[{id:\"1\",daysAgo:-1,type:\"post\",likes:0,replies:0,text:\"x\",summary:\"x\"}]")
+        loaded = _set_const_initializer(loaded, "POOL", "[{id:\"1\",daysAgo:-1,type:\"post\",likes:0,replies:0,text:\"x\",summary:\"x\",media:false}]")
         assert normalize_page_boot(loaded) == base
         run_edit = page_state_edits(run="running")
         assert run_edit[0]["name"] == "START_RUN" and run_edit[0]["new_string"].endswith('"running";')
+        stepped = apply_const_edits(base, run_edit)
+        again = page_state_edits(run="done", src=stepped)
+        assert again[0]["old_string"].endswith('"running";') and again[0]["new_string"].endswith('"done";')
+        qa_edits = page_state_edits(qa="replies")
+        assert any(e["name"] == "LOADED_RULES" and "replies:true" in e["new_string"].replace(" ", "") and "selfReplies:false" in e["new_string"].replace(" ", "") for e in qa_edits)
+        assert card_rules("replies", [], fixed)["selfReplies"] is False
         import tempfile
         tmp = tempfile.mkdtemp()
         open(os.path.join(tmp, "tweets.js"), "w", encoding="utf-8").write(
@@ -1748,14 +2000,28 @@ def _cli(argv=None):
         assert rep["count_mismatch"] is False and rep["skipped_counted"] == 1 and rep["ready_for_review"] is True
         _posts, rep = parse_archive([tmp], "1", today=fixed, manifest_count=3)
         assert rep["count_mismatch"] is True and rep["ready_for_review"] is False
+        open(os.path.join(tmp, "community-tweet.js"), "w", encoding="utf-8").write(
+            'window.YTD.community_tweet.part0 = [{"tweet":{"id_str":"200","created_at":"Wed Jan 01 00:00:00 +0000 2020","full_text":"group","favorite_count":0}}]'
+        )
+        both, both_rep = parse_archive([tmp], "1", today=fixed, manifest_count=2)
+        assert both_rep["count_mismatch"] is False and both_rep["parsed_tweets"] == 1 and len(both) == 2
         csv_path = os.path.join(tmp, "doomed.csv")
-        write_export_csv(csv_path, [{"id": "1234567890123456789", "status_url": "https://x.com/i/web/status/1234567890123456789", "type": "post", "likes": 0, "about": "ssn 123-45-6789", "text": "fine", "matched_rule": "Matches"}], ["id", "status_url", "type", "likes", "about", "text", "matched_rule"])
+        write_export_csv(csv_path, [{"id": "1234567890123456789", "status_url": "https://x.com/i/web/status/1234567890123456789", "date": "2020-01-01", "type": "post", "community": "false", "likes": 0, "text": "ssn 123-45-6789", "matched_rule": "Delete everything"}], EXPORT_FIELDS)
         checked = export_check(csv_path)
-        assert checked["ok"] and checked["rows"] == 1 and checked["ids"] == ["1234567890123456789"]
+        assert checked["ok"] and checked["rows"] == 1 and "ids" not in checked
+        assert export_check(csv_path, include_ids=True)["ids"] == ["1234567890123456789"]
+        assert checked["ids_sha256"] == hashlib.sha256(b"1234567890123456789").hexdigest()
         raw_csv = open(csv_path, encoding="utf-8").read()
         assert "123-45-6789" not in raw_csv and "***-**-6789" in raw_csv
-        pool = page_pool_payloads(sample, None, qa="everything", today=fixed)
+        pool = page_pool_payloads(sample, None, qa="everything", pins=["10"], today=fixed)
         assert pool["bytes"] and max(pool["bytes"]) <= PAGE_POOL_MAX and pool["totals"]["noDate"] == 1
+        pool_text = pool["edits"][-1]["new_string"]
+        assert "replies:" in pool_text and "media:" in pool_text and '"10"' not in pool_text
+        quote_posts = [{"id": "q1", "type": "quote", "text": "q", "daysAgo": 5}, {"id": "p1", "type": "post", "text": "p", "daysAgo": 5}]
+        qres = compute_verdicts(quote_posts, rules={**base_rules(), "timeMode": "all", "posts": True, "quotes": True, "replies": True, "selfReplies": True, "reposts": True, "community": True}, today=fixed)
+        qrows = verdict_totals(qres, {"hasQuoteFields": False})
+        assert qrows["byType"][0][0] == "Posts" and qrows["byType"][0][1] == "2"
+        assert qrows["byType"][3] == ["Quotes", "n/a", "not available from this archive"]
         if not a.no_typecheck:
             tcode, tout = page_typecheck()
             assert tcode == 0, tout
@@ -1765,6 +2031,16 @@ def _cli(argv=None):
             final = page_steps()["full_page_after"]
             for label in ("ok step-01.tsx", "ok step-07.tsx", f"ok step-{final:02d}.tsx", "ok step-01-archive.tsx", "ok step-01-ready.tsx"):
                 assert label in tout, tout
+            import subprocess
+            applied = apply_const_edits(base, pool["edits"])
+            pool_path = os.path.join(tmp, "pool-page.tsx")
+            open(pool_path, "w", encoding="utf-8", newline="").write(applied)
+            script = os.path.join(BUNDLE_DIR, "tools", "typecheck_page.js")
+            env = os.environ.copy()
+            env["XPC_NODE_TOOLS"] = os.environ.get("XPC_NODE_TOOLS") or NODE_TOOLS_DEFAULT
+            proc = subprocess.run(["node", script, pool_path], capture_output=True, text=True, env=env)
+            assert proc.returncode == 0, proc.stdout + proc.stderr
+            assert "ok " in proc.stdout, proc.stdout
         print(f"xpc_core {__version__} selftest ok · tz={TZ} · wordlists={WORDLIST_SOURCE}"); return 0
     os.makedirs(a.out, exist_ok=True)
     posts, report = parse_archive(a.paths, a.own_id)

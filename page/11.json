@@ -40,71 +40,75 @@
 "new_string": "//^const LOADED_DELETED=0;const LOADED_VERIFIED=0;const LOADED_LEFT=0;const LOADED_UNCHECKED=0;const LOADED_LIKES=0;"
 },
 {
-"old_string": "//^@@47@@",
+"old_string": "//^@@44@@",
+"new_string": "//^const LOADED_PROOF:{recheck:string;final:string}|null=null;"
+},
+{
+"old_string": "//^@@48@@",
 "new_string": "//^function statusUrl(id:string):string{const h=handleOf(SIGNED_IN_HANDLE);return h?`https://x.com/${h}/status/${id}`:`https://x.com/i/web/status/${id}`;}"
 },
 {
-"old_string": "//^@@57@@",
+"old_string": "//^@@58@@",
 "new_string": "//^const _s3:CSSProperties={fontSize:13,color:theme.text.secondary,lineHeight:1.5};"
 },
 {
-"old_string": "//^@@59@@",
+"old_string": "//^@@60@@",
 "new_string": "//^const _s5:CSSProperties={fontSize:16,fontWeight:650,color:theme.text.primary};"
 },
 {
-"old_string": "//^@@62@@",
+"old_string": "//^@@63@@",
 "new_string": "//^const _s10:CSSProperties={fontSize:13,color:theme.text.secondary};const _s11:CSSProperties={marginBottom:6};"
 },
 {
-"old_string": "//^@@64@@",
+"old_string": "//^@@65@@",
 "new_string": "//^const[speed,setSpeed]=useState<Speed>(LOADED_PACE||\"steady\");const[lane,setLane]=useState<Lane>(LOADED_LANE||\"free\");const[fastSetup,setFastSetup]=useState<FastSetup>(\"idle\");"
 },
 {
-"old_string": "//^@@66@@",
+"old_string": "//^@@67@@",
 "new_string": "//^const[wipeConfirm,setWipeConfirm]=useState(\"\");"
 },
 {
-"old_string": "//^@@68@@",
+"old_string": "//^@@69@@",
 "new_string": "//^const[exportFmt,setExportFmt]=useState(\"csv\");const[exportNote,setExportNote]=useState(\"\");const[coolOn,setCoolOn]=useState(LOADED_COOLING===true);const[likesOn,setLikesOn]=useState(false);const[spendLimit,setSpendLimit]=useState(\"\");"
 },
 {
-"old_string": "//^@@70@@",
+"old_string": "//^@@71@@",
 "new_string": "//^const[showFailed,setShowFailed]=useState(true);"
 },
 {
-"old_string": "//^@@71@@",
+"old_string": "//^@@72@@",
 "new_string": "//^const[kitDisconnect,setKitDisconnect]=useState(false);"
 },
 {
-"old_string": "//^@@75@@",
+"old_string": "//^@@76@@",
 "new_string": "//^const noDateInPool=pool.filter((p)=>p.daysAgo<0).length;"
 },
 {
-"old_string": "//^@@77@@",
+"old_string": "//^@@78@@",
 "new_string": "//^const noDateCount=LOADED_TOTALS?LOADED_TOTALS.noDate:noDateInPool;const keptByRule=pool.filter((p)=>verdicts.get(p.id)?.kind===\"keep\").length;const fastCount=LOADED_TOTALS?LOADED_TOTALS.fastCount:doomed.filter((p:Post)=>effectiveType(p)!==\"repost\").length;const fastReposts=Math.max(0,matched-fastCount);const daily=lane===\"fast\"?4000:dailyCap(speed);const days=matched===0?0:(lane===\"fast\"?Math.max(Math.ceil(fastCount/4000),Math.ceil(fastReposts/dailyCap(speed))):Math.ceil(matched/daily))+(coolOn?1:0);const fastCost=fastCount*0.01;const limitUsd=spendLimit===\"\"?Math.ceil(fastCost):Math.max(0,Number(spendLimit)||0);"
 },
 {
-"old_string": "//^@@78@@",
+"old_string": "//^@@79@@",
 "new_string": "//^const deletedSoFar=LOADED_DELETED;const verifiedGone=LOADED_VERIFIED;const leftCount=LOADED_LEFT;const uncheckedCount=LOADED_UNCHECKED;const spentSoFar=deletedSoFar*0.01;const likesTotal=LOADED_LIKES;const likesDays=days+Math.ceil(likesTotal/dailyCap(speed));const rulesActive=hasActiveRules(rules,activeQA,pins.length);"
 },
 {
-"old_string": "//^@@80@@",
+"old_string": "//^@@81@@",
 "new_string": "//^const isFullWipe=archiveReady&&matched>0&&(activeQA===\"everything\"||matched>=10000||matched/Math.max(1,scanned)>0.5);const wipePhrase=`DELETE ${matched.toLocaleString(\"en-US\")} POSTS`;const wipeMatch=/^DELETE ([\\d, ]+) POSTS?$/.exec(wipeConfirm.trim().toUpperCase().replace(/\\s+/g,\" \"));const wipeOk=!!wipeMatch&&Number(wipeMatch[1].replace(/[, ]/g,\"\"))===matched;useEffect(()=>{setWipeConfirm(\"\");},[matched]);"
 },
 {
-"old_string": "//^@@84@@",
+"old_string": "//^@@85@@",
 "new_string": "//^const doExport=()=>{const rows=doomed.map((p)=>({id:p.id,status_url:statusUrl(p.id),posted:monthYear(p.daysAgo),type:p.community?`community ${p.type}`:p.type,likes:p.likes,replies:p.replies,reply_to:maskSsn(p.replyTo||\"\"),matched_rule:maskSsn(verdicts.get(p.id)?.reason||\"\"),about:maskSsn(p.summary),text:maskSsn(p.text),}));if(exportFmt===\"json\"){downloadText(\"xpc-delete-list.json\",JSON.stringify({scanned,kept,to_delete:matched,posts:rows},null,2),\"application/json\");setExportNote(`Downloaded JSON with ${matched} posts.`);} else{const q=(s:string)=>`\"${s.replace(/\"/g,'\"\"')}\"`;const header=\"id,status_url,posted,type,likes,replies,reply_to,matched_rule,about,text\";const safe=(s:string)=>(/^[=+\\-@\\t\\r]/.test(s)?`'${s}`:s);const lines=rows.map((r)=>[`\"=\"\"${r.id}\"\"\"`,r.status_url,r.posted,r.type,r.likes,r.replies,r.reply_to,q(safe(r.matched_rule)),q(safe(r.about)),q(safe(r.text))].join(\",\"));downloadText(\"xpc-delete-list.csv\",[header,...lines].join(\"\\n\"),\"text/csv\");setExportNote(`Downloaded CSV with ${matched} posts.`);}};"
 },
 {
-"old_string": "//^@@86@@",
+"old_string": "//^@@87@@",
 "new_string": "//^!rulesActive"
 },
 {
-"old_string": "//^@@90@@",
+"old_string": "//^@@91@@",
 "new_string": "//^const paceSafetyNote=(<ul style={{margin:0,paddingLeft:18,fontSize:14,color:theme.text.secondary,lineHeight:1.45}}><li style={_s11}>Soft stops (rate limits, cooldowns) restart on their own, with nothing deleted twice. If that happens twice in one day, the run continues the next day one pace slower.</li><li style={_s11}>But every limit or warning adds to X's record of your account. Repeated ones can turn into temporary locks, phone or ID checks, or a suspension.</li><li style={_s11}>A lock or verification check needs you to step in. We'll tell you right away, and the run resumes after you clear it. A suspension can't be undone by us.</li><li style={_s11}>That's why steady is usually faster overall than fast with stops.</li><li>Pace options: Steady 100/day (default), Faster 200/day, Fastest ~350/day (higher chance of limits and checks).</li></ul>);"
 },
 {
-"old_string": "//^@@92@@",
-"new_string": "//^const numBox=(value:string,label:string,color:string)=>(<div key={label} style={_s12}><div style={{fontSize:26,fontWeight:650,letterSpacing:\"-0.02em\",color}}>{value}</div><div style={{fontSize:13,color:theme.text.secondary,marginTop:2}}>{label}</div></div>);const countsReady=archiveReady&&step!==\"archive\"&&step!==\"signin\";const finishLine=step===\"run\"?`Done by ${finishDate(Math.max(1,days-1))}`:matched===0?\"Pick a cleanup to see a finish date\":`Done by ${finishDate(days)} · ${lane===\"fast\"?\"about 4,000\":String(daily)} a day`;const archiveVsProfileLine=recentOnly?\"Recent only · not your full history. This list is only about the last 3,200 posts X can show now.\":`Found in archive vs. on your profile: ${ARCHIVE_POST_COUNT.toLocaleString(\"en-US\")} in the archive, ${PROFILE_POST_COUNT_LABEL} on your profile.`;const archiveVsProfileNote=recentOnly?\"Your official archive is still the way to clean your full history.\":\"The list only covers what's in the archive. X's profile number can include older posts that aren't in this file, and it can lag after deletes.\";const shortCounts=!archiveReady?\"Counts appear once your archive loads\":step===\"run\"?runPhase===\"done\"?`Verified gone: ${verifiedGone} · Still live: ${failedCount} · Left: ${leftCount} · Couldn't check: ${uncheckedCount}`:`${deletedSoFar} deleted · ${leftCount} left · ${failedCount} failed`:`${scanned} scanned · ${kept} keep · ${matched} delete`;const totalsRows:Array<[string,string,string]>=LOADED_TOTALS?[...LOADED_TOTALS.byType,[\"Total\",String(matched),String(kept)]]:([[\"Posts\",(p:Post)=>!p.community&&effectiveType(p)===\"post\"],[\"Replies\",(p:Post)=>!p.community&&effectiveType(p)===\"reply\"],[\"Reposts\",(p:Post)=>effectiveType(p)===\"repost\"],[\"Quotes\",(p:Post)=>!p.community&&effectiveType(p)===\"quote\"],[\"Community\",(p:Post)=>!!p.community],]as Array<[string,(p:Post)=>boolean]>).map(([label,f])=>{if(label===\"Quotes\"&&!ARCHIVE_CAPS.hasQuoteFields){return[label,\"n/a\",\"not available from this archive\"]as[string,string,string];} const all=pool.filter(f);const del=all.filter((p)=>verdicts.get(p.id)?.kind===\"delete\").length;return[label,String(del),String(all.length-del)]as[string,string,string];});if(!LOADED_TOTA\n//^@@92@@"
+"old_string": "//^@@93@@",
+"new_string": "//^const numBox=(value:string,label:string,color:string)=>(<div key={label} style={_s12}><div style={{fontSize:26,fontWeight:650,letterSpacing:\"-0.02em\",color}}>{value}</div><div style={{fontSize:13,color:theme.text.secondary,marginTop:2}}>{label}</div></div>);const countsReady=archiveReady&&step!==\"archive\"&&step!==\"signin\";const finishLine=step===\"run\"?`Done by ${finishDate(Math.max(1,days-1))}`:matched===0?\"Pick a cleanup to see a finish date\":`Done by ${finishDate(days)} · ${lane===\"fast\"?\"about 4,000\":String(daily)} a day`;const archiveVsProfileLine=recentOnly?\"Recent only · not your full history. This list is only about the last 3,200 posts X can show now.\":`Found in archive vs. on your profile: ${ARCHIVE_POST_COUNT.toLocaleString(\"en-US\")} in the archive, ${PROFILE_POST_COUNT_LABEL} on your profile.`;const archiveVsProfileNote=recentOnly?\"Your official archive is still the way to clean your full history.\":\"The list only covers what's in the archive. X's profile number can include older posts that aren't in this file, and it can lag after deletes.\";const shortCounts=!archiveReady?\"Counts appear once your archive loads\":step===\"run\"?runPhase===\"done\"?`Verified gone: ${verifiedGone} · Still live: ${failedCount} · Left: ${leftCount} · Couldn't check: ${uncheckedCount}`:`${deletedSoFar} deleted · ${leftCount} left · ${failedCount} failed`:`${scanned} scanned · ${kept} keep · ${matched} delete`;const totalsRows:Array<[string,string,string]>=LOADED_TOTALS?[...LOADED_TOTALS.byType,[\"Total\",String(matched),String(kept)]]:([[\"Posts\",(p:Post)=>!p.community&&effectiveType(p)===\"post\"],[\"Replies\",(p:Post)=>!p.community&&effectiveType(p)===\"reply\"],[\"Reposts\",(p:Post)=>effectiveType(p)===\"repost\"],[\"Quotes\",(p:Post)=>!p.community&&effectiveType(p)===\"quote\"],[\"Community\",(p:Post)=>!!p.community],]as Array<[string,(p:Post)=>boolean]>).map(([label,f])=>{if(label===\"Quotes\"&&!ARCHIVE_CAPS.hasQuoteFields){return[label,\"n/a\",\"not available from this archive\"]as[string,string,string];} const all=pool.filter(f);const del=all.filter((p)=>verdicts.get(p.id)?.ki\n//^@@93@@"
 }
 ]

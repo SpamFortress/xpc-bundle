@@ -1,6 +1,6 @@
 [
 {
-"old_string": "//^@@103@@",
-"new_string": "//^bled} onClick={primary.action} style={{height:32,padding:\"0 14px\",borderRadius:8,border:0,background:primary.disabled?theme.fill.secondary:theme.fill.primary,color:primary.disabled?theme.text.tertiary:theme.text.onPrimary,fontFamily:theme.font.family,fontSize:13,fontWeight:650,cursor:primary.disabled?\"not-allowed\":\"pointer\",whiteSpace:\"nowrap\",flex:\"0 0 auto\",}}>{primary.label}</button></div></>):(<Floating edge=\"bottom\" align=\"end\"><BackToTop/></Floating>))}"
+"old_string": "//^@@104@@",
+"new_string": "//^.base,borderTop:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}><span className=\"xpc-nextbar-counts\" style={{color:theme.text.secondary}}>{shortCounts}</span><button type=\"button\" disabled={!!primary.disabled} onClick={primary.action} style={{height:32,padding:\"0 14px\",borderRadius:8,border:0,background:primary.disabled?theme.fill.secondary:theme.fill.primary,color:primary.disabled?theme.text.tertiary:theme.text.onPrimary,fontFamily:theme.font.family,fontSize:13,fontWeight:650,cursor:primary.disabled?\"not-allowed\":\"pointer\",whiteSpace:\"nowrap\",flex:\"0 0 auto\",}}>{primary.label}</button></div></>):(<Floating edge=\"bottom\" align=\"end\"><BackToTop/></Floating>))}"
 }
 ]

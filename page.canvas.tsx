@@ -269,7 +269,7 @@ function wordHit(text: string, word: string): boolean {
   if (!w.startsWith("@") && !/\s/.test(w)) {
     const wl = w.toLowerCase().replace(/^#/, "");
     const forms = new Set(WORD_ENDINGS.map((e: string) => collapseRepeats(wl + e)));
-    const toks = text.match(/#?[\w@$!|*']+/g) || [];
+    const toks = text.match(/#?[\w@$!|*']+(?:-[\w@$!|*']+)*/g) || [];
     for (let i = 0; i < toks.length; i++) {
       const raw = toks[i];
       const n = normToken(raw);
@@ -401,13 +401,14 @@ const LOADED_UNCHECKED = 0;
 const LOADED_LIKES = 0;
 type LoadedTotals = { scanned: number; matched: number; kept: number; noDate: number; fastCount: number; byType: Array<[string, string, string]> };
 const LOADED_TOTALS: LoadedTotals | null = null;
+const LOADED_PROOF: { recheck: string; final: string } | null = null;
 
 const BASE: Rules = {
   timeMode: "none",
   olderDays: 365,
   olderDate: "",
-  yearFrom: 2023,
-  yearTo: 2026,
+  yearFrom: 0,
+  yearTo: 0,
   protectDays: 0,
   protectDate: "",
   posts: false,
@@ -872,7 +873,17 @@ export default function App() {
     upd({ deleteSlurs: true, deleteWords: next });
   };
 
-  const qaUnchanged = activeQA !== "" && JSON.stringify(rules) === JSON.stringify(mergeQA(activeQA, rules.keepWords));
+  const datedDays = pool.filter((p) => p.daysAgo >= 0).map((p) => p.daysAgo);
+  const oldestYear = datedDays.length > 0 ? yearOf(Math.max(...datedDays)) : TODAY.getFullYear();
+  const rulesForCard = (id: QAId): Rules => {
+    const next = mergeQA(id, rules.keepWords);
+    if (id === "era") {
+      next.yearFrom = oldestYear;
+      next.yearTo = oldestYear + 1;
+    }
+    return next;
+  };
+  const qaUnchanged = activeQA !== "" && JSON.stringify(rules) === JSON.stringify(rulesForCard(activeQA));
   const qaTitle = qaUnchanged ? QUICK.find((q) => q.id === activeQA)?.title || "" : "";
 
   const verdicts = useMemo(() => computeVerdicts(pool, rules, pins, qaTitle), [pool, rules, pins, qaTitle]);
@@ -880,7 +891,7 @@ export default function App() {
   const qaCounts = useMemo(() => {
     const m: Record<string, number> = {};
     for (const q of QUICK) {
-      const v = computeVerdicts(pool, mergeQA(q.id, rules.keepWords), pins, q.title);
+      const v = computeVerdicts(pool, rulesForCard(q.id), pins, q.title);
       let n = 0;
       v.forEach((x) => {
         if (x.kind === "delete") n += 1;
@@ -954,9 +965,6 @@ export default function App() {
         .sort((a, b) => b.count - a.count || a.word.localeCompare(b.word)),
     [pool]
   );
-
-  const datedDays = pool.filter((p) => p.daysAgo >= 0).map((p) => p.daysAgo);
-  const oldestYear = datedDays.length > 0 ? yearOf(Math.max(...datedDays)) : TODAY.getFullYear();
 
   const threadExtraKept = pool.filter((p) => verdicts.get(p.id)?.reason === "Keep rule: part of a kept thread").length;
 
@@ -1772,7 +1780,10 @@ export default function App() {
                         <Select
                           label="Time range"
                           value={rules.timeMode as string}
-                          onChange={(v: string) => upd({ timeMode: v as TimeMode })}
+                          onChange={(v: string) => {
+                            if (v === "years" && (rules.yearFrom === 0 || rules.yearTo === 0)) upd({ timeMode: "years", yearFrom: oldestYear, yearTo: oldestYear + 1 });
+                            else upd({ timeMode: v as TimeMode });
+                          }}
                           options={[
                             { value: "none", label: "Not set" },
                             { value: "all", label: "From the beginning" },
@@ -2274,10 +2285,14 @@ export default function App() {
                     <div style={subhead}>Export and cooling-off</div>
                     <div style={{ ...subhint, margin: 0 }}>Deletes are permanent. Download the list first; it has every link, date and the rule that matched.</div>
                   </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
-                    <Select label="Format" value={exportFmt} onChange={(v: string) => setExportFmt(v)} options={[{ value: "csv", label: "CSV" }, { value: "json", label: "JSON" }]} />
-                    <Button label="Download the delete list" onClick={doExport} disabled={matched === 0} />
-                  </div>
+                  {LOADED_TOTALS ? (
+                    tapLine("Tap Download the delete list in chat.")
+                  ) : (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+                      <Select label="Format" value={exportFmt} onChange={(v: string) => setExportFmt(v)} options={[{ value: "csv", label: "CSV" }, { value: "json", label: "JSON" }]} />
+                      <Button label="Download the delete list" onClick={doExport} disabled={matched === 0} />
+                    </div>
+                  )}
                   {exportNote !== "" && <div style={{ fontSize: 13, color: theme.text.success }}>{exportNote}</div>}
                   <Toggle label="Cooling-off: nothing is deleted for 24 hours after you approve, so you can change your mind. Off by default." value={coolOn} onChange={setCoolOn} />
                   {coolOn && <div style={{ fontSize: 13, color: theme.text.secondary }}>{`First batch starts ${finishDate(1)}. You can cancel or change rules until then.`}</div>}
@@ -2337,8 +2352,8 @@ export default function App() {
                       columns={["Check", "When", "Result"]}
                       rows={[
                         ["Right after the run", "Today", `Verified gone: ${verifiedGone}. Still live: ${failedCount}. Couldn't check: ${uncheckedCount}.`],
-                        ["Re-check", finishDate(2), "Scheduled"],
-                        ["Final re-check", finishDate(7), "Scheduled"],
+                        ["Re-check", LOADED_PROOF ? LOADED_PROOF.recheck : "Scheduled", "Scheduled"],
+                        ["Final re-check", LOADED_PROOF ? LOADED_PROOF.final : "Scheduled", "Scheduled"],
                       ]}
                     />
                   </div>
