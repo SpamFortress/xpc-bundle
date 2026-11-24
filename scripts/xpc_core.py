@@ -13,19 +13,26 @@ CLI (all local, read-only on the archive):
   python3 xpc_core.py selftest
   python3 xpc_core.py page-steps                     # list the Page build steps (first page, then background)
   python3 xpc_core.py page-steps --show 1 --part K   # step 1 (first page) text, part K
+  python3 xpc_core.py page-steps --show 1 --part K --start archive --handle HANDLE
+                                                 # same, already on the archive step with the handle filled
   python3 xpc_core.py page-steps --show N            # step N's EditCanvas edits (JSON), nothing else
+  python3 xpc_core.py page-state --start archive --handle HANDLE
+                                                 # exact START_STEP and SIGNED_IN_HANDLE edits
   python3 xpc_core.py page-verify <file> [--after N] # check a ReadCanvas result against the expected source
   python3 xpc_core.py page-where <file>              # which step a ReadCanvas result is at (resume)
   python3 xpc_core.py page-status --tone info --lead "..." --text "..."
                                                  # exact PAGE_STATUS edit (SSNs masked); --apply <file> writes it
-  python3 xpc_core.py page-typecheck             # tsc --strict on every build step (needs XPC_NODE_TOOLS)
+  python3 xpc_core.py page-typecheck             # tsc --strict on every build step
 """
 from __future__ import annotations
 import csv, glob, hashlib, io, json, math, os, re, struct, unicodedata, zlib
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-__version__ = "1.1.4"
+__version__ = "1.1.5"
+
+NODE_TOOLS_DEFAULT = "/workspace/xpc-node-tools"
+NODE_TOOL_PACKAGES = ("typescript@5.6.3", "esbuild@0.28.2", "@types/react@18.3.18")
 
 
 def owner_tz():
@@ -724,17 +731,66 @@ def page_step_sources(bundle_dir=BUNDLE_DIR):
     return [(n, text) for n, text in enumerate(states) if text is not None]
 
 
+def node_tools_dir():
+    return os.environ.get("XPC_NODE_TOOLS") or NODE_TOOLS_DEFAULT
+
+
+def ensure_node_tools():
+    """(dir, ready). Use XPC_NODE_TOOLS or /workspace/xpc-node-tools. Install the pinned
+    packages there if they are missing. If node or npm cannot do that, return ready False
+    so the type-check is skipped instead of stalling the first run."""
+    import subprocess
+    d = node_tools_dir()
+    tsc = os.path.join(d, "node_modules", "typescript", "bin", "tsc")
+    react = os.path.join(d, "node_modules", "@types", "react", "package.json")
+    if os.path.isfile(tsc) and os.path.isfile(react):
+        os.environ["XPC_NODE_TOOLS"] = d
+        return d, True
+    try:
+        os.makedirs(d, exist_ok=True)
+        proc = subprocess.run(["npm", "i", "--prefix", d, "--silent", *NODE_TOOL_PACKAGES], capture_output=True, text=True, timeout=90)
+    except (OSError, subprocess.TimeoutExpired):
+        return d, False
+    ready = proc.returncode == 0 and os.path.isfile(tsc) and os.path.isfile(react)
+    if ready:
+        os.environ["XPC_NODE_TOOLS"] = d
+    return d, ready
+
+
+def apply_page_boot(src, start=None, handle=None):
+    """First-write variant: START_STEP and SIGNED_IN_HANDLE already set. Empty handle leaves the default."""
+    if start:
+        src = _set_const_initializer(src, "START_STEP", '"' + start + '"')
+    if handle:
+        src = _set_const_initializer(src, "SIGNED_IN_HANDLE", _ts_string(mask_ssn(handle)))
+    return src
+
+
 def page_typecheck(bundle_dir=BUNDLE_DIR):
-    """tsc --strict (React types) on every build step. Returns (exit_code, output)."""
+    """tsc --strict (React types) on every build step, plus a step-1 page that already
+    starts at archive with a handle. Returns (exit_code, output). Skips if the tools
+    cannot be installed."""
     import subprocess, tempfile
+    tools, ready = ensure_node_tools()
+    if not ready:
+        return 0, f"page-typecheck skipped: typescript and @types/react are not available in {tools}\n"
     script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "typecheck_page.js")
     tmp = tempfile.mkdtemp(prefix="xpc-steps-")
     paths = []
+    first = None
     for n, text in page_step_sources(bundle_dir):
         path = os.path.join(tmp, f"step-{n:02d}.tsx")
         open(path, "w", encoding="utf-8", newline="").write(text)
         paths.append(path)
-    proc = subprocess.run(["node", script, *paths], capture_output=True, text=True)
+        if n == 1:
+            first = text
+    if first is not None:
+        path = os.path.join(tmp, "step-01-archive.tsx")
+        open(path, "w", encoding="utf-8", newline="").write(apply_page_boot(first, "archive", "example"))
+        paths.append(path)
+    env = os.environ.copy()
+    env["XPC_NODE_TOOLS"] = tools
+    proc = subprocess.run(["node", script, *paths], capture_output=True, text=True, env=env)
     out = (proc.stdout or "") + (proc.stderr or "")
     return proc.returncode, out
 
@@ -743,12 +799,16 @@ def page_steps(bundle_dir=BUNDLE_DIR):
     return json.load(open(os.path.join(_page_paths(bundle_dir)[1], "plan.json"), encoding="utf-8"))
 
 
-def page_show(n, part=None, bundle_dir=BUNDLE_DIR, limit=PAGE_CHUNK_MAX):
+def page_show(n, part=None, bundle_dir=BUNDLE_DIR, limit=PAGE_CHUNK_MAX, start=None, handle=None):
     """Exact text for step n. Step 1 is long, so it prints in parts (--part 1, 2, ...): the
-    WriteCanvas contents are the parts joined with nothing between them."""
+    WriteCanvas contents are the parts joined with nothing between them.
+    --start and --handle rewrite the boot lines before the first page is split, so the
+    first write can open on the archive step when sign-in already finished."""
     plan = page_steps(bundle_dir)
     st = plan["steps"][n - 1]
     text = open(os.path.join(bundle_dir, st["file"]), encoding="utf-8").read()
+    if n == 1 and (start or handle):
+        text = apply_page_boot(text, start, handle)
     if n != 1:
         return text
     parts, cur, size = [], [], 0
@@ -886,6 +946,19 @@ def page_status_edit(tone=None, lead="", text="", bundle_dir=BUNDLE_DIR):
     return {"old_string": src[i:end + 1], "new_string": src[i:eq + 1] + expr + ";"}
 
 
+def page_state_edits(start=None, handle=None, bundle_dir=BUNDLE_DIR):
+    """Exact one-line edits for START_STEP and SIGNED_IN_HANDLE, from the shipped declarations."""
+    src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
+    edits = []
+    if start:
+        i, eq, end = _const_decl(src, "START_STEP")
+        edits.append({"name": "START_STEP", "old_string": src[i:end + 1], "new_string": src[i:eq + 1] + '"' + start + '"' + ";"})
+    if handle:
+        i, eq, end = _const_decl(src, "SIGNED_IN_HANDLE")
+        edits.append({"name": "SIGNED_IN_HANDLE", "old_string": src[i:end + 1], "new_string": src[i:eq + 1] + _ts_string(mask_ssn(handle)) + ";"})
+    return edits
+
+
 def apply_page_status(src, tone=None, lead="", text=""):
     if _const_decl(src, "PAGE_STATUS") is None:
         raise ValueError("PAGE_STATUS declaration not found")
@@ -962,6 +1035,11 @@ def _cli(argv=None):
     ps = sub.add_parser("page-steps", help="the Page build steps")
     ps.add_argument("--show", type=int, help="print only this step's exact text")
     ps.add_argument("--part", type=int, help="step 1 only: which part to print")
+    ps.add_argument("--start", choices=["signin", "archive", "pick", "review", "run"], help="step 1 only: START_STEP already set")
+    ps.add_argument("--handle", default="", help="step 1 only: SIGNED_IN_HANDLE already filled")
+    pstate = sub.add_parser("page-state", help="exact START_STEP and SIGNED_IN_HANDLE edits")
+    pstate.add_argument("--start", choices=["signin", "archive", "pick", "review", "run"])
+    pstate.add_argument("--handle", default="")
     pv = sub.add_parser("page-verify", help="check a ReadCanvas result")
     pv.add_argument("file")
     pv.add_argument("--after", type=int, help="check the state after this build step instead of the finished page")
@@ -987,7 +1065,11 @@ def _cli(argv=None):
         if a.show is None:
             plan = page_steps()
             print(json.dumps([{k: v for k, v in st.items() if k != "sha256_after"} for st in plan["steps"]], indent=1)); return 0
-        sys.stdout.write(page_show(a.show, a.part)); return 0
+        sys.stdout.write(page_show(a.show, a.part, start=a.start, handle=a.handle or None)); return 0
+    if a.cmd == "page-state":
+        if not a.start and not a.handle:
+            print("page-state needs --start or --handle"); return 1
+        print(json.dumps(page_state_edits(a.start, a.handle or None), ensure_ascii=False)); return 0
     if a.cmd == "page-verify":
         ok, detail = page_verify(a.file, a.after)
         print(f"page-verify ok {detail}" if ok else f"page-verify MISMATCH {detail}"); return 0 if ok else 1
@@ -1034,8 +1116,22 @@ def _cli(argv=None):
         ):
             j, _eq, jend = _const_decl(base, name)
             assert base[j:jend + 1] == f'const {name}:string="{literal}";'
+        first = open(os.path.join(_page_paths()[1], "01-first.tsx"), encoding="utf-8").read()
+        booted = apply_page_boot(first, "archive", "example")
+        assert 'const START_STEP:Step="archive";' in booted
+        assert 'const SIGNED_IN_HANDLE:string="example";' in booted
+        assert normalize_page_boot(booted) == first
+        edits = page_state_edits("archive", "example")
+        assert edits[0]["old_string"] == 'const START_STEP:Step="signin";'
+        assert edits[0]["new_string"] == 'const START_STEP:Step="archive";'
+        assert edits[1]["old_string"] == 'const SIGNED_IN_HANDLE:string="";'
+        assert edits[1]["new_string"] == 'const SIGNED_IN_HANDLE:string="example";'
         tcode, tout = page_typecheck()
         assert tcode == 0, tout
+        if "skipped" not in tout:
+            final = page_steps()["full_page_after"]
+            for label in ("ok step-01.tsx", "ok step-07.tsx", f"ok step-{final:02d}.tsx", "ok step-01-archive.tsx"):
+                assert label in tout, tout
         print(f"xpc_core {__version__} selftest ok · tz={TZ} · wordlists={WORDLIST_SOURCE}"); return 0
     os.makedirs(a.out, exist_ok=True)
     posts, report = parse_archive(a.paths, a.own_id)
