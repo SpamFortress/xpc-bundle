@@ -1,6 +1,6 @@
 {
- "version": "1.1.3",
- "tag": "xpc-v1.1.3",
- "manifest_sha256": "fd9cb074a4d0960bb6625cdcbcd5a4d32c6c3460fcd02d808e88c3461909f886",
- "notes": "The page can show a status line, so the bot can stay quiet in chat. Phone Fortress and Email Fortress open from the page in a new tab."
+ "version": "1.1.4",
+ "tag": "xpc-v1.1.4",
+ "manifest_sha256": "7ffb3078594416aaf757e7080b5ba6b058ac00ac8ec14d62839eaef831b09228",
+ "notes": "The first page type-checks again. The signed-in handle line is const SIGNED_IN_HANDLE:string=\"\";."
 }
