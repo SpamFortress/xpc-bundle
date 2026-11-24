@@ -43,6 +43,9 @@ const START_STEP: Step = "signin";
 const START_PHASE: HomePhase = "choose";
 const START_RUN: RunPhase = "idle";
 const SIGNED_IN_HANDLE: string = "";
+const SHOW_SIGNIN_DETAILS = true;
+const SHOW_WHERE_DATA = true;
+const SHOW_NEXT_BAR = true;
 const PAGE_STATUS: PageStatus | null = null;
 const PHONE_FORTRESS_URL: string = "https://x.ai/bot/a_4tVB4gwbwFBLkUhkTCW";
 const EMAIL_FORTRESS_URL: string = "https://x.ai/bot/MyKDbPYVwJeJpCNtVTFym";
@@ -1669,29 +1672,30 @@ export default function App() {
 
             {step === "signin" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                <div id="sig-start" style={{ ...panel, background: theme.fill.accentSubtle, padding: "28px 28px" }}>
-                  <Rows
-                    rows={[
-                      { title: "1. Open", detail: "The X sign-in window opens below the Page in the chat." },
-                      { title: "2. Sign in", detail: "You type your password and any 2FA code yourself. The bot never sees them." },
-                      { title: "3. Next", detail: "The bot reads your handle from X and moves you on to your archive." },
-                    ]}
-                  />
-                  <div style={{ marginTop: 18, fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Sign in in the X window in the chat. If you already signed in, you're set.</div>
-                </div>
-
-                <div id="sig-data">
-                  <div style={subhead}>Where your data goes</div>
-                  <Properties
-                    items={[
-                      { label: "Sign-in", value: "To fetch your archive and later delete posts, you sign in to X once, yourself, in the bot's own browser. The bot never sees your password, and you can sign out of X anytime." },
-                      { label: "Your archive", value: "A copy is stored on the bot's computer so it can build your list and carry out the deletes you approve. Media files in the ZIP (the photos and videos themselves) are not imported. Posts that include photos or videos can still be in your cleanup list." },
-                      { label: "Sharing", value: "None of your data or information is sold, or shared with third parties or anyone else." },
-                      { label: "Deletes", value: "Deletes happen only after you approve your cleanup list." },
-                      { label: "After the run", value: "Taking posts off X does not take them off the rest of the internet. After the run, we offer to delete the archive copy from the bot's computer, and we can help with leftover copies on Google and the Wayback Machine." },
-                    ]}
-                  />
-                </div>
+                <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Sign in in the X window in the chat. If you already signed in, you're set.</div>
+                {SHOW_SIGNIN_DETAILS && (
+                  <div id="sig-start" style={{ ...panel, background: theme.fill.accentSubtle, padding: "28px 28px" }}>
+                    <Rows
+                      rows={[
+                        { title: "1. Open", detail: "The X sign-in window opens below the Page in the chat." },
+                        { title: "2. Sign in", detail: "You type your password and any 2FA code yourself. The bot never sees them." },
+                        { title: "3. Next", detail: "The bot reads your handle from X and moves you on to your archive." },
+                      ]}
+                    />
+                    <div id="sig-data" style={{ marginTop: 22 }}>
+                      <div style={subhead}>Where your data goes</div>
+                      <Properties
+                        items={[
+                          { label: "Sign-in", value: "To fetch your archive and later delete posts, you sign in to X once, yourself, in the bot's own browser. The bot never sees your password, and you can sign out of X anytime." },
+                          { label: "Your archive", value: "A copy is stored on the bot's computer so it can build your list and carry out the deletes you approve. Media files in the ZIP (the photos and videos themselves) are not imported. Posts that include photos or videos can still be in your cleanup list." },
+                          { label: "Sharing", value: "None of your data or information is sold, or shared with third parties or anyone else." },
+                          { label: "Deletes", value: "Deletes happen only after you approve your cleanup list." },
+                          { label: "After the run", value: "Taking posts off X does not take them off the rest of the internet. After the run, we offer to delete the archive copy from the bot's computer, and we can help with leftover copies on Google and the Wayback Machine." },
+                        ]}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1758,19 +1762,21 @@ export default function App() {
                   )}
                 </div>
 
-                <div id="arc-data">
-                  <div style={subhead}>Where your data goes</div>
-                  <Properties
-                    items={[
-                      { label: "Sign-in", value: "To fetch your archive and later delete posts, you sign in to X once, yourself, in the bot's own browser. The bot never sees your password, and you can sign out of X anytime." },
-                      { label: "Your archive", value: "A copy is stored on the bot's computer so it can build your list and carry out the deletes you approve. Media files in the ZIP (the photos and videos themselves) are not imported. Posts that include photos or videos can still be in your cleanup list." },
-                      { label: "Sharing", value: "None of your data or information is sold, or shared with third parties or anyone else." },
-                      { label: "Deletes", value: "Deletes happen only after you approve your cleanup list." },
-                      { label: "After the run", value: "Taking posts off X does not take them off the rest of the internet. After the run, we offer to delete the archive copy from the bot's computer, and we can help with leftover copies on Google and the Wayback Machine." },
-                    ]}
-                  />
-                  {fortressCard}
-                </div>
+                {SHOW_WHERE_DATA && (
+                  <div id="arc-data">
+                    <div style={subhead}>Where your data goes</div>
+                    <Properties
+                      items={[
+                        { label: "Sign-in", value: "To fetch your archive and later delete posts, you sign in to X once, yourself, in the bot's own browser. The bot never sees your password, and you can sign out of X anytime." },
+                        { label: "Your archive", value: "A copy is stored on the bot's computer so it can build your list and carry out the deletes you approve. Media files in the ZIP (the photos and videos themselves) are not imported. Posts that include photos or videos can still be in your cleanup list." },
+                        { label: "Sharing", value: "None of your data or information is sold, or shared with third parties or anyone else." },
+                        { label: "Deletes", value: "Deletes happen only after you approve your cleanup list." },
+                        { label: "After the run", value: "Taking posts off X does not take them off the rest of the internet. After the run, we offer to delete the archive copy from the bot's computer, and we can help with leftover copies on Google and the Wayback Machine." },
+                      ]}
+                    />
+                    {fortressCard}
+                  </div>
+                )}
               </div>
             )}
 
@@ -2628,7 +2634,7 @@ export default function App() {
         </div>
       </div>
 
-      {narrow && primary && step !== "review" ? (
+      {SHOW_NEXT_BAR && (narrow && primary && step !== "review" ? (
         <div
           className={barHidden ? "xpc-nextbar xpc-nextbar-hide" : "xpc-nextbar"}
           role="region"
@@ -2662,7 +2668,7 @@ export default function App() {
         <Floating edge="bottom" align="end">
           <BackToTop />
         </Floating>
-      )}
+      ))}
     </Page>
   );
 }

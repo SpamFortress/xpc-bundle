@@ -29,7 +29,7 @@ import csv, glob, hashlib, io, json, math, os, re, struct, unicodedata, zlib
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-__version__ = "1.1.5"
+__version__ = "1.1.6"
 
 NODE_TOOLS_DEFAULT = "/workspace/xpc-node-tools"
 NODE_TOOL_PACKAGES = ("typescript@5.6.3", "esbuild@0.28.2", "@types/react@18.3.18")
@@ -1040,7 +1040,8 @@ def _cli(argv=None):
     pa.add_argument("--own-id", required=True, help="the signed-in account's numeric X id")
     pa.add_argument("--out", default="/workspace/xpc/state")
     sub.add_parser("mask", help="mask SSN-shaped numbers in stdin")
-    sub.add_parser("selftest")
+    stest = sub.add_parser("selftest")
+    stest.add_argument("--no-typecheck", action="store_true", help="skip the Node type-check; first-turn fast path")
     ps = sub.add_parser("page-steps", help="the Page build steps")
     ps.add_argument("--show", type=int, help="print only this step's exact text")
     ps.add_argument("--part", type=int, help="step 1 only: which part to print")
@@ -1073,9 +1074,12 @@ def _cli(argv=None):
         sys.stdout.write(out)
         return code
     if a.cmd == "page-steps":
+        plan = page_steps()
         if a.show is None:
-            plan = page_steps()
             print(json.dumps([{k: v for k, v in st.items() if k != "sha256_after"} for st in plan["steps"]], indent=1)); return 0
+        nsteps = len(plan["steps"])
+        if a.show < 1 or a.show > nsteps:
+            print(f"the plan has {nsteps} steps"); return 1
         sys.stdout.write(page_show(a.show, a.part, start=a.start, handle=a.handle or None, phase=a.phase)); return 0
     if a.cmd == "page-state":
         if not a.start and not a.handle and not a.phase:
@@ -1140,9 +1144,16 @@ def _cli(argv=None):
         assert edits[1]["new_string"] == 'const SIGNED_IN_HANDLE:string="example";'
         assert edits[2]["old_string"] == 'const START_PHASE:HomePhase="choose";'
         assert edits[2]["new_string"] == 'const START_PHASE:HomePhase="grabbing";'
-        tcode, tout = page_typecheck()
-        assert tcode == 0, tout
-        if "skipped" not in tout:
+        man = json.load(open(os.path.join(BUNDLE_DIR, "manifest.json"), encoding="utf-8"))
+        for item in man["files"]:
+            data = open(os.path.join(BUNDLE_DIR, item["path"]), "rb").read()
+            assert hashlib.sha256(data).hexdigest() == item["sha256"] and len(data) == item["bytes"], item["path"]
+        if not a.no_typecheck:
+            tcode, tout = page_typecheck()
+            assert tcode == 0, tout
+        else:
+            tcode, tout = 0, ""
+        if not a.no_typecheck and "skipped" not in tout:
             final = page_steps()["full_page_after"]
             for label in ("ok step-01.tsx", "ok step-07.tsx", f"ok step-{final:02d}.tsx", "ok step-01-archive.tsx", "ok step-01-ready.tsx"):
                 assert label in tout, tout

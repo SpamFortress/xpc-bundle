@@ -1,20 +1,20 @@
-import{Page,Section,Text,Callout,Select,Input,Button,Toggle,Table,Rows,Properties,BulletList,Status,Segmented,Floating,BackToTop,TextLink,useState,useMemo,useEffect,useGrokTheme,} from"grok/canvas";import type{CSSProperties} from"grok/canvas";type Step="signin"|"archive"|"pick"|"review"|"run";type HomePhase="choose"|"grabbing"|"waiting"|"ready"|"manual";type RunPhase="idle"|"running"|"done";type Speed="steady"|"faster"|"fastest";type Lane="free"|"fast";/*@B*/
+import{Page,Section,Text,Callout,Select,Input,Button,Toggle,Table,Rows,Properties,BulletList,Status,Segmented,Floating,BackToTop,TextLink,useState,useMemo,useEffect,useGrokTheme,} from"grok/canvas";import type{CSSProperties} from"grok/canvas";type Step="signin"|"archive"|"pick"|"review"|"run";type HomePhase="choose"|"grabbing"|"waiting"|"ready"|"manual";type RunPhase="idle"|"running"|"done";/*@B*/
 //^@@0@@
-/*@@B*/type Order="oldest"|"newest"|"low";type PostType="post"|"reply"|"repost"|"quote";type TimeMode="none"|"all"|"older"|"years";type MediaKind="photo"|"video"|"animated_gif";type QAId="everything"|"oldest"|"era"|"replies"|"reposts"|"best";/*@A*/
+/*@@B*//*@A*/
 //~@@1@@
-/*@@A*/type PageTone="info"|"warn"|"error"|"ok";type PageStatus={tone:PageTone;lead:string;text:string};const START_STEP:Step="signin";const START_PHASE:HomePhase="choose";const START_RUN:RunPhase="idle";const SIGNED_IN_HANDLE:string="";const PAGE_STATUS:PageStatus|null=null;const PHONE_FORTRESS_URL:string="https://x.ai/bot/a_4tVB4gwbwFBLkUhkTCW";const EMAIL_FORTRESS_URL:string="https://x.ai/bot/MyKDbPYVwJeJpCNtVTFym";type Post={id:string;daysAgo:number;type:PostType;likes:number;replies:number;text:string;summary:string;media:boolean;gif?:boolean;mediaKind?:MediaKind;replyTo?:string;inReplyToId?:string;mentions?:boolean;extraMentions?:boolean;thread?:string;profilePin?:boolean;community?:boolean;repostOf?:string;quoteOf?:string;};type Rules={timeMode:TimeMode;olderDays:number;yearFrom:number;yearTo:number;protectDays:number;posts:boolean;replies:boolean;reposts:boolean;quotes:boolean;community:boolean;mediaPhotos:boolean;mediaVideos:boolean;mediaGifs:boolean;mediaText:boolean;postsLikesMax:number;repliesLikesMax:number;repliesMax:number;deleteWords:string[];keepWords:string[];replyHandles:string[];olderDate:string;protectDate:string;repostOf:string;topic:string;skipMentions:boolean;keepThreads:boolean;keepProfilePin:boolean;keepMedia:boolean;};type Verdict={kind:"delete"|"keep"|"none";reason:string};/*@A*/
+/*@@A*/type PostType="post"|"reply"|"repost"|"quote";type TimeMode="none"|"all"|"older"|"years";type MediaKind="photo"|"video"|"animated_gif";/*@A*/
 //~@@2@@
-/*@@A*/const ARCHIVE_CAPS={hasPinFlag:false,hasReplyCount:false,hasQuoteFields:false,};const ARCHIVE_POST_COUNT=0;const PROFILE_POST_COUNT_LABEL:string="";/*@B*/
-//^@@3@@
-/*@@B*/ /*@B*/
+/*@@A*/type PageTone="info"|"warn"|"error"|"ok";type PageStatus={tone:PageTone;lead:string;text:string};const START_STEP:Step="signin";const START_PHASE:HomePhase="choose";const START_RUN:RunPhase="idle";const SIGNED_IN_HANDLE:string="";/*@A*/
+//~@@3@@
+/*@@A*//*@B*/
 //^@@4@@
-/*@@B*/ function effectiveType(p:Post):PostType{return null as any/*@B*/
-//^@@5@@
-/*@@Bc*/} /*@B*/
-//^@@6@@
-/*@@B*/ /*@A*/
-//~@@7@@
-/*@@A*/ /*@A*/
+/*@@B*/const PAGE_STATUS:PageStatus|null=null;/*@A*/
+//~@@5@@
+/*@@A*/type Post={id:string;daysAgo:number;type:PostType;likes:number;replies:number;text:string;summary:string;media:boolean;gif?:boolean;mediaKind?:MediaKind;replyTo?:string;inReplyToId?:string;mentions?:boolean;extraMentions?:boolean;thread?:string;profilePin?:boolean;community?:boolean;repostOf?:string;quoteOf?:string;};type Rules={timeMode:TimeMode;olderDays:number;yearFrom:number;yearTo:number;protectDays:number;posts:boolean;replies:boolean;reposts:boolean;quotes:boolean;community:boolean;mediaPhotos:boolean;mediaVideos:boolean;mediaGifs:boolean;mediaText:boolean;postsLikesMax:number;repliesLikesMax:number;repliesMax:number;deleteWords:string[];keepWords:string[];replyHandles:string[];olderDate:string;protectDate:string;repostOf:string;topic:string;skipMentions:boolean;keepThreads:boolean;keepProfilePin:boolean;keepMedia:boolean;};/*@A*/
+//~@@6@@
+/*@@A*//*@B*/
+//^@@7@@
+/*@@B*//*@A*/
 //~@@8@@
 /*@@A*/ /*@A*/
 //~@@9@@
@@ -26,144 +26,178 @@ import{Page,Section,Text,Callout,Select,Input,Button,Toggle,Table,Rows,Propertie
 //~@@12@@
 /*@@A*/ /*@A*/
 //~@@13@@
-/*@@A*/ /*@B*/
-//^@@14@@
-/*@@B*/ /*@B*/
-//^@@15@@
-/*@@B*/ /*@A*/
+/*@@A*/ /*@A*/
+//~@@14@@
+/*@@A*/ /*@A*/
+//~@@15@@
+/*@@A*/ /*@A*/
 //~@@16@@
-/*@@A*/ function finishDate(d:number):string{const t=new Date();t.setDate(t.getDate()+d);return t.toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"});} /*@A*/
+/*@@A*/ /*@A*/
 //~@@17@@
-/*@@A*/ /*@B*/
-//^@@18@@
-/*@@B*/ /*@A*/
+/*@@A*/ /*@A*/
+//~@@18@@
+/*@@A*/ /*@A*/
 //~@@19@@
 /*@@A*/ /*@A*/
 //~@@20@@
 /*@@A*/ /*@A*/
 //~@@21@@
-/*@@A*/ /*@A*/
-//~@@22@@
-/*@@A*/ /*@A*/
-//~@@23@@
-/*@@A*/ /*@A*/
-//~@@24@@
-/*@@A*/ /*@A*/
-//~@@25@@
 /*@@A*/ /*@B*/
-//^@@26@@
-/*@@B*/ /*@B*/
-//^@@27@@
-/*@@B*/ /*@B*/
-//^@@28@@
-/*@@B*/ /*@B*/
-//^@@29@@
-/*@@B*/ function allTypesOn():Pick<Rules,"posts"|"replies"|"reposts"|"quotes"|"community">{return{posts:true,replies:true,reposts:true,quotes:ARCHIVE_CAPS.hasQuoteFields,community:true};} /*@B*/
-//^@@30@@
-/*@@B*/ /*@B*/
-//^@@31@@
-/*@@B*/ function dailyCap(speed:Speed):number{if(speed==="faster")return 200;if(speed==="fastest")return 350;return 100;} /*@B*/
-//^@@32@@
-/*@@B*/ const POOL:Post[]=[];const BASE:Rules={timeMode:"none",olderDays:365,olderDate:"",yearFrom:2023,yearTo:2026,protectDays:0,protectDate:"",posts:false,replies:false,reposts:false,quotes:false,community:false,mediaPhotos:false,mediaVideos:false,mediaGifs:false,mediaText:false,postsLikesMax:-1,repliesLikesMax:-1,repliesMax:-1,deleteWords:[],keepWords:[],replyHandles:[],repostOf:"",topic:"",skipMentions:false,keepThreads:false,keepProfilePin:true,keepMedia:false,};const QUICK:Array<{id:QAId;title:string;detail:string;rules:Partial<Rules>}>=[{id:"everything",title:"Delete everything",detail:"Every post, reply, quote post and repost, except posts you mark Keep.",rules:{timeMode:"all",protectDays:0,protectDate:"",...allTypesOn()}},{id:"oldest",title:"Delete my oldest posts (older than 2 years)",detail:"Everything older than 2 years. Newer posts stay.",rules:{timeMode:"older",olderDays:730,olderDate:"",protectDays:0,protectDate:"",...allTypesOn()}},{id:"era",title:"Delete a past era",detail:"Starts with your oldest two years. Change the range on this card.",rules:{timeMode:"years",yearFrom:2023,yearTo:2024,protectDays:0,protectDate:"",...allTypesOn()}},{id:"replies",title:"Delete all my replies",detail:"Removes your replies only. Your own posts, quote posts and reposts stay.",rules:{timeMode:"all",posts:false,replies:true,reposts:false,quotes:false,community:false,protectDays:0,protectDate:""}},{id:"reposts",title:"Undo all reposts",detail:"Removes your reposts only.",rules:{timeMode:"all",posts:false,replies:false,reposts:true,quotes:false,community:false,protectDays:0,protectDate:""}},{id:"best",title:"Delete posts and replies with few likes",detail:"Set a like cap for posts, replies, or both. A dash means that type is left alone. Reposts are not affected.",rules:{timeMode:"all",posts:false,replies:false,reposts:false,quotes:false,community:false,postsLikesMax:-1,repliesLikesMax:-1,keepThreads:false,protectDays:0,protectDate:""}},];function mergeQA(id:QAId,keepWords:string[]):Rules{const q=QUICK.find((x)=>x.id===id);return{...BASE,...(q?q.rules:{}),keepWords};} /*@B*/
-//^@@33@@
-/*@@B*/ /*@B*/
-//^@@34@@
-/*@@B*/ /*@B*/
-//^@@35@@
-/*@@B*/ /*@B*/
-//^@@36@@
-/*@@B*/ function computeVerdicts(pool:Post[],r:Rules,pins:string[],qaTitle:string):Map<string,Verdict>{return new Map()/*@B*/
-//^@@37@@
-/*@@Bc*/} const STEP_META:Record<Step,{n:number;label:string;heading:string;hint:string}>={signin:{n:1,label:"Sign in",heading:"Sign in to X",hint:"You sign in once, yourself, in the bot's own browser. The bot never sees your password."},archive:{n:2,label:"Archive",heading:"Get your archive",hint:"One click. X emails the file in about 1–3 days, and the bot loads it for you."},pick:{n:3,label:"Pick",heading:"Pick what goes",hint:"Start with a quick cleanup or set your own rules."},review:{n:4,label:"Review",heading:"Review your cleanup",hint:"Check the totals, pick Free or Fast, download the list, then approve once."},run:{n:5,label:"Run",heading:"Running",hint:"It runs on its own at X's pace. You can close this."},};/*@A*/
-//~@@38@@
-/*@@A*/ /*@A*/
-//~@@39@@
-/*@@A*/ /*@A*/
-//~@@40@@
-/*@@A*/ /*@B*/
-//^@@41@@
+//^@@22@@
 /*@@B*/ /*@A*/
+//~@@23@@
+/*@@A*/ /*@B*/
+//^@@24@@
+/*@@B*/ /*@A*/
+//~@@25@@
+/*@@A*/ /*@A*/
+//~@@26@@
+/*@@A*/ /*@A*/
+//~@@27@@
+/*@@A*/ /*@A*/
+//~@@28@@
+/*@@A*/ /*@A*/
+//~@@29@@
+/*@@A*/ /*@A*/
+//~@@30@@
+/*@@A*/ /*@A*/
+//~@@31@@
+/*@@A*/ /*@A*/
+//~@@32@@
+/*@@A*/ /*@A*/
+//~@@33@@
+/*@@A*/ /*@A*/
+//~@@34@@
+/*@@A*/ /*@A*/
+//~@@35@@
+/*@@A*/ /*@A*/
+//~@@36@@
+/*@@A*/ /*@A*/
+//~@@37@@
+/*@@A*/ /*@B*/
+//^@@38@@
+/*@@B*/ /*@B*/
+//^@@39@@
+/*@@B*/ /*@B*/
+//^@@40@@
+/*@@B*/ const POOL:Post[]=[];const BASE:Rules={timeMode:"none",olderDays:365,olderDate:"",yearFrom:2023,yearTo:2026,protectDays:0,protectDate:"",posts:false,replies:false,reposts:false,quotes:false,community:false,mediaPhotos:false,mediaVideos:false,mediaGifs:false,mediaText:false,postsLikesMax:-1,repliesLikesMax:-1,repliesMax:-1,deleteWords:[],keepWords:[],replyHandles:[],repostOf:"",topic:"",skipMentions:false,keepThreads:false,keepProfilePin:true,keepMedia:false,};/*@A*/
+//~@@41@@
+/*@@A*/ /*@A*/
 //~@@42@@
-/*@@A*/ export default function App(){const theme=useGrokTheme();const _s0:CSSProperties={fontSize:14,color:theme.text.secondary,lineHeight:1.5};/*@B*/
-//^@@43@@
-/*@@B*//*@A*/
+/*@@A*/ /*@A*/
+//~@@43@@
+/*@@A*/ /*@A*/
 //~@@44@@
-/*@@A*//*@B*/
-//^@@45@@
-/*@@B*//*@A*/
+/*@@A*/ /*@A*/
+//~@@45@@
+/*@@A*/ /*@A*/
 //~@@46@@
-/*@@A*/const _s9:CSSProperties={fontSize:13,color:theme.text.tertiary};const _s10:CSSProperties={display:"flex",flexDirection:"column",gap:8};/*@A*/
+/*@@A*/ const STEP_META:Record<Step,{n:number;label:string;heading:string;hint:string}>={signin:{n:1,label:"Sign in",heading:"Sign in to X",hint:"You sign in once, yourself, in the bot's own browser. The bot never sees your password."},archive:{n:2,label:"Archive",heading:"Get your archive",hint:"One click. X emails the file in about 1–3 days, and the bot loads it for you."},pick:{n:3,label:"Pick",heading:"Pick what goes",hint:"Start with a quick cleanup or set your own rules."},review:{n:4,label:"Review",heading:"Review your cleanup",hint:"Check the totals, pick Free or Fast, download the list, then approve once."},run:{n:5,label:"Run",heading:"Running",hint:"It runs on its own at X's pace. You can close this."},};/*@A*/
 //~@@47@@
-/*@@A*//*@B*/
-//^@@48@@
-/*@@B*/const _s14:CSSProperties={minWidth:0};const pool=POOL;const[step,setStep]=useState<Step>(START_STEP);const[phase,setPhase]=useState<HomePhase>(START_PHASE);const[runPhase,setRunPhase]=useState<RunPhase>(START_RUN);const[rules,setRules]=useState<Rules>(BASE);const[activeQA,setActiveQA]=useState<QAId|"">("");/*@A*/
+/*@@A*/ /*@A*/
+//~@@48@@
+/*@@A*/ /*@A*/
 //~@@49@@
-/*@@A*/const[pins,setPins]=useState<string[]>([]);/*@A*/
-//~@@50@@
-/*@@A*/const[order,setOrder]=useState<Order>("oldest");const[speed,setSpeed]=useState<Speed>("steady");const[lane,setLane]=useState<Lane>("free");/*@B*/
-//^@@51@@
+/*@@A*/ /*@B*/
+//^@@50@@
+/*@@B*/ /*@A*/
+//~@@51@@
+/*@@A*/ export default function App(){const theme=useGrokTheme();const _s0:CSSProperties={fontSize:14,color:theme.text.secondary,lineHeight:1.5};/*@B*/
+//^@@52@@
 /*@@B*//*@A*/
-//~@@52@@
-/*@@A*/const[wipeConfirm,setWipeConfirm]=useState("");/*@A*/
 //~@@53@@
 /*@@A*//*@B*/
 //^@@54@@
-/*@@B*/const[coolOn,setCoolOn]=useState(false);/*@B*/
-//^@@55@@
 /*@@B*//*@A*/
+//~@@55@@
+/*@@A*/const _s9:CSSProperties={fontSize:13,color:theme.text.tertiary};const _s10:CSSProperties={display:"flex",flexDirection:"column",gap:8};/*@A*/
 //~@@56@@
-/*@@A*/const[likesLast,setLikesLast]=useState({posts:5,replies:5});/*@B*/
+/*@@A*//*@B*/
 //^@@57@@
-/*@@B*/const[recentOnly,setRecentOnly]=useState(false);/*@B*/
-//^@@58@@
-/*@@B*/const[failedIds,setFailedIds]=useState<string[]>([]);const[narrow,setNarrow]=useState(false);const[barHidden,setBarHidden]=useState(false);const[activeRail,setActiveRail]=useState("");useEffect(()=>{const check=()=>setNarrow(window.innerWidth<1100);check();window.addEventListener("resize",check);return()=>window.removeEventListener("resize",check);},[]);useEffect(()=>{if(!narrow||step==="review"){setBarHidden(false);return;} let lastY=window.scrollY;let stopTimer:ReturnType<typeof window.setTimeout>|undefined;const onScroll=()=>{const y=window.scrollY;if(y>lastY+2&&y>24)setBarHidden(true);else if(y<lastY-2)setBarHidden(false);lastY=y;if(stopTimer!==undefined)window.clearTimeout(stopTimer);stopTimer=window.setTimeout(()=>setBarHidden(false),450);};window.addEventListener("scroll",onScroll,{passive:true});return()=>{window.removeEventListener("scroll",onScroll);if(stopTimer!==undefined)window.clearTimeout(stopTimer);};},[narrow,step]);const archiveReady=phase==="ready";/*@A*/
-//~@@59@@
-/*@@A*/useEffect(()=>{setLikesLast((prev)=>({posts:rules.postsLikesMax>=0?rules.postsLikesMax:prev.posts,replies:rules.repliesLikesMax>=0?rules.repliesLikesMax:prev.replies,}));},[rules.postsLikesMax,rules.repliesLikesMax]);/*@B*/
-//^@@60@@
-/*@@B*/const qaUnchanged=activeQA!==""&&JSON.stringify(rules)===JSON.stringify(mergeQA(activeQA,rules.keepWords));const qaTitle=qaUnchanged?QUICK.find((q)=>q.id===activeQA)?.title||"":"";const verdicts=useMemo(()=>computeVerdicts(pool,rules,pins,qaTitle),[pool,rules,pins,qaTitle]);/*@A*/
-//~@@61@@
-/*@@A*/const sortPosts=(list:Post[]):Post[]=>[...list].sort((a,b)=>{if(order==="newest")return a.daysAgo-b.daysAgo;if(order==="low")return a.likes-b.likes||b.daysAgo-a.daysAgo;return b.daysAgo-a.daysAgo;});const doomed=useMemo(()=>sortPosts(pool.filter((p)=>verdicts.get(p.id)?.kind==="delete")),[pool,verdicts,order]);const scanned=pool.length;const matched=doomed.length;const kept=scanned-matched;/*@B*/
-//^@@62@@
-/*@@B*/const fastCount=doomed.filter((p:Post)=>effectiveType(p)!=="repost").length;const fastReposts=matched-fastCount;const daily=lane==="fast"?4000:dailyCap(speed);const days=matched===0?0:(lane==="fast"?Math.max(Math.ceil(fastCount/4000),Math.ceil(fastReposts/dailyCap(speed))):Math.ceil(matched/daily))+(coolOn?1:0);/*@B*/
+/*@@B*/const _s14:CSSProperties={minWidth:0};const pool=POOL;const[step,setStep]=useState<Step>(START_STEP);const[phase,setPhase]=useState<HomePhase>(START_PHASE);const[runPhase,setRunPhase]=useState<RunPhase>(START_RUN);const[rules,setRules]=useState<Rules>(BASE);/*@A*/
+//~@@58@@
+/*@@A*//*@B*/
+//^@@59@@
+/*@@B*//*@A*/
+//~@@60@@
+/*@@A*//*@B*/
+//^@@61@@
+/*@@B*//*@A*/
+//~@@62@@
+/*@@A*//*@B*/
 //^@@63@@
-/*@@B*/const failedCount=failedIds.length;const deletedSoFar=runPhase==="done"?Math.max(0,matched-failedCount):Math.min(matched,12);/*@B*/
-//^@@64@@
 /*@@B*//*@A*/
-//~@@65@@
-/*@@A*//*@B*/
+//~@@64@@
+/*@@A*/const[likesLast,setLikesLast]=useState({posts:5,replies:5});/*@B*/
+//^@@65@@
+/*@@B*/const[recentOnly,setRecentOnly]=useState(false);/*@B*/
 //^@@66@@
-/*@@B*//*@A*/
+/*@@B*/const[failedIds,setFailedIds]=useState<string[]>([]);const[narrow,setNarrow]=useState(false);const[barHidden,setBarHidden]=useState(false);/*@A*/
 //~@@67@@
-/*@@A*//*@B*/
-//^@@68@@
-/*@@B*/useEffect(()=>{setWipeConfirm("");},[matched]);/*@A*/
-//~@@69@@
-/*@@A*/const scrollPageTop=()=>{const zero=(el:{scrollTop:number}|null)=>{if(el)el.scrollTop=0;};window.scrollTo({top:0,left:0,behavior:"auto"});zero(document.scrollingElement);zero(document.documentElement);zero(document.body);const wrap=document.querySelector(".xpc-wrap");if(wrap instanceof HTMLElement){let n:HTMLElement|null=wrap;while(n){n.scrollTop=0;n=n.parentElement;}}};const scrollToId=(id:string)=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});};/*@A*/
+/*@@A*/useEffect(()=>{if(!narrow||step==="review"){setBarHidden(false);return;} let lastY=window.scrollY;let stopTimer:ReturnType<typeof window.setTimeout>|undefined;const onScroll=()=>{const y=window.scrollY;if(y>lastY+2&&y>24)setBarHidden(true);else if(y<lastY-2)setBarHidden(false);lastY=y;if(stopTimer!==undefined)window.clearTimeout(stopTimer);stopTimer=window.setTimeout(()=>setBarHidden(false),450);};window.addEventListener("scroll",onScroll,{passive:true});return()=>{window.removeEventListener("scroll",onScroll);if(stopTimer!==undefined)window.clearTimeout(stopTimer);};},[narrow,step]);/*@A*/
+//~@@68@@
+/*@@A*/useEffect(()=>{setLikesLast((prev)=>({posts:rules.postsLikesMax>=0?rules.postsLikesMax:prev.posts,replies:rules.repliesLikesMax>=0?rules.repliesLikesMax:prev.replies,}));},[rules.postsLikesMax,rules.repliesLikesMax]);/*@B*/
+//^@@69@@
+/*@@B*//*@A*/
 //~@@70@@
-/*@@A*/const goStep=(id:Step)=>{setStep(id);};useEffect(()=>{let cancelled=false;const run=()=>{if(!cancelled)scrollPageTop();};run();const raf=window.requestAnimationFrame(()=>{run();window.requestAnimationFrame(run);});const t=window.setTimeout(run,80);return()=>{cancelled=true;window.cancelAnimationFrame(raf);window.clearTimeout(t);};},[step]);/*@B*/
-//^@@71@@
-/*@@B*/const primary=(():{label:string;action:()=>void;disabled?:boolean}|null=>{if(step==="signin")return null;if(step==="archive")return null;/*@A*/
-//~@@72@@
-/*@@A*/ if(step==="pick")return{label:"Next: review my list →",action:()=>goStep("review"),disabled:true/*@B*/
+/*@@A*/const scanned=pool.length;/*@A*/
+//~@@71@@
+/*@@A*//*@B*/
+//^@@72@@
+/*@@B*/const failedCount=failedIds.length;/*@B*/
 //^@@73@@
-/*@@B*/};if(step==="review")return null;if(failedCount>0)return{label:"Open failure tray",action:()=>scrollToId("run-tray")};return null;})();const heading=step==="run"&&runPhase==="done"?"Done":STEP_META[step].heading;const hint=step==="run"&&runPhase==="done"?"Here is what was verified, plus optional cleanup on Google and Wayback.":STEP_META[step].hint;const railItems:Array<[string,string]>=step==="signin"?[["sig-start","Sign in to X"],["sig-data","Where your data goes"]]:step==="archive"?[["arc-get","Get your archive"],["arc-data","Where your data goes"]]:step==="pick"?[["pick-quick","Quick cleanup"],["pick-rules","Adjust rules"],["pick-posts","Your posts"]]:step==="review"?[["rev-totals","Totals"],["rev-pace","How it runs"],["rev-sample","Summary"],["rev-export","Export and cooling-off"],["rev-more","More options"]]:runPhase==="done"?[["run-progress","Result"],["run-proof","Proof pass"],["run-kit","After-cleanup kit"],["run-tray","Failure tray"],["run-more","Maintenance"]]:[["run-progress","Progress"],["run-tray","Failure tray"],["run-more","Maintenance"]];useEffect(()=>{const ids=railItems.map(([id])=>id);setActiveRail(ids[0]||"");const scrollerOf=(el:HTMLElement|null):HTMLElement|null=>{let n=el?.parentElement??null;while(n){const style=window.getComputedStyle(n);const overflowY=style.overflowY;if((overflowY==="auto"||overflowY==="scroll"||overflowY==="overlay")&&n.scrollHeight>n.clientHeight+4)return n;n=n.parentElement;} return null;};const update=()=>{const els:Array<{id:string;top:number}>=[];for(const id of ids){const node=document.getElementById(id);if(node)els.push({id,top:node.getBoundingClientRect().top});} if(els.length===0)return;const firstNode=document.getElementById(ids[0]||"");const box=scrollerOf(firstNode);let remain=0;let viewH=window.innerHeight;let canScroll=false;if(box){viewH=box.clientHeight;remain=box.scrollHeight-box.scrollTop-box.clientHeight;canScroll=box.scrollHeight-box.clientHeight>16;} else{const root=document.scrollingElement||document.documentElement;const scrollMax=Math.max(0,root.scrollHeight-window.innerHeight);remain=scrollMax-(window.scrollY||root.scrollTop||0);canScroll=scrollMax>16;} if(canScroll&&remain<=48){setActiveRail(els[els.length-1].id);return;} let probe=140;if(canScroll&&remain<viewH*0.55){probe=Math.max(140,viewH-remain-40);} let current=els[0].id;for(const item of els){if(item.top<=probe)current=item.id;} setActiveRail(current);};const box=scrollerOf(document.getElementById(ids[0]||""));const opts:AddEventListenerOptions={passive:true,capture:true};window.addEventListener("scroll",update,opts);document.addEventListener("scroll",update,opts);window.addEventListener("resize",update);if(box)box.addEventListener("scroll",update,opts);const raf=window.requestAnimationFrame(update);return()=>{window.cancelAnimationFrame(raf);window.removeEventListener("scroll",update,opts);document.removeEventListener("scroll",update,opts);window.removeEventListener("resize",update);if(box)box.removeEventListener("scroll",update,opts);};},[step,runPhase]);const panel:CSSProperties={borderRadius:16,border:`1px solid ${theme.border.default}`,background:theme.bg.subtle,padding:24,};const subhead:CSSProperties={fontSize:17,fontWeight:650,margin:"0 0 4px",color:theme.text.primary};/*@A*/
+/*@@B*//*@A*/
 //~@@74@@
-/*@@A*/const fortressRow=(key:"phone"|"email",name:string,what:string)=>{const url=key==="phone"?PHONE_FORTRESS_URL:EMAIL_FORTRESS_URL;const linked=url!=="";return(<div>{linked?(<a href={url} target="_blank" rel="noopener noreferrer" style={{color:theme.text.accent,fontSize:14,fontWeight:600,fontFamily:theme.font.family,textDecoration:"underline"}}>{`${name} ↗`}</a>):(<span style={{color:theme.text.primary,fontSize:14,fontWeight:600,fontFamily:theme.font.family}}>{name}</span>)}<div style={{fontSize:13,color:theme.text.secondary,lineHeight:1.45,marginTop:6}}><div>{what}</div><div style={{marginTop:6}}>{`To open it, use the Grok Bot sidebar and choose ${name} from your bots.`}</div></div></div>);};const tapLine=(sentence:string)=>(<div style={{fontSize:14,color:theme.text.secondary,lineHeight:1.5,marginTop:10}}>{sentence}</div>);const xDownloadLink=(<div style={{fontSize:13,color:theme.text.secondary,marginTop:10,lineHeight:1.45}}>Or request it yourself on <TextLink href="https://x.com/settings/download_your_data">X's Download your data page</TextLink> (opens in your own browser).</div>);const recentOnlyOffer=(<div style={_s10}><div style={_s0}>Optional, while you wait for the archive: start with your recent posts only (about the last 3,200). This is not your full history, and it still needs a preview and one Approve.</div><div>{tapLine("Start with recent posts only with the tap card in the chat.")}</div></div>);const fortressCard=(<div style={{marginTop:12,padding:"14px 16px",borderRadius:12,border:`1px solid ${theme.border.default}`,background:theme.bg.base,display:"flex",flexDirection:"column",gap:10}}><div style={_s0}>Want your name, phone and address off people-search sites too? Those listings are usually there for reasons that have nothing to do with X. Our bots can help.</div>{fortressRow("phone","Phone Fortress","Data-broker opt-outs, Do Not Call, spam call and text cleanup, and breach watch.")}{fortressRow("email","Email Fortress","Data-broker opt-outs, spam email cleanup, and breach watch.")}</div>);/*@B*/
+/*@@A*//*@B*/
 //^@@75@@
 /*@@B*//*@A*/
 //~@@76@@
-/*@@A*/const numBox=(value:string,label:string,color:string)=>(<div key={label} style={_s14}><div style={{fontSize:26,fontWeight:650,letterSpacing:"-0.02em",color}}>{value}</div><div style={{fontSize:13,color:theme.text.secondary,marginTop:2}}>{label}</div></div>);const countsReady=archiveReady&&step!=="archive"&&step!=="signin";const finishLine=step==="run"?`Done by ${finishDate(Math.max(1,days-1))}`:matched===0?"Pick a cleanup to see a finish date":`Done by ${finishDate(days)} · ${lane==="fast"?"about 4,000":String(daily)} a day`;const archiveVsProfileLine=recentOnly?"Recent only · not your full history. This list is only about the last 3,200 posts X can show now.":`Found in archive vs. on your profile: ${ARCHIVE_POST_COUNT.toLocaleString("en-US")} in the archive, ${PROFILE_POST_COUNT_LABEL} on your profile.`;/*@B*/
+/*@@A*//*@B*/
 //^@@77@@
-/*@@B*/const shortCounts=!archiveReady?"Counts appear once your archive loads":step==="run"?runPhase==="done"?`Verified gone: ${deletedSoFar} of ${deletedSoFar+failedCount} · Still live: ${failedCount}`:`${deletedSoFar} deleted · ${Math.max(0,matched-deletedSoFar)} left · ${failedCount} failed`:`${scanned} scanned · ${kept} keep · ${matched} delete`;const totalsRows:Array<[string,string,string]>=([["Posts",(p:Post)=>!p.community&&effectiveType(p)==="post"],["Replies",(p:Post)=>!p.community&&effectiveType(p)==="reply"],["Reposts",(p:Post)=>effectiveType(p)==="repost"],["Quotes",(p:Post)=>!p.community&&effectiveType(p)==="quote"],["Community",(p:Post)=>!!p.community],]as Array<[string,(p:Post)=>boolean]>).map(([label,f])=>{if(label==="Quotes"&&!ARCHIVE_CAPS.hasQuoteFields){return[label,"n/a","not available from this archive"]as[string,string,string];} const all=pool.filter(f);const del=all.filter((p)=>verdicts.get(p.id)?.kind==="delete").length;return[label,String(del),String(all.length-del)]as[string,string,string];});totalsRows.push(["Total",String(matched),String(kept)]);return(<Page title="X Post Cleaner" width="full" summary="Free. No card. Nothing to cancel. Sign in, get your archive, pick what goes, approve once." palette={["#6EC1FF","#4AA3E0","#B8DFFF"]}><style>{`.xpc-wrap{max-width: 1440px;margin: 0 auto;padding: 4px 12px 96px;box-sizing: border-box}.xpc-stepper{display: flex;align-items: center;gap: 6px;margin: 0 0 20px}.xpc-step{display: flex;align-items: center;gap: 8px;min-width: 0;background: none;border: 0;padding: 6px 4px;cursor: pointer;text-align: left;font: inherit;color: inherit}.xpc-step[disabled]{cursor: default;opacity: 0.45}.xpc-num{width: 26px;height: 26px;border-radius: 999px;display: inline-flex;align-items: center;justify-content: center;font-size: 13px;font-weight: 600;flex-shrink: 0}.xpc-step-label{font-size: 14px;font-weight: 600;white-space: nowrap}.xpc-shell{display: grid;grid-template-columns: 200px minmax(0, 1fr) 280px;gap: 32px;align-items: start}.xpc-rail, .xpc-summary{position: sticky;top: 24px}.xpc-quick{display: grid;grid-template-columns: repeat(3, minmax(0, 1fr));gap: 12px}.xpc-groups{display: grid;grid-template-columns: repeat(2, minmax(0, 1fr));gap: 12px;align-items: start}.xpc-groups-col{display: flex;flex-direction: column;gap: 12px;min-width: 0}.xpc-likes-pair{display: grid;grid-template-columns: 1fr 1fr;gap: 16px;align-items: start}.xpc-likes-pick{min-width: 0;width: 100%;box-sizing: border-box}.xpc-list{max-height: 640px;overflow: auto;border-radius: 16px}.xpc-row{display: grid;grid-template-columns: auto minmax(0, 1fr) 220px;gap: 16px;align-items: start;padding: 16px 20px}.xpc-keep{display: inline-flex;align-items: center;gap: 6px;border-radius: 999px;padding: 6px 12px;font-size: 13px;font-weight: 600;cursor: pointer;white-space: nowrap;font-family: inherit}.xpc-text{font-size: 15px;line-height: 1.45;display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden}.xpc-about{font-size: 13.5px;margin-top: 4px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis}.xpc-verdict{text-align: right}.xpc-totals{width: auto;max-width: 420px;border-collapse: collapse;font-size: 14px;line-height: 1.3}.xpc-totals th, .xpc-totals td{padding: 5px 16px 5px 0;vertical-align: top}.xpc-totals th:not(:first-child), .xpc-totals td:not(:first-child){text-align: right;padding-left: 20px;padding-right: 0}.xpc-engage{display: flex;flex-direction: column;gap: 8px}.xpc-engage-row{display: flex;align-items: stretch;gap: 8px}.xpc-engage-off, .xpc-engage-step, .xpc-engage-chip{min-height: 36px;border-radius: 10px;cursor: pointer;font-size: 13px;font-weight: 600}.xpc-engage-off{padding: 0 12px;flex: 0 0 auto}.xpc-engage-step{min-width: 36px;padding: 0;flex: 0 0 36px;font-size: 16px;line-height: 1}.xpc-engage-num{flex: 1 1 96px;min-width: 72px;min-height: 36px;border-radius: 10px;font-size: 15px;font-weight: 600;text-align: center;padding: 0 8px;box-sizing: border-box}.xpc-engage-chips{display: flex;flex-wrap: wrap;gap: 8px}.xpc-engage-chip{padding: 0 12px}.xpc-engage-off:disabled, .xpc-engage-step:disabled, .xpc-engage-chip:disabled, .xpc-engage-num:disabled{cursor: not-allowed}@media (max-width: 1280px){.xpc-quick{grid-template-columns: repeat(2, minmax(0, 1fr))}}@media (max-width: 1100px){.xpc-shell{grid-template-columns: minmax(0, 1fr)}.xpc-rail, .xpc-summary{display: none}}@media (max-width: 760px){.xpc-quick, .xpc-groups{grid-template-columns: minmax(0, 1fr)}.xpc-likes-pair{grid-template-columns: minmax(0, 1fr)}.xpc-row{grid-template-columns: auto minmax(0, 1fr)}.xpc-verdict{grid-column: 2;text-align: left}.xpc-step-label{font-size: 12px}.xpc-wrap{padding: 0 0 112px}}.xpc-wrap-pickbar{padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px))}@media (max-width: 760px){.xpc-wrap-pickbar{padding: 0 0 calc(80px + env(safe-area-inset-bottom, 0px))}}.xpc-nextbar{position: fixed;left: 0;right: 0;bottom: 0;z-index: 50;display: flex;align-items: center;justify-content: center;gap: 10px;box-sizing: border-box;height: calc(48px + env(safe-area-inset-bottom, 0px));max-height: calc(48px + env(safe-area-inset-bottom, 0px));padding: 0 12px env(safe-area-inset-bottom, 0px);transform: translateY(0);transition: transform 0.2s ease, opacity 0.2s ease}.xpc-nextbar-counts{font-size: 13px;line-height: 1.2;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;min-width: 0}.xpc-nextbar-hide{transform: translateY(100%);opacity: 0;pointer-events: none}.xpc-kinds-grid{display: grid;grid-template-columns: 1fr 1fr;gap: 8px 24px;align-items: start}.xpc-tiers{display: grid;grid-template-columns: repeat(3, minmax(0, 1fr));gap: 12px;margin-top: 16px}.xpc-tier{border-radius: 14px;padding: 16px 18px;display: flex;flex-direction: column;gap: 8px;min-width: 0}h1{color: #8BE9FF !important;text-shadow: 0 0 6px rgba(110, 193, 255, 0.95), 0 0 18px rgba(74, 163, 224, 0.55), 0 0 36px rgba(110, 193, 255, 0.35)}@media (max-width: 760px){.xpc-kinds-grid, .xpc-tiers{grid-template-columns: minmax(0, 1fr)}}`}</style><div className={narrow&&primary&&step!=="review"?"xpc-wrap xpc-wrap-pickbar":"xpc-wrap"} style={{fontFamily:theme.font.family,color:theme.text.primary}}>{SIGNED_IN_HANDLE!==""&&(<div style={{fontSize:13,color:theme.text.secondary,margin:"0 0 8px",lineHeight:1.45}}>{`Signed in as @${SIGNED_IN_HANDLE.replace(/^@/,"")}`}</div>)}<div className="xpc-stepper" role="navigation" aria-label="Cleanup steps">{(["signin","archive","pick","review","run"]as Step[]).map((id,i)=>{const meta=STEP_META[id];const active=step===id;const locked=(id==="run"||id==="review")/*@B*/
-//^@@78@@
-/*@@B*/;const label=id==="run"&&runPhase==="done"?"Done":meta.label;return(<div key={id} style={{display:"flex",alignItems:"center",gap:6,flex:i<4?1:"0 0 auto",minWidth:0}}><button type="button" className="xpc-step" disabled={locked||id==="pick"/*@A*/
+/*@@B*//*@A*/
+//~@@78@@
+/*@@A*/const scrollToId=(id:string)=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});};/*@A*/
 //~@@79@@
-/*@@A*/} onClick={()=>goStep(id)} aria-current={active?"step":undefined}><span className="xpc-num" style={{background:active?theme.fill.primary:theme.fill.secondary,color:active?theme.text.onPrimary:theme.text.secondary}}>{meta.n}</span><span className="xpc-step-label" style={{color:active?theme.text.primary:theme.text.secondary}}>{label}</span></button>{i<4&&<div style={{flex:1,height:1,background:theme.border.default,minWidth:12}}/>}</div>);})}</div>{PAGE_STATUS&&(PAGE_STATUS.lead!==""||PAGE_STATUS.text!=="")&&(<div role="status" style={{margin:"0 0 20px",padding:"12px 14px",borderRadius:12,border:`1px solid ${theme.border.default}`,background:PAGE_STATUS.tone==="ok"?theme.fill.successSubtle:PAGE_STATUS.tone==="info"?theme.fill.accentSubtle:theme.bg.subtle}}>{PAGE_STATUS.lead!==""&&(<div style={{fontSize:14,fontWeight:650,color:PAGE_STATUS.tone==="ok"?theme.text.success:PAGE_STATUS.tone==="info"?theme.text.accent:theme.text.warning}}>{PAGE_STATUS.lead}</div>)}{PAGE_STATUS.text!==""&&(<div style={{fontSize:14,color:theme.text.secondary,lineHeight:1.45,marginTop:PAGE_STATUS.lead!==""?4:0}}>{PAGE_STATUS.text}</div>)}</div>)}<div className="xpc-shell"><aside className="xpc-rail" aria-label="Sections on this step"><div style={{fontSize:12,color:theme.text.tertiary,marginBottom:10,letterSpacing:0.04,textTransform:"uppercase"}}>On this step</div>{railItems.map(([id,label])=>(<button key={id} type="button" onClick={()=>{setActiveRail(id);scrollToId(id);}} style={{display:"block",width:"100%",textAlign:"left",background:"transparent",border:0,borderLeft:`2px solid ${activeRail===id?theme.border.focus:theme.border.default}`,padding:"8px 12px",cursor:"pointer",fontFamily:theme.font.family,fontSize:14,fontWeight:activeRail===id?650:400,color:activeRail===id?theme.text.accent:theme.text.secondary}}>{label}</button>))}</aside><main style={_s14}><div style={{marginBottom:22}}><h2 style={{margin:0,fontSize:theme.font.heading2.fontSize,lineHeight:theme.font.heading2.lineHeight,fontFamily:theme.font.family,color:theme.text.primary,fontWeight:650}}>{heading}</h2><p style={{margin:"6px 0 0",fontSize:15,lineHeight:1.5,color:theme.text.secondary}}>{hint}</p>{null/*@B*/
-//^@@80@@
-/*@@Bc*/}</div>{step==="signin"&&(<div style={{display:"flex",flexDirection:"column",gap:20}}><div id="sig-start" style={{...panel,background:theme.fill.accentSubtle,padding:"28px 28px"}}><Rows rows={[{title:"1. Open",detail:"The X sign-in window opens below the Page in the chat."},{title:"2. Sign in",detail:"You type your password and any 2FA code yourself. The bot never sees them."},{title:"3. Next",detail:"The bot reads your handle from X and moves you on to your archive."},]}/><div style={{marginTop:18,fontSize:14,color:theme.text.secondary,lineHeight:1.5}}>Sign in in the X window in the chat. If you already signed in, you're set.</div></div><div id="sig-data"><div style={subhead}>Where your data goes</div><Properties items={[{label:"Sign-in",value:"To fetch your archive and later delete posts, you sign in to X once, yourself, in the bot's own browser. The bot never sees your password, and you can sign out of X anytime."},{label:"Your archive",value:"A copy is stored on the bot's computer so it can build your list and carry out the deletes you approve. Media files in the ZIP (the photos and videos themselves) are not imported. Posts that include photos or videos can still be in your cleanup list."},{label:"Sharing",value:"None of your data or information is sold, or shared with third parties or anyone else."},{label:"Deletes",value:"Deletes happen only after you approve your cleanup list."},{label:"After the run",value:"Taking posts off X does not take them off the rest of the internet. After the run, we offer to delete the archive copy from the bot's computer, and we can help with leftover copies on Google and the Wayback Machine."},]}/></div></div>)}{step==="archive"&&(<div style={{display:"flex",flexDirection:"column",gap:20}}><div id="arc-get" style={{display:"flex",flexDirection:"column",gap:16}}>{phase==="choose"&&(<><div style={{...panel,background:theme.fill.accentSubtle,padding:"28px 28px"}}><Rows rows={[{title:"1. Request",detail:"The bot taps Download your data on X, in its own signed-in browser."},{title:"2. Wait",detail:"X emails a link, usually in 1–3 days. While you wait, choose what to delete: old posts, replies with few likes, reposts, and more."},{title:"3. Load",detail:"The bot downloads the file and loads it here. You never handle the ZIP."},]}/><div style={{marginTop:18}}>{xDownloadLink}</div></div><div role="button" tabIndex={0} onClick={()=>setPhase("manual")} style={{...panel,minHeight:80,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,cursor:"pointer",borderStyle:"dashed"}}><span style={{fontSize:15,color:theme.text.secondary}}>Already have the file? Drop your archive here</span><span style={_s9}>ZIP or tweets.js · read on the bot's computer</span></div>{recentOnlyOffer}</>)}{(phase==="grabbing"||phase==="waiting")&&(<div style={_s0}>Your archive has been requested. X usually takes 1 to 3 days. The bot will pull it in automatically and let you know when it's ready. Meanwhile, set up your rules.</div>)}{phase==="manual"&&(<><div style={{...panel,minHeight:100,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,borderStyle:"dashed"}}><span style={{fontSize:16,color:theme.text.secondary}}>Drop your archive here</span><span style={_s9}>or click to browse · ZIP or tweets.js</span></div><div><Button label="Let the bot fetch it instead" variant="quiet" onClick={()=>setPhase("choose")}/></div></>)}{phase==="ready"&&(<>{recentOnly?(<Callout tone="info" lead="Recent only · not your full history">Your recent posts (about the last 3,200 X can show). Older posts are not in this list. Your official archive is still the way to clean your full history.</Callout>):(<Callout tone="success" lead="Archive loaded">{`${scanned.toLocaleString("en-US")} posts found. Next, choose what goes.`}</Callout>)}{recentOnly&&(<div>{tapLine("Wait for the full archive with the tap card in the chat.")}</div>)}</>)}</div><div id="arc-data"><div style={subhead}>Where your data goes</div><Properties items={[{label:"Sign-in",value:"To fetch your archive and later delete posts, you sign in to X once, yourself, in the bot's own browser. The bot never sees your password, and you can sign out of X anytime."},{label:"Your archive",value:"A copy is stored on the bot's computer so it can build your list and carry out the deletes you approve. Media files in the ZIP (the photos and videos themselves) are not imported. Posts that include photos or videos can still be in your cleanup list."},{label:"Sharing",value:"None of your data or information is sold, or shared with third parties or anyone else."},{label:"Deletes",value:"Deletes happen only after you approve your cleanup list."},{label:"After the run",value:"Taking posts off X does not take them off the rest of the internet. After the run, we offer to delete the archive copy from the bot's computer, and we can help with leftover copies on Google and the Wayback Machine."},]}/>{fortressCard}</div></div>)}{null/*@A*/
-//~@@81@@
-/*@@Ac*/}{null/*@B*/
-//^@@82@@
-/*@@Bc*/}{null/*@B*/
+/*@@A*/const goStep=(id:Step)=>{setStep(id);};/*@A*/
+//~@@80@@
+/*@@A*//*@B*/
+//^@@81@@
+/*@@B*/const primary=(():{label:string;action:()=>void;disabled?:boolean}|null=>{if(step==="signin")return null;if(step==="archive")return null;/*@A*/
+//~@@82@@
+/*@@A*/ if(step==="pick")return{label:"Next: review my list →",action:()=>goStep("review"),disabled:true/*@B*/
 //^@@83@@
-/*@@Bc*/}</main><aside className="xpc-summary" aria-label="Live counts" style={{...panel,padding:22}}>{countsReady?(<><div style={{display:"grid",gridTemplateColumns:"repeat(3, minmax(0, 1fr))",gap:10}}>{step==="run"?runPhase==="done"?[numBox(String(deletedSoFar),"Verified gone",theme.text.primary),numBox(String(failedCount),"Still live",failedCount?theme.text.warning:theme.text.primary),numBox("0","Left",theme.text.primary)]:[numBox(String(deletedSoFar),"Deleted",theme.text.primary),numBox(String(Math.max(0,matched-deletedSoFar)),"Left",theme.text.primary),numBox(String(failedCount),"Failed",failedCount?theme.text.warning:theme.text.primary)]:[numBox(String(scanned),"Scanned",theme.text.primary),numBox(String(kept),"Keep",theme.text.success),numBox(String(matched),"Delete",matched?theme.text.warning:theme.text.primary)]}</div>{step!=="run"&&(<div style={{fontSize:13,color:theme.text.secondary,marginTop:12,lineHeight:1.45}}>{archiveVsProfileLine}</div>)}<div style={{fontSize:14,color:theme.text.secondary,margin:"12px 0 18px",lineHeight:1.45}}>{finishLine}</div></>):(<div style={{fontSize:14,color:theme.text.tertiary,marginBottom:primary?18:0,lineHeight:1.45}}>Counts appear once your archive loads.</div>)}{primary&&step!=="review"&&<Button label={primary.label} variant="primary" disabled={primary.disabled} onClick={primary.action}/>}</aside></div></div>{narrow&&primary&&step!=="review"?(<div className={barHidden?"xpc-nextbar xpc-nextbar-hide":"xpc-nextbar"} role="region" aria-label="Next step" style={{background:theme.bg.base,borderTop:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}><span className="xpc-nextbar-counts" style={{color:theme.text.secondary}}>{shortCounts}</span><button type="button" disabled={!!primary.disabled} onClick={primary.action} style={{height:32,padding:"0 14px",borderRadius:8,border:0,background:primary.disabled?theme.fill.secondary:theme.fill.primary,color:primary.disabled?theme.text.tertiary:theme.text.onPrimary,fontFamily:theme.font.family,fontSize:13,fontWeight:650,cursor:primary.disabled?"not-allowed":"pointer",whiteSpace:"nowrap",flex:"0 0 auto",}}>{primary.label}</button></div>):(<Floating edge="bottom" align="end"><BackToTop/></Floating>)}</Page>);}
+/*@@B*/};if(step==="review")return null;if(failedCount>0)return{label:"Open failure tray",action:()=>scrollToId("run-tray")};return null;})();const heading=step==="run"&&runPhase==="done"?"Done":STEP_META[step].heading;const hint=step==="run"&&runPhase==="done"?"Here is what was verified, plus optional cleanup on Google and Wayback.":STEP_META[step].hint;/*@A*/
+//~@@84@@
+/*@@A*/const panel:CSSProperties={borderRadius:16,border:`1px solid ${theme.border.default}`,background:theme.bg.subtle,padding:24,};/*@A*/
+//~@@85@@
+/*@@A*/const tapLine=(sentence:string)=>(<div style={{fontSize:14,color:theme.text.secondary,lineHeight:1.5,marginTop:10}}>{sentence}</div>);const xDownloadLink=(<div style={{fontSize:13,color:theme.text.secondary,marginTop:10,lineHeight:1.45}}>Or request it yourself on <TextLink href="https://x.com/settings/download_your_data">X's Download your data page</TextLink> (opens in your own browser).</div>);const recentOnlyOffer=(<div style={_s10}><div style={_s0}>Optional, while you wait for the archive: start with your recent posts only (about the last 3,200). This is not your full history, and it still needs a preview and one Approve.</div><div>{tapLine("Start with recent posts only with the tap card in the chat.")}</div></div>);/*@A*/
+//~@@86@@
+/*@@A*//*@B*/
+//^@@87@@
+/*@@B*//*@A*/
+//~@@88@@
+/*@@A*//*@B*/
+//^@@89@@
+/*@@B*/return(<Page title="X Post Cleaner" width="full" summary="Free. No card. Nothing to cancel. Sign in, get your archive, pick what goes, approve once." palette={["#6EC1FF","#4AA3E0","#B8DFFF"]}><style>{`.xpc-wrap{max-width: 1440px;margin: 0 auto;padding: 4px 12px 96px;box-sizing: border-box}.xpc-stepper{display: flex;align-items: center;gap: 6px;margin: 0 0 20px}.xpc-step{display: flex;align-items: center;gap: 8px;min-width: 0;background: none;border: 0;padding: 6px 4px;cursor: pointer;text-align: left;font: inherit;color: inherit}.xpc-step[disabled]{cursor: default;opacity: 0.45}.xpc-num{width: 26px;height: 26px;border-radius: 999px;display: inline-flex;align-items: center;justify-content: center;font-size: 13px;font-weight: 600;flex-shrink: 0}.xpc-step-label{font-size: 14px;font-weight: 600;white-space: nowrap}.xpc-shell{display: grid;grid-template-columns: 200px minmax(0, 1fr) 280px;gap: 32px;align-items: start}.xpc-rail, .xpc-summary{position: sticky;top: 24px}.xpc-quick{display: grid;grid-template-columns: repeat(3, minmax(0, 1fr));gap: 12px}.xpc-groups{display: grid;grid-template-columns: repeat(2, minmax(0, 1fr));gap: 12px;align-items: start}.xpc-groups-col{display: flex;flex-direction: column;gap: 12px;min-width: 0}.xpc-likes-pair{display: grid;grid-template-columns: 1fr 1fr;gap: 16px;align-items: start}.xpc-likes-pick{min-width: 0;width: 100%;box-sizing: border-box}.xpc-list{max-height: 640px;overflow: auto;border-radius: 16px}.xpc-row{display: grid;grid-template-columns: auto minmax(0, 1fr) 220px;gap: 16px;align-items: start;padding: 16px 20px}.xpc-keep{display: inline-flex;align-items: center;gap: 6px;border-radius: 999px;padding: 6px 12px;font-size: 13px;font-weight: 600;cursor: pointer;white-space: nowrap;font-family: inherit}.xpc-text{font-size: 15px;line-height: 1.45;display: -webkit-box;-webkit-line-clamp: 2;-webkit-box-orient: vertical;overflow: hidden}.xpc-about{font-size: 13.5px;margin-top: 4px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis}.xpc-verdict{text-align: right}.xpc-totals{width: auto;max-width: 420px;border-collapse: collapse;font-size: 14px;line-height: 1.3}.xpc-totals th, .xpc-totals td{padding: 5px 16px 5px 0;vertical-align: top}.xpc-totals th:not(:first-child), .xpc-totals td:not(:first-child){text-align: right;padding-left: 20px;padding-right: 0}.xpc-engage{display: flex;flex-direction: column;gap: 8px}.xpc-engage-row{display: flex;align-items: stretch;gap: 8px}.xpc-engage-off, .xpc-engage-step, .xpc-engage-chip{min-height: 36px;border-radius: 10px;cursor: pointer;font-size: 13px;font-weight: 600}.xpc-engage-off{padding: 0 12px;flex: 0 0 auto}.xpc-engage-step{min-width: 36px;padding: 0;flex: 0 0 36px;font-size: 16px;line-height: 1}.xpc-engage-num{flex: 1 1 96px;min-width: 72px;min-height: 36px;border-radius: 10px;font-size: 15px;font-weight: 600;text-align: center;padding: 0 8px;box-sizing: border-box}.xpc-engage-chips{display: flex;flex-wrap: wrap;gap: 8px}.xpc-engage-chip{padding: 0 12px}.xpc-engage-off:disabled, .xpc-engage-step:disabled, .xpc-engage-chip:disabled, .xpc-engage-num:disabled{cursor: not-allowed}@media (max-width: 1280px){.xpc-quick{grid-template-columns: repeat(2, minmax(0, 1fr))}}@media (max-width: 1100px){.xpc-shell{grid-template-columns: minmax(0, 1fr)}.xpc-rail, .xpc-summary{display: none}}@media (max-width: 760px){.xpc-quick, .xpc-groups{grid-template-columns: minmax(0, 1fr)}.xpc-likes-pair{grid-template-columns: minmax(0, 1fr)}.xpc-row{grid-template-columns: auto minmax(0, 1fr)}.xpc-verdict{grid-column: 2;text-align: left}.xpc-step-label{font-size: 12px}.xpc-wrap{padding: 0 0 112px}}.xpc-wrap-pickbar{padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px))}@media (max-width: 760px){.xpc-wrap-pickbar{padding: 0 0 calc(80px + env(safe-area-inset-bottom, 0px))}}.xpc-nextbar{position: fixed;left: 0;right: 0;bottom: 0;z-index: 50;display: flex;align-items: center;justify-content: center;gap: 10px;box-sizing: border-box;height: calc(48px + env(safe-area-inset-bottom, 0px));max-height: calc(48px + env(safe-area-inset-bottom, 0px));padding: 0 12px env(safe-area-inset-bottom, 0px);transform: translateY(0);transition: transform 0.2s ease, opacity 0.2s ease}.xpc-nextbar-counts{font-size: 13px;line-height: 1.2;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;min-width: 0}.xpc-nextbar-hide{transform: translateY(100%);opacity: 0;pointer-events: none}.xpc-kinds-grid{display: grid;grid-template-columns: 1fr 1fr;gap: 8px 24px;align-items: start}.xpc-tiers{display: grid;grid-template-columns: repeat(3, minmax(0, 1fr));gap: 12px;margin-top: 16px}.xpc-tier{border-radius: 14px;padding: 16px 18px;display: flex;flex-direction: column;gap: 8px;min-width: 0}h1{color: #8BE9FF !important;text-shadow: 0 0 6px rgba(110, 193, 255, 0.95), 0 0 18px rgba(74, 163, 224, 0.55), 0 0 36px rgba(110, 193, 255, 0.35)}@media (max-width: 760px){.xpc-kinds-grid, .xpc-tiers{grid-template-columns: minmax(0, 1fr)}}`}</style><div className={narrow&&primary&&step!=="review"?"xpc-wrap xpc-wrap-pickbar":"xpc-wrap"} style={{fontFamily:theme.font.family,color:theme.text.primary}}>{SIGNED_IN_HANDLE!==""&&(<div style={{fontSize:13,color:theme.text.secondary,margin:"0 0 8px",lineHeight:1.45}}>{`Signed in as @${SIGNED_IN_HANDLE.replace(/^@/,"")}`}</div>)}<div className="xpc-stepper" role="navigation" aria-label="Cleanup steps">{(["signin","archive","pick","review","run"]as Step[]).map((id,i)=>{const meta=STEP_META[id];const active=step===id;const locked=(id==="run"||id==="review")/*@B*/
+//^@@90@@
+/*@@B*/;const label=id==="run"&&runPhase==="done"?"Done":meta.label;return(<div key={id} style={{display:"flex",alignItems:"center",gap:6,flex:i<4?1:"0 0 auto",minWidth:0}}><button type="button" className="xpc-step" disabled={locked||id==="pick"/*@A*/
+//~@@91@@
+/*@@A*/} onClick={()=>goStep(id)} aria-current={active?"step":undefined}><span className="xpc-num" style={{background:active?theme.fill.primary:theme.fill.secondary,color:active?theme.text.onPrimary:theme.text.secondary}}>{meta.n}</span><span className="xpc-step-label" style={{color:active?theme.text.primary:theme.text.secondary}}>{label}</span></button>{i<4&&<div style={{flex:1,height:1,background:theme.border.default,minWidth:12}}/>}</div>);})}</div>{PAGE_STATUS&&(PAGE_STATUS.lead!==""||PAGE_STATUS.text!=="")&&(<div role="status" style={{margin:"0 0 20px",padding:"12px 14px",borderRadius:12,border:`1px solid ${theme.border.default}`,background:PAGE_STATUS.tone==="ok"?theme.fill.successSubtle:PAGE_STATUS.tone==="info"?theme.fill.accentSubtle:theme.bg.subtle}}>{PAGE_STATUS.lead!==""&&(<div style={{fontSize:14,fontWeight:650,color:PAGE_STATUS.tone==="ok"?theme.text.success:PAGE_STATUS.tone==="info"?theme.text.accent:theme.text.warning}}>{PAGE_STATUS.lead}</div>)}{PAGE_STATUS.text!==""&&(<div style={{fontSize:14,color:theme.text.secondary,lineHeight:1.45,marginTop:PAGE_STATUS.lead!==""?4:0}}>{PAGE_STATUS.text}</div>)}</div>)}<div className="xpc-shell">{null/*@A*/
+//~@@92@@
+/*@@Ac*/}<main style={_s14}><div style={{marginBottom:22}}><h2 style={{margin:0,fontSize:theme.font.heading2.fontSize,lineHeight:theme.font.heading2.lineHeight,fontFamily:theme.font.family,color:theme.text.primary,fontWeight:650}}>{heading}</h2><p style={{margin:"6px 0 0",fontSize:15,lineHeight:1.5,color:theme.text.secondary}}>{hint}</p>{null/*@B*/
+//^@@93@@
+/*@@Bc*/}</div>{step==="signin"&&(<div style={{display:"flex",flexDirection:"column",gap:20}}><div style={_s0}>Sign in in the X window in the chat. If you already signed in, you're set.</div>{null/*@A*/
+//~@@94@@
+/*@@Ac*/}</div>)}{step==="archive"&&(<div style={{display:"flex",flexDirection:"column",gap:20}}><div id="arc-get" style={{display:"flex",flexDirection:"column",gap:16}}>{phase==="choose"&&(<><div style={{...panel,background:theme.fill.accentSubtle,padding:"28px 28px"}}><Rows rows={[{title:"1. Request",detail:"The bot taps Download your data on X, in its own signed-in browser."},{title:"2. Wait",detail:"X emails a link, usually in 1–3 days. While you wait, choose what to delete: old posts, replies with few likes, reposts, and more."},{title:"3. Load",detail:"The bot downloads the file and loads it here. You never handle the ZIP."},]}/><div style={{marginTop:18}}>{xDownloadLink}</div></div><div role="button" tabIndex={0} onClick={()=>setPhase("manual")} style={{...panel,minHeight:80,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4,cursor:"pointer",borderStyle:"dashed"}}><span style={{fontSize:15,color:theme.text.secondary}}>Already have the file? Drop your archive here</span><span style={_s9}>ZIP or tweets.js · read on the bot's computer</span></div>{recentOnlyOffer}</>)}{(phase==="grabbing"||phase==="waiting")&&(<div style={_s0}>Your archive has been requested. X usually takes 1 to 3 days. The bot will pull it in automatically and let you know when it's ready. Meanwhile, set up your rules.</div>)}{phase==="manual"&&(<><div style={{...panel,minHeight:100,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,borderStyle:"dashed"}}><span style={{fontSize:16,color:theme.text.secondary}}>Drop your archive here</span><span style={_s9}>or click to browse · ZIP or tweets.js</span></div><div><Button label="Let the bot fetch it instead" variant="quiet" onClick={()=>setPhase("choose")}/></div></>)}{phase==="ready"&&(<>{recentOnly?(<Callout tone="info" lead="Recent only · not your full history">Your recent posts (about the last 3,200 X can show). Older posts are not in this list. Your official archive is still the way to clean your full history.</Callout>):(<Callout tone="success" lead="Archive loaded">{`${scanned.toLocaleString("en-US")} posts found. Next, choose what goes.`}</Callout>)}{recentOnly&&(<div>{tapLine("Wait for the full archive with the tap card in the chat.")}</div>)}</>)}</div>{null/*@A*/
+//~@@95@@
+/*@@Ac*/}</div>)}{null/*@A*/
+//~@@96@@
+/*@@Ac*/}{null/*@B*/
+//^@@97@@
+/*@@Bc*/}{null/*@B*/
+//^@@98@@
+/*@@Bc*/}</main>{null/*@B*/
+//^@@99@@
+/*@@Bc*/}</div></div>{null/*@B*/
+//^@@100@@
+/*@@Bc*/}</Page>);}

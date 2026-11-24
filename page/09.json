@@ -1,90 +1,37 @@
 [
 {
-"old_string": "//^@@41@@",
-"new_string": "//^==\"\"){apply(props.offValue);return;} const n=parseInt(t,10);if(Number.isFinite(n))apply(n);};return(<div className=\"xpc-engage\" style={{opacity:props.disabled?0.55:1}}><div style={{fontSize:13,color:theme.text.secondary}}>{props.label}</div><div className=\"xpc-engage-row\"><button type=\"button\" className=\"xpc-engage-off\" aria-pressed={off} disabled={props.disabled} onClick={()=>apply(props.offValue)} style={{background:off?theme.fill.accentSubtle:theme.bg.base,border:`${off?1.5:1}px solid ${off?theme.border.focus:theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>{props.offLabel??\"Off\"}</button><button type=\"button\" className=\"xpc-engage-step\" aria-label=\"Decrease\" disabled={props.disabled||off} onClick={()=>bump(-1)} style={{background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>−</button><input className=\"xpc-engage-num\" type=\"text\" inputMode=\"numeric\" pattern=\"[0-9]*\" aria-label={props.label} disabled={props.disabled} value={off?\"\":String(props.value)} placeholder=\"Off\" onChange={(e:{target:{value:string}})=>onTyped(e.target.value)} style={{background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}/><button type=\"button\" className=\"xpc-engage-step\" aria-label=\"Increase\" disabled={props.disabled} onClick={()=>bump(1)} style={{background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>+</button></div><div className=\"xpc-engage-chips\">{ENGAGE_PRESETS.map((n)=>{const on=!off&&props.value===n;return(<button key={n} type=\"button\" aria-pressed={on} disabled={props.disabled} onClick={()=>apply(n)} className=\"xpc-engage-chip\" style={{background:on?theme.fill.accentSubtle:theme.bg.base,border:`${on?1.5:1}px solid ${on?theme.border.focus:theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>{formatEngage(n)}</button>);})}</div>{props.hint?<div style={{fontSize:13,color:theme.text.secondary,lineHeight:1.45}}>{props.hint}</div>:null}</div>);}"
+"old_string": "if(step===\"archive\")return null;/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@43@@",
-"new_string": "//^const _s1:CSSProperties={fontSize:13,fontWeight:650,color:theme.text.primary,marginTop:8};const _s2:CSSProperties={fontSize:16,fontWeight:650,color:theme.text.primary};"
+"old_string": "locked||id===\"pick\"/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@45@@",
-"new_string": "//^const _s5:CSSProperties={fontSize:13,color:theme.text.secondary,lineHeight:1.5};"
+"old_string": "{null/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@48@@",
-"new_string": "//^const _s12:CSSProperties={fontSize:13,color:theme.text.secondary};const _s13:CSSProperties={marginBottom:6};"
+"old_string": "/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@51@@",
-"new_string": "//^const[fastSetup,setFastSetup]=useState<FastSetup>(\"idle\");"
+"old_string": "\n/*@@Ac*/}",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@54@@",
-"new_string": "//^const[kitGoogleRecheck,setKitGoogleRecheck]=useState(false);const[kitWaybackRecheck,setKitWaybackRecheck]=useState(false);const[exportFmt,setExportFmt]=useState(\"csv\");const[exportNote,setExportNote]=useState(\"\");"
+"old_string": "\n/*@@A*/",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@55@@",
-"new_string": "//^const[likesOn,setLikesOn]=useState(false);const[spendLimit,setSpendLimit]=useState(\"\");"
-},
-{
-"old_string": "//^@@57@@",
-"new_string": "//^const[maintOn,setMaintOn]=useState(false);const[autoCont,setAutoCont]=useState(false);const[rollWin,setRollWin]=useState(\"90\");const[showFailed,setShowFailed]=useState(true);"
-},
-{
-"old_string": "//^@@58@@",
-"new_string": "//^const[kitDisconnect,setKitDisconnect]=useState(false);"
-},
-{
-"old_string": "//^@@60@@",
-"new_string": "//^const swearStrongActive=SWEAR_STRONG.every((w)=>rules.deleteWords.includes(w));const swearMildActive=SWEAR_MILD.every((w)=>rules.deleteWords.includes(w));const toggleSwearStrong=()=>{if(swearStrongActive){upd({deleteWords:rules.deleteWords.filter((w)=>!SWEAR_PRESET.includes(w))});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_PRESET.includes(w)));return;} const next=[...rules.deleteWords];for(const w of SWEAR_STRONG)if(!next.includes(w))next.push(w);upd({deleteWords:next});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_STRONG.includes(w)));};const toggleSwearMild=()=>{if(swearMildActive){upd({deleteWords:rules.deleteWords.filter((w)=>!SWEAR_MILD.includes(w))});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_MILD.includes(w)));return;} const next=[...rules.deleteWords];for(const w of SWEAR_STRONG)if(!next.includes(w))next.push(w);for(const w of SWEAR_MILD)if(!next.includes(w))next.push(w);upd({deleteWords:next});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_PRESET.includes(w)));};"
-},
-{
-"old_string": "//^@@62@@",
-"new_string": "//^const keptByRule=pool.filter((p)=>verdicts.get(p.id)?.kind===\"keep\").length;"
-},
-{
-"old_string": "//^@@63@@",
-"new_string": "//^const fastCost=fastCount*0.01;const limitUsd=spendLimit===\"\"?Math.ceil(fastCost):Math.max(0,Number(spendLimit)||0);"
-},
-{
-"old_string": "//^@@64@@",
-"new_string": "//^const spentSoFar=deletedSoFar*0.01;const likesTotal=0;const likesDays=days+Math.ceil(likesTotal/dailyCap(speed));const rulesActive=hasActiveRules(rules,activeQA,pins.length);"
-},
-{
-"old_string": "//^@@66@@",
-"new_string": "//^const knownPinCount=pins.length+(ARCHIVE_CAPS.hasPinFlag&&rules.keepProfilePin?pool.filter((p)=>p.profilePin&&!pins.includes(p.id)).length:0);const everythingBlocked=knownPinCount===0;"
-},
-{
-"old_string": "//^@@68@@",
-"new_string": "//^const isFullWipe=archiveReady&&matched>0&&(activeQA===\"everything\"||matched>=10000||matched/Math.max(1,scanned)>0.5);const wipePhrase=`DELETE ${matched.toLocaleString(\"en-US\")} POSTS`;const wipeMatch=/^DELETE ([\\d, ]+) POSTS?$/.exec(wipeConfirm.trim().toUpperCase().replace(/\\s+/g,\" \"));const wipeOk=!!wipeMatch&&Number(wipeMatch[1].replace(/[, ]/g,\"\"))===matched;"
-},
-{
-"old_string": "//^@@71@@",
-"new_string": "//^const doExport=()=>{const rows=doomed.map((p)=>({id:p.id,status_url:`https://x.com/you/status/${p.id}`,posted:monthYear(p.daysAgo),type:p.community?`community ${p.type}`:p.type,likes:p.likes,replies:p.replies,reply_to:p.replyTo||\"\",matched_rule:verdicts.get(p.id)?.reason||\"\",about:maskSsn(p.summary),text:maskSsn(p.text),}));if(exportFmt===\"json\"){downloadText(\"xpc-delete-list.json\",JSON.stringify({scanned,kept,to_delete:matched,posts:rows},null,2),\"application/json\");setExportNote(`Downloaded JSON with ${matched} posts.`);} else{const q=(s:string)=>`\"${s.replace(/\"/g,'\"\"')}\"`;const header=\"id,status_url,posted,type,likes,replies,reply_to,matched_rule,about,text\";const safe=(s:string)=>(/^[=+\\-@\\t\\r]/.test(s)?`'${s}`:s);const lines=rows.map((r)=>[`\"=\"\"${r.id}\"\"\"`,r.status_url,r.posted,r.type,r.likes,r.replies,r.reply_to,q(safe(r.matched_rule)),q(safe(r.about)),q(safe(r.text))].join(\",\"));downloadText(\"xpc-delete-list.csv\",[header,...lines].join(\"\\n\"),\"text/csv\");setExportNote(`Downloaded CSV with ${matched} posts.`);}};"
-},
-{
-"old_string": "//^@@73@@",
-"new_string": "//^!rulesActive"
-},
-{
-"old_string": "//^@@75@@",
-"new_string": "//^const paceSafetyNote=(<ul style={{margin:0,paddingLeft:18,fontSize:14,color:theme.text.secondary,lineHeight:1.45}}><li style={_s13}>Soft stops (rate limits, cooldowns) restart on their own, with nothing deleted twice. If that happens twice in one day, the run continues the next day one pace slower.</li><li style={_s13}>But every limit or warning adds to X's record of your account. Repeated ones can turn into temporary locks, phone or ID checks, or a suspension.</li><li style={_s13}>A lock or verification check needs you to step in. We'll tell you right away, and the run resumes after you clear it. A suspension can't be undone by us.</li><li style={_s13}>That's why steady is usually faster overall than fast with stops.</li><li>Pace options: Steady 100/day (default), Faster 200/day, Fastest ~350/day (higher chance of limits and checks).</li></ul>);"
-},
-{
-"old_string": "//^@@77@@",
-"new_string": "//^const archiveVsProfileNote=recentOnly?\"Your official archive is still the way to clean your full history.\":\"The list only covers what's in the archive. X's profile number can include older posts that aren't in this file, and it can lag after deletes.\";"
-},
-{
-"old_string": "//^@@78@@",
-"new_string": "//^id===\"run\"&&runPhase===\"idle\""
-},
-{
-"old_string": "//^@@80@@",
-"new_string": "//^{step===\"review\"&&(<button type=\"button\" onClick={()=>scrollToId(\"rev-approve\")} style={{marginTop:8,background:\"none\",border:0,padding:0,color:theme.text.accent,fontSize:13,fontWeight:600,fontFamily:theme.font.family,cursor:\"pointer\",textDecoration:\"underline\"}}>Jump to Approve</button>)}"
-},
-{
-"old_string": "//^@@82@@",
-"new_string": "//^{step===\"review\"&&(<div style={{display:\"flex\",flexDirection:\"column\",gap:32}}>{!archiveReady&&(<div style={{...panel,padding:16,display:\"flex\",flexWrap:\"wrap\",alignItems:\"center\",gap:12,justifyContent:\"space-between\"}}><span style={_s11}>Approve stays off until your archive is loaded.</span></div>)}{recentOnly&&(<div style={{...panel,padding:16,fontSize:14,color:theme.text.secondary,lineHeight:1.5}}>Recent only · not your full history. This list is only about the last 3,200 posts, not your full archive.</div>)}<div id=\"rev-totals\"><div style={subhead}>Totals</div><div style={subhint}>{!archiveReady?\"Counts appear once your archive \n//^@@82@@"
+"old_string": "\n//~",
+"new_string": "",
+"replace_all": true
 }
 ]

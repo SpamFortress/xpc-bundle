@@ -19,7 +19,7 @@ A bot has to type every byte of a Page into WriteCanvas and EditCanvas, so a big
 
 Commands:
 
-- `python3 scripts/xpc_core.py page-steps` lists the steps. `page-steps --show 1 --part K` prints the first page in parts of up to 9,500 bytes (join them with nothing between). `page-steps --show N` prints the edits for step N as JSON.
+- `python3 scripts/xpc_core.py page-steps` lists the steps. `page-steps --show 1 --part K` prints the first page in parts (join them with nothing between). `page-steps --show N` prints the edits for step N as JSON. If N is past the last step, it exits non-zero and prints `the plan has N steps`.
 - `python3 scripts/xpc_core.py page-verify <saved ReadCanvas result> [--after N]` checks the canvas against the expected text after step N (no --after: the finished page).
 - `python3 scripts/xpc_core.py page-where <saved ReadCanvas result>` tells which step the canvas is at, so an interrupted build can resume.
 - `python3 scripts/xpc_core.py page-build` regenerates page/ from page.min.tsx and page/regions.json and checks that every step reassembles byte for byte.
@@ -48,7 +48,9 @@ The full archive is the default. If X is slow, the bot can offer recent posts wi
 
 Bot actions are not buttons. A plain line names the tap card in the chat (approve, grab the archive, recent posts, retry, removal requests, and the rest). Buttons that only change the Page, such as rules, filters, Keep on the preview list, sort, and download, stay.
 
-`selftest` and `page-typecheck` look for typescript and `@types/react` in `XPC_NODE_TOOLS`, or in `/workspace/xpc-node-tools` when that variable is unset. If those packages are missing, the script installs `typescript@5.6.3`, `esbuild@0.28.2`, and `@types/react@18.3.18` there. If that install cannot run, the type-check is skipped and selftest still finishes.
+`python3 scripts/xpc_core.py selftest --no-typecheck` is the first-turn fast path: it checks the Python logic and that every file in manifest.json matches its bytes and sha256, and it does not run Node. The full `selftest` is the release gate. It also type-checks every build step. `page-typecheck` looks for typescript and `@types/react` in `XPC_NODE_TOOLS`, or in `/workspace/xpc-node-tools` when that variable is unset. If those packages are missing, the script installs `typescript@5.6.3`, `esbuild@0.28.2`, and `@types/react@18.3.18` there. If that install cannot run, the type-check is skipped and the full selftest still finishes.
+
+Page 1 is the small file a bot types first: styles, header, stepper, the status banner, the five state lines, a one-line Sign in note, and the Archive view. The full Sign in steps and the Where your data goes panels are filled in by a later step.
 
 ## Page status (1.1.3)
 

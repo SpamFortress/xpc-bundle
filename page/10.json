@@ -1,6 +1,94 @@
 [
 {
-"old_string": "//^@@82@@",
-"new_string": "//^loads.\":`${scanned} scanned = ${kept} staying + ${matched} to delete. ${keptByRule} of the staying posts are protected by a keep rule or marked Keep by you.${rules.keepThreads&&threadExtraKept>0?` The thread rule is keeping ${threadExtraKept} extra ${threadExtraKept===1?\"post\":\"posts\"}.`:\"\"}`}</div>{isFullWipe&&(<div style={{...panel,padding:16,margin:\"0 0 16px\"}}><div style={{fontSize:16,fontWeight:650,color:theme.text.primary,marginBottom:6}}>Type to confirm</div><div style={{fontSize:15,lineHeight:1.55,color:theme.text.secondary,marginBottom:10}}>{`Big cleanup: ${matched.toLocaleString(\"en-US\")} of ${scanned.toLocaleString(\"en-US\")} posts. Any cleanup over half your archive or 10,000+ posts needs this step. Type ${wipePhrase} to turn on Approve. Kept posts always stay.`}</div><Input label=\"Confirmation\" value={wipeConfirm} onChange={setWipeConfirm} placeholder={wipePhrase}/></div>)}<table className=\"xpc-totals\" style={{color:theme.text.primary,fontFamily:theme.font.family}}><thead><tr>{([\"Type\",\"To delete\",\"Staying\"]as const).map((h,i)=>(<th key={h} style={{textAlign:i===0?\"left\":\"right\",fontWeight:600,fontSize:12,color:theme.text.secondary,borderBottom:`1px solid ${theme.border.default}`,}}>{h}</th>))}</tr></thead><tbody>{totalsRows.map((row,i)=>{const last=i===totalsRows.length-1;return(<tr key={row[0]} style={{fontWeight:last?650:400}}>{row.map((cell,j)=>(<td key={`${row[0]}-${j}`} style={{textAlign:j===0?\"left\":\"right\",borderTop:last?`1px solid ${theme.border.default}`:\"none\",paddingTop:last?8:5,whiteSpace:cell.length>18?\"normal\":\"nowrap\",}}>{cell}</td>))}</tr>);})}</tbody></table>{!ARCHIVE_CAPS.hasQuoteFields&&(<div style={{fontSize:12.5,color:theme.text.tertiary,marginTop:8,lineHeight:1.45}}>Quotes are not available from this archive, so that row is left out of the type counts. Posts, replies, reposts, community, and the total still add up.</div>)}<div style={{fontSize:14,color:theme.text.secondary,marginTop:10,lineHeight:1.5}}><div>{archiveReady?archiveVsProfileLine:\"Counts appear once your archive loads.\"}</div><div style={{marginTop:4}}>{archiveVsProfileNote}</div></div></div><div id=\"rev-pace\"><div style={subhead}>How it runs</div><div style={{fontSize:16,lineHeight:1.55,color:theme.text.primary,margin:\"0 0 14px\"}}>X Post Cleaner is free and runs in your browser at a safe pace. Want it faster? Turn on Fast with your own X developer key. X charges that key about $0.01 per delete, billed by X to you. We never charge you or take a cut.</div><Segmented value={lane} onChange={(v:Lane)=>setLane(v)} options={[{value:\"free\",label:\"Free\"},{value:\"fast\",label:\"Fast\"},]}/>{lane===\"free\"&&(<div style={{marginTop:16,display:\"flex\",flexDirection:\"column\",gap:10}}><div style={{display:\"flex\",flexWrap:\"wrap\",gap:16,alignItems:\"flex-start\"}}><div style={{display:\"flex\",flexWrap:\"wrap\",gap:16,alignItems:\"flex-end\"}}><Select label=\"Pace\" value={speed as string} onChange={(v:string)=>setSpeed(v as Speed)} options={[{value:\"steady\",label:\"Steady · 100 a day (default)\"},{value:\"faster\",label:\"Faster · 200 a day\"},{value:\"fastest\",label:\"Fastest · ~350 a day · higher chance of limits and checks\"},]}/><span style={{fontSize:14,color:theme.text.secondary,paddingBottom:8}}>{matched===0?\"No posts selected yet.\":`Finishes ${finishDate(days)}, ${days} day${days===1?\"\":\"s\"} at this pace.`}</span></div><div style={{flex:\"1 1 280px\",minWidth:0}}>{paceSafetyNote}</div></div><div style={{fontSize:13,color:theme.text.tertiary,lineHeight:1.5}}>$0, no setup.</div></div>)}{lane===\"fast\"&&(<div style={{marginTop:16,display:\"flex\",flexDirection:\"column\",gap:12}}><div style={{fontSize:15,fontWeight:650,color:theme.text.primary}}>Your key, your account, your bill</div><div style={_s0}>{matched===0?\"About 4,000 a day, a little under X's 50 per 15 minutes. Pick a cleanup to see the cost.\":`About 4,000 a day, a little under X's 50 per 15 minutes. Finishes ${finishDate(days)}. X bills you about ${usd(fastCost)} for ${fastCount.toLocaleString(\"en-US\")} deletes ($0.01 each).${fastReposts>0?` Your ${fastReposts.toLocaleString(\"en-US\")} reposts run in the Free lane at your Free pace until X's API repost route is tested.`:\"\"}`}</div>{matched>0&&(<div style={{maxWidth:260}}><Input label=\"Stop at $ (spending limit)\" type=\"number\" value={spendLimit===\"\"?String(Math.ceil(fastCost)):spendLimit} onChange={setSpendLimit}/></div>)}<div style={{fontSize:13,color:theme.text.tertiary,lineHeight:1.5}}>We never take money or see your card. Keys stay in your vault; revoke them anytime in X settings. This lane uses only X's official API — no browser clicking — so it stays inside X's developer rules. It deletes posts only (not likes).</div><div style={{...panel,padding:16,display:\"flex\",flexDirection:\"column\",gap:10}}><div style={{fontSize:14,fontWeight:600}}>Set it up for me: about 2 minutes of your time (sign in, accept X's terms, add credits)</div><div style={_s5}>The bot does the clicking in its browser: open the X developer console, create the project and app, set read and write permissions, create the user access token, and save the keys to your vault.</div><div style={_s5}>You step in only to sign in (and 2FA), accept X's developer terms, and add your card or credits on X.</div>{tapLine(\"Set it up for me with the tap card in the chat.\")}</div>{fastSetup===\"ready\"&&<div style={{fontSize:13,color:theme.text.success,lineHeight:1.5}}>Your key is saved in your vault.</div>}<div><Button label=\"I'll do it myself: about 10–15 minutes.\" variant=\"quiet\" onClick={()=>setFastSetup(fastSetup===\"manual\"?\"idle\":\"manual\")}/></div>{fastSetup===\"manual\"&&(<div style={{...panel,padding:16,display:\"flex\",flexDirection:\"column\",gap:8}}><div style={{fontSize:14,fontWeight:600}}>I'll do it myself: about 10–15 minutes</div><div style={_s5}>1. Open console.x.com and sign in. 2. Accept X's developer terms. 3. Create a project and app with read and write access, then a user access token. 4. Add a card or credits on X. 5. Tell the bot you're done. It saves the keys to your vault. Never paste keys in chat.</div></div>)}</div>)}<div className=\"xpc-tiers\"><div className=\"xpc-tier\" style={{border:`1px solid ${theme.border.default}`,background:theme.bg.subtle}}><div style={_s2}>X Post Cleaner · Free</div><div style={_s1}>Speed</div><div style={_s0}>100–350 actions a day (you pick), shared by deleting and unliking.</div><div style={_s1}>Why not faster?</div><div style={{fontSize:14,color:theme.text.secondary,lineHeight:1.5,marginBottom:8}}>X doesn't publish a browser limit, but accounts that delete too fast get rate-limited, locked or asked to verify. 100–350 a day stays under that.</div>{paceSafetyNote}<div style={_s1}>Cost</div><div style={_s0}>$0. We never charge you or take a cut.</div><div style={_s1}>Setup</div><div style={_s0}>Nothing to set up beyond picking your rules.</div><div style={_s1}>If something goes wrong</div><div style={_s0}>If X slows things down, it waits and continues on its own. A lock or verification check stops the run until you clear it. Nothing is deleted twice.</div></div><div className=\"xpc-tier\" style={{border:`1px solid ${theme.border.default}`,background:theme.bg.subtle}}><div style={_s2}>X Post Cleaner · Fast (your key)</div><div style={_s1}>Speed</div><div style={_s0}>About 4,000 a day. Spend so far and your stop-at limit, shown live.</div><div style={_s1}>Limit</div><div style={_s0}>X's published limit is 50 per 15 minutes (about 4,800/day). We stay a little under it.</div><div style={_s1}>Cost</div><div style={_s0}>X charges your developer key about $0.01 per delete, billed by X to you. We never charge you or take a cut.</div><div style={_s1}>Setup</div><div style={_s0}>Your own X developer key.</div><div style={_s1}>Deletes</div><div style={_s0}>Posts, replies and quote posts. Reposts and Remove my likes run in the Free lane for now: X's API needs each original post's id, which the archive doesn't include, and API unliking isn't confirmed yet.</div><div style={_s1}>If something goes wrong</div><div style={_s0}>If X slows things down, it waits and continues. A lock or warning stops the run until you clear it. At your stop-at limit, or if your X credits run out, it stops; top up or raise the limit and it continues where it left off, with nothing deleted twice.</div></div><div className=\"xpc-tier\" style={{border:`1px solid ${theme.border.default}`,background:theme.bg.subtle}}><div style={_s2}>Other X/Twitter deleting apps and sites</div><div style={_s1}>Speed</div><div style={_s0}>Paid official-API apps vary; cheap plans often cap around 500 deletes a month. Free browser tools are often limited to a few hundred deletes at a time.</div><div style={_s1}>Limit</div><div style={_s0}>Free browser tools hit rate limits about every couple hundred deletes and need cooldowns.</div><div style={_s1}>Cost</div><div style={_s0}>Paid apps typically charge roughly $8–11 a month, or about $99 lifetime, and use X's official API. Free browser tools don't pay X's per-delete fee.</div><div style={_s1}>Setup</div><div style={_s0}>Paid apps usually have you sign in and pick a plan. Some jobs stall unless you upload an archive. Browser tools run in your browser.</div><div style={_s1}>If something goes wrong</div><div style={_s0}\n//^@@82@@"
+"old_string": "//^@@0@@",
+"new_string": "//^type Speed=\"steady\"|\"faster\"|\"fastest\";type Lane=\"free\"|\"fast\";type FastSetup=\"idle\"|\"guide\"|\"manual\"|\"ready\";"
+},
+{
+"old_string": "//^@@4@@",
+"new_string": "//^const SHOW_NEXT_BAR=true;"
+},
+{
+"old_string": "//^@@7@@",
+"new_string": "//^const ARCHIVE_POST_COUNT=0;const PROFILE_POST_COUNT_LABEL:string=\"\";"
+},
+{
+"old_string": "//^@@22@@",
+"new_string": "//^function finishDate(d:number):string{const t=new Date();t.setDate(t.getDate()+d);return t.toLocaleDateString(\"en-US\",{weekday:\"short\",month:\"short\",day:\"numeric\"});}"
+},
+{
+"old_string": "//^@@24@@",
+"new_string": "//^function downloadText(filename:string,body:string,mime:string){const blob=new Blob([body],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement(\"a\");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);}"
+},
+{
+"old_string": "//^@@38@@",
+"new_string": "//^function hasActiveRules(r:Rules,qa:QAId|\"\",keptCount:number):boolean{if(qa!==\"\")return true;if(keptCount>0)return true;if(hasDeleteScope(r))return true;if(r.keepMedia||r.keepThreads||r.keepWords.length>0)return true;if(r.protectDays!==BASE.protectDays||r.protectDate!==\"\")return true;return false;}"
+},
+{
+"old_string": "//^@@39@@",
+"new_string": "//^function dailyCap(speed:Speed):number{if(speed===\"faster\")return 200;if(speed===\"fastest\")return 350;return 100;}"
+},
+{
+"old_string": "//^@@40@@",
+"new_string": "//^function usd(n:number):string{return`$${n.toFixed(2)}`;}"
+},
+{
+"old_string": "//^@@50@@",
+"new_string": "//^function EngageControl(props:{label:string;value:number;offValue:number;offLabel?:string;onChange:(n:number)=>void;disabled?:boolean;hint?:string}){const theme=useGrokTheme();const off=props.offValue===0?props.value<=0:props.value<0;const apply=(n:number)=>{if(props.disabled)return;if(n<0){props.onChange(props.offValue===0?0:-1);return;} props.onChange(Math.min(1000000,n));};const bump=(dir:1|-1)=>{if(props.disabled)return;if(off){if(dir>0)apply(props.offValue===0?1:0);return;} const next=props.value+dir;if(next<0){apply(props.offValue);return;} apply(next);};const onTyped=(v:string)=>{const t=v.replace(/[^\\d]/g,\"\");if(t===\"\"){apply(props.offValue);return;} const n=parseInt(t,10);if(Number.isFinite(n))apply(n);};return(<div className=\"xpc-engage\" style={{opacity:props.disabled?0.55:1}}><div style={{fontSize:13,color:theme.text.secondary}}>{props.label}</div><div className=\"xpc-engage-row\"><button type=\"button\" className=\"xpc-engage-off\" aria-pressed={off} disabled={props.disabled} onClick={()=>apply(props.offValue)} style={{background:off?theme.fill.accentSubtle:theme.bg.base,border:`${off?1.5:1}px solid ${off?theme.border.focus:theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>{props.offLabel??\"Off\"}</button><button type=\"button\" className=\"xpc-engage-step\" aria-label=\"Decrease\" disabled={props.disabled||off} onClick={()=>bump(-1)} style={{background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>−</button><input className=\"xpc-engage-num\" type=\"text\" inputMode=\"numeric\" pattern=\"[0-9]*\" aria-label={props.label} disabled={props.disabled} value={off?\"\":String(props.value)} placeholder=\"Off\" onChange={(e:{target:{value:string}})=>onTyped(e.target.value)} style={{background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}/><button type=\"button\" className=\"xpc-engage-step\" aria-label=\"Increase\" disabled={props.disabled} onClick={()=>bump(1)} style={{background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>+</button></div><div className=\"xpc-engage-chips\">{ENGAGE_PRESETS.map((n)=>{const on=!off&&props.value===n;return(<button key={n} type=\"button\" aria-pressed={on} disabled={props.disabled} onClick={()=>apply(n)} className=\"xpc-engage-chip\" style={{background:on?theme.fill.accentSubtle:theme.bg.base,border:`${on?1.5:1}px solid ${on?theme.border.focus:theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>{formatEngage(n)}</button>);})}</div>{props.hint?<div style={{fontSize:13,color:theme.text.secondary,lineHeight:1.45}}>{props.hint}</div>:null}</div>);}"
+},
+{
+"old_string": "//^@@52@@",
+"new_string": "//^const _s1:CSSProperties={fontSize:13,fontWeight:650,color:theme.text.primary,marginTop:8};const _s2:CSSProperties={fontSize:16,fontWeight:650,color:theme.text.primary};"
+},
+{
+"old_string": "//^@@54@@",
+"new_string": "//^const _s5:CSSProperties={fontSize:13,color:theme.text.secondary,lineHeight:1.5};"
+},
+{
+"old_string": "//^@@57@@",
+"new_string": "//^const _s12:CSSProperties={fontSize:13,color:theme.text.secondary};const _s13:CSSProperties={marginBottom:6};"
+},
+{
+"old_string": "//^@@59@@",
+"new_string": "//^const[speed,setSpeed]=useState<Speed>(\"steady\");const[lane,setLane]=useState<Lane>(\"free\");const[fastSetup,setFastSetup]=useState<FastSetup>(\"idle\");"
+},
+{
+"old_string": "//^@@61@@",
+"new_string": "//^const[wipeConfirm,setWipeConfirm]=useState(\"\");"
+},
+{
+"old_string": "//^@@63@@",
+"new_string": "//^const[kitGoogleRecheck,setKitGoogleRecheck]=useState(false);const[kitWaybackRecheck,setKitWaybackRecheck]=useState(false);const[exportFmt,setExportFmt]=useState(\"csv\");const[exportNote,setExportNote]=useState(\"\");const[coolOn,setCoolOn]=useState(false);const[likesOn,setLikesOn]=useState(false);const[spendLimit,setSpendLimit]=useState(\"\");"
+},
+{
+"old_string": "//^@@65@@",
+"new_string": "//^const[maintOn,setMaintOn]=useState(false);const[autoCont,setAutoCont]=useState(false);const[rollWin,setRollWin]=useState(\"90\");const[showFailed,setShowFailed]=useState(true);"
+},
+{
+"old_string": "//^@@66@@",
+"new_string": "//^const[kitDisconnect,setKitDisconnect]=useState(false);"
+},
+{
+"old_string": "//^@@69@@",
+"new_string": "//^const swearStrongActive=SWEAR_STRONG.every((w)=>rules.deleteWords.includes(w));const swearMildActive=SWEAR_MILD.every((w)=>rules.deleteWords.includes(w));const toggleSwearStrong=()=>{if(swearStrongActive){upd({deleteWords:rules.deleteWords.filter((w)=>!SWEAR_PRESET.includes(w))});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_PRESET.includes(w)));return;} const next=[...rules.deleteWords];for(const w of SWEAR_STRONG)if(!next.includes(w))next.push(w);upd({deleteWords:next});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_STRONG.includes(w)));};const toggleSwearMild=()=>{if(swearMildActive){upd({deleteWords:rules.deleteWords.filter((w)=>!SWEAR_MILD.includes(w))});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_MILD.includes(w)));return;} const next=[...rules.deleteWords];for(const w of SWEAR_STRONG)if(!next.includes(w))next.push(w);for(const w of SWEAR_MILD)if(!next.includes(w))next.push(w);upd({deleteWords:next});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_PRESET.includes(w)));};"
+},
+{
+"old_string": "//^@@72@@",
+"new_string": "//^const keptByRule=pool.filter((p)=>verdicts.get(p.id)?.kind===\"keep\").length;const fastCount=doomed.filter((p:Post)=>effectiveType(p)!==\"repost\").length;const fastReposts=matched-fastCount;const daily=lane===\"fast\"?4000:dailyCap(speed);const days=matched===0?0:(lane===\"fast\"?Math.max(Math.ceil(fastCount/4000),Math.ceil(fastReposts/dailyCap(speed))):Math.ceil(matched/daily))+(coolOn?1:0);const fastCost=fastCount*0.01;const limitUsd=spendLimit===\"\"?Math.ceil(fastCost):Math.max(0,Number(spendLimit)||0);"
+},
+{
+"old_string": "//^@@73@@",
+"new_string": "//^const deletedSoFar=runPhase===\"done\"?Math.max(0,matched-failedCount):Math.min(matched,12);const spentSoFar=deletedSoFar*0.01;const likesTotal=0;const likesDays=days+Math.ceil(likesTotal/dailyCap(speed));const rulesActive=hasActiveRules(rules,activeQA,pins.length);"
+},
+{
+"old_string": "//^@@75@@",
+"new_string": "//^const knownPinCount=pins.length+(ARCHIVE_CAPS.hasPinFlag&&rules.keepProfilePin?pool.filter((p)=>p.profilePin&&!pins.includes(p.id)).length:0);const everythingBlocked=knownPinCount===0;"
+},
+{
+"old_string": "//^@@77@@",
+"new_string": "//^const isFullWipe=archiveReady&&matched>0&&(activeQA===\"everything\"||matched>=10000||matched/Math.max(1,scanned)>0.5);const wipePhrase=`DELETE ${matched.toLocaleString(\"en-US\")} POSTS`;const wipeMatch=/^DELETE ([\\d, ]+) POSTS?$/.exec(wipeConfirm.trim().toUpperCase().replace(/\\s+/g,\" \"));const wipeOk=!!wipeMatch&&Number(wipeMatch[1].replace(/[, ]/g,\"\"))===matched;useEffect(()=>{setWipeConfirm(\"\");},[matched]);"
+},
+{
+"old_string": "//^@@81@@",
+"new_string": "//^const doExport=()=>{const rows=doomed.map((p)=>({id:p.id,status_url:`https://x.com/you/status/${p.id}`,posted:monthYear(p.daysAgo),type:p.community?`community ${p.type}`:p.type,likes:p.likes,replies:p.replies,reply_to:p.replyTo||\"\",matched_rule:verdicts.get(p.id)?.reason||\"\",about:maskSsn(p.summary),text:maskSsn(p.text),}));if(exportFmt===\"json\"){downloadText(\"xpc-delete-list.json\",JSON.stringify({scanned,kept,to_delete:matched,posts:rows},null,2),\"application/json\");setExportNote(`Downloaded JSON with ${matched} posts.`);} else{const q=(s:string)=>`\"${s.replace(/\"/g,'\"\"')}\"`;const header=\"id,status_url,posted,type,likes,replies,reply_to,matched_rule,about,text\";const safe=(s:string)=>(/^[=+\\-@\\t\\r]/.test(s)?`'${\n//^@@81@@"
 }
 ]
