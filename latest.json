@@ -1,6 +1,6 @@
 {
- "version": "1.1.4",
- "tag": "xpc-v1.1.4",
- "manifest_sha256": "7ffb3078594416aaf757e7080b5ba6b058ac00ac8ec14d62839eaef831b09228",
- "notes": "The first page type-checks again. The signed-in handle line is const SIGNED_IN_HANDLE:string=\"\";."
+ "version": "1.1.5",
+ "tag": "xpc-v1.1.5",
+ "manifest_sha256": "90fb1921f3f9ef30415745930574c7403641af510910c9d0a1a12d8b206fc652",
+ "notes": "Sign-in opens right away, and the bot requests the archive itself. While X prepares the file, the Page says so in one line and you can set your rules."
 }
