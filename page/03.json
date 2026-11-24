@@ -45,18 +45,14 @@
 },
 {
 "old_string": "//~@@52@@",
-"new_string": "//~function computeVerdicts(pool:Post[],r:Rules,pins:string[],qaTitle:string):Map<string,Verdict>{const keptThreads=new Set<string>();const byId=new Map<string,Post>(pool.map((p:Post)=>[p.id,p]as[string,Post]));if(r.keepThreads){for(const p of pool){if(isStrongKeep(p,r,pins))keptThreads.add(threadGroupKey(p,byId));}} const out=new Map<string,Verdict>();for(const p of pool){if(pins.includes(p.id)){out.set(p.id,{kind:\"keep\",reason:\"Kept by you\"});continue;} const parts=scopeParts(p,r);if(!parts){out.set(p.id,{kind:\"none\",reason:\"\"});continue;} const k=explicitKeep(p,r);if(k){out.set(p.id,{kind:\"keep\",reason:`Keep rule: ${k}`});continue;} if(r.keepThreads&&keptThreads.has(threadGroupKey(p,byId))){out.set(p.id,{kind:\"keep\",reason:\"Keep rule: part of a kept thread\"});continue;} const body=qaTitle||parts.join(\" · \");out.set(p.id,{kind:\"delete\",reason:`Matches: ${body.charAt(0).toUpperCase()}${body.slice(1)}`});} return out;}"
+"new_string": "//~function deleteReason(p:Post,r:Rules,qaTitle:string):string{const w=r.deleteWords.find((x)=>wordHit(p.text,x));if(w)return`Word: ${maskSsn(w)}`;if(r.deleteSlurs&&SLUR_WORDS.some((x)=>wordHit(p.text,x)))return\"Word: slur\";const repliesOnly=r.replies&&!r.posts&&!r.reposts&&!r.quotes&&!r.selfReplies;if(repliesOnly)return\"Reply to others\";if(r.reposts&&!r.posts&&!r.replies&&!r.quotes)return\"Reposts\";if(r.timeMode===\"older\")return r.olderDays===730?\"Older than 2 years\":`Older than ${r.olderDays} days`;if(r.timeMode===\"years\")return r.yearFrom===r.yearTo?`From ${r.yearFrom}`:`${r.yearFrom}-${r.yearTo}`;if(r.timeMode===\"all\")return\"Delete everything\";return qaTitle||\"Matches\";}"
 },
 {
 "old_string": "//~@@53@@",
-"new_string": "//~function formatEngage(n:number):string{return n.toLocaleString(\"en-US\");}"
+"new_string": "//~function rulesEqual(a:Rules,b:Rules):boolean{const keys=Object.keys(BASE)as Array<keyof Rules>;return keys.every((k)=>{const av=a[k];const bv=b[k];if(Array.isArray(av)||Array.isArray(bv)){const left=Array.isArray(av)?av:[];const right=Array.isArray(bv)?bv:[];return left.length===right.length&&left.every((item,i)=>item===right[i]);} return av===bv;});}"
 },
 {
 "old_string": "//~@@54@@",
-"new_string": "//~function likesCapLabel(name:string,n:number):string{return n<0?`${name} —`:`${name} ≤ ${formatEngage(n)}`;}"
-},
-{
-"old_string": "//~@@55@@",
-"new_string": "//~function LikesCapPicker(props:{postsCap:number;repliesCap:number;focus:LikesTarget;restore:{posts:number;replies:number};onFocus:(t:LikesTarget)=>void;onChange:(t:LikesTarget,n:number)=>void;presets:number[]}){const theme=useGrokTheme();const cap=props.focus===\"posts\"?props.postsCap:props.repliesCap;const off=cap<0;const apply=(n:number)=>{if(n<0){props.onChange(props.focus,-1);return;} props.onChange(props.focus,Math.min(1000000,n));};const bump=(dir:1|-1)=>{if(off){if(dir>0)apply(0);return;} const next=cap+dir;apply(next<0?-1:next);};const onTyped=(v:string)=>{const t=v.replace(/[^\\d]/g,\"\");if(t===\"\"){apply(-1);return;} const n=parseInt(t,10);if(Number.isFinite(n))apply(n);};const row=(t:LikesTarget,value:number,name:string)=>{const on=value>=0;const selected=props.focus===t;return(<div key={t} role=\n//~@@55@@"
+"new_string": "//~function computeVerdicts(pool:Post[],r:Rules,pins:string[],qaTitle:string):Map<string,Verdict>{const keptThreads=new Set<string>();const byId=new Map<string,Post>(pool.map((p:Post)=>[p.id,p]as[string,Post]));if(r.keepThreads){for(const p of pool){if(isStrongKeep(p,r,pins))keptThreads.add(threadGroupKey(p,byId));}} const out=new Map<string,Verdict>();for(const p of pool){if(pins.includes(p.id)){out.set(p.id,{kind:\"keep\",reason:\"Kept by you\"});continue;} const parts=scopeParts(p,r);if(!parts){out.set(p.id,{kind:\"none\",reason:\"\"});continue;} const k=explicitKeep(p,r);if(k){out.set(p.id,{kind:\"keep\",reason:`Keep rule: ${k}`});continue;} if(r.keepThreads&&keptThreads.has(threadGroupKey(p,byId))){out.set(p.id,{kind:\"keep\",reason:\"Keep rule: part of a kept thread\"});continue;} out.set(p.id,{kind:\"delete\",reason:deleteReason(p,r,qaTitle)});} return out;}"
 }
 ]

@@ -315,13 +315,20 @@ def parse_archive(paths, own_id, today=None, manifest_count=None):
             manifest_count = None
     report["manifest_count"] = manifest_count
     n_tweets = sum(1 for p in posts if not p["community"])
+    n_community = sum(1 for p in posts if p["community"])
     report["parsed_tweets"] = n_tweets
+    report["parsed_community"] = n_community
     skipped_tweets = sum(1 for s in report["skipped"] if not str(s.get("where") or "").startswith("community"))
+    community_skipped = sum(1 for s in report["skipped"] if str(s.get("where") or "").startswith("community"))
     report["skipped_counted"] = skipped_tweets
-    report["unreadable"] = len(report["date_issues"]) + skipped_tweets
-    accounted = n_tweets + report.get("tweet_duplicates", 0) + skipped_tweets
-    report["accounted"] = accounted
-    report["count_mismatch"] = manifest_count is not None and manifest_count != accounted
+    report["unreadable"] = len(report["date_issues"]) + skipped_tweets + community_skipped
+    tweet_accounted = n_tweets + report.get("tweet_duplicates", 0) + skipped_tweets
+    community_dups = report["duplicates"] - report.get("tweet_duplicates", 0)
+    all_accounted = tweet_accounted + n_community + community_skipped + community_dups
+    report["accounted"] = tweet_accounted
+    report["accounted_with_community"] = all_accounted
+    # Tweets-only and tweets-plus-community are both a like-for-like match.
+    report["count_mismatch"] = manifest_count is not None and manifest_count not in (tweet_accounted, all_accounted)
     report["ready_for_review"] = not report["partial"] and not report["count_mismatch"] and bool(tweet_files(src))
     return posts, report
 
@@ -558,6 +565,22 @@ def verified_gone(results):
 def csv_safe(v):
     s = "" if v is None else str(v)
     return "'" + s if s[:1] in ("=", "+", "-", "@", "\t", "\r") else s
+
+
+def write_export(path, rows, fields=None):
+    """CSV, or JSON when the path ends in .json. Anything else is refused."""
+    fields = fields or EXPORT_FIELDS
+    if str(path).endswith(".json"):
+        masked = []
+        for r in rows:
+            masked.append({k: (r.get(k) if k == "id" else mask_ssn("" if r.get(k) is None else str(r.get(k)))) for k in fields})
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(masked, f, ensure_ascii=False, indent=1)
+            f.write("\n")
+        return
+    if not str(path).endswith(".csv"):
+        raise ValueError("export --out must end in .csv or .json")
+    write_export_csv(path, rows, fields)
 
 
 def write_export_csv(path, rows, fields):
@@ -1026,7 +1049,9 @@ def page_state_edits(start=None, handle=None, phase=None, run=None, rules=None, 
     --qa also sets LOADED_RULES to that card."""
     if src is None:
         src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
-    if qa and rules is None:
+    if rules is not None:
+        rules = {**base_rules(), **rules}
+    elif qa:
         rules = card_rules(qa, posts or [], today or datetime.now(TZ))
     edits = []
     if start:
@@ -1065,7 +1090,7 @@ def page_state_edits(start=None, handle=None, phase=None, run=None, rules=None, 
         edits.append(_const_edit(src, "LOADED_TOTALS", _ts_value(totals)))
     if proof is not None:
         edits.append(_const_edit(src, "LOADED_PROOF", _ts_value(proof)))
-    return edits
+    return [e for e in edits if e["old_string"] != e["new_string"]]
 
 
 def apply_const_edits(src, edits):
@@ -1143,12 +1168,12 @@ def base_rules():
     """The Page's BASE. Clear all rules returns here. Loaded rules are a separate constant."""
     return {
         "timeMode": "none", "olderDays": 365, "olderDate": "", "yearFrom": 0, "yearTo": 0,
-        "protectDays": 0, "protectDate": "", "posts": False, "replies": False, "selfReplies": False,
-        "reposts": False, "quotes": False, "community": False, "mediaPhotos": False, "mediaVideos": False,
-        "mediaGifs": False, "mediaText": False, "postsLikesMax": -1, "repliesLikesMax": -1, "repliesMax": -1,
+        "protectDays": 0, "protectDate": "", "posts": False, "replies": False, "reposts": False,
+        "quotes": False, "community": False, "mediaPhotos": False, "mediaVideos": False, "mediaGifs": False,
+        "mediaText": False, "postsLikesMax": -1, "repliesLikesMax": -1, "repliesMax": -1,
         "deleteWords": [], "keepWords": [], "replyHandles": [], "repostOf": "", "topic": "",
         "skipMentions": False, "keepThreads": False, "keepProfilePin": True, "keepMedia": False,
-        "deleteSlurs": False,
+        "selfReplies": False, "deleteSlurs": False,
     }
 
 
@@ -1523,16 +1548,28 @@ def _read_posts(path):
     return posts
 
 
+def parse_rules_arg(text, posts=None, today=None):
+    """A rules file path, or JSON text when the value starts with '{'. Partial rules merge over BASE."""
+    if text is None or str(text).strip() == "":
+        return None
+    raw_text = str(text).strip()
+    if raw_text.startswith("{"):
+        data = json.loads(raw_text)
+    else:
+        data = json.load(open(raw_text, encoding="utf-8"))
+    if isinstance(data, dict) and data.get("qa"):
+        return card_rules(data["qa"], posts or [], today or datetime.now(TZ))
+    partial = data.get("rules", data) if isinstance(data, dict) else data
+    if not isinstance(partial, dict):
+        raise ValueError("rules must be a JSON object")
+    return {**base_rules(), **partial}
+
+
 def load_rules_file(path, qa, posts, today):
     if qa:
         return card_rules(qa, posts, today), qa
-    if not path:
-        return base_rules(), ""
-    raw = json.load(open(path, encoding="utf-8"))
-    qa_in = raw.get("qa") or ""
-    if qa_in:
-        return card_rules(qa_in, posts, today), qa_in
-    return {**base_rules(), **raw.get("rules", raw)}, ""
+    parsed = parse_rules_arg(path, posts, today)
+    return (parsed if parsed is not None else base_rules()), ""
 
 
 def page_pool_payloads(posts, rules, qa="", handle="", pins=None, today=None, src=None, bundle_dir=BUNDLE_DIR):
@@ -1548,29 +1585,36 @@ def page_pool_payloads(posts, rules, qa="", handle="", pins=None, today=None, sr
     totals = verdict_totals(result, caps)
     doomed = [p for p in result["posts"] if result["verdicts"][p["id"]]["kind"] == "delete"]
     doomed.sort(key=_worst_key)
+    pinset = set(str(x) for x in (pins or []))
+    staying = [p for p in result["posts"] if result["verdicts"][p["id"]]["kind"] != "delete"]
+    staying.sort(key=lambda p: (0 if p["id"] in pinset else 1, p["id"]))
     if src is None:
         src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
     count = sum(1 for p in result["posts"] if not p["community"])
-    sample_n, text_cap = PAGE_SAMPLE_CAP, 80
+    sample_n, keep_n, text_cap = PAGE_SAMPLE_CAP, 20, 80
     edits = []
     while True:
         sample = [_compact_post(p, text_cap) for p in doomed[:sample_n]]
+        sample += [_compact_post(p, text_cap) for p in staying[:keep_n]]
         edits = [
             _const_edit(src, "ARCHIVE_CAPS", _ts_value(caps)),
             _const_edit(src, "ARCHIVE_POST_COUNT", str(count)),
             _const_edit(src, "LOADED_TOTALS", _ts_value(totals)),
             _const_edit(src, "POOL", _ts_value(sample)),
         ]
-        sizes = [len(json.dumps(e, ensure_ascii=False).encode()) for e in edits]
-        if max(sizes) <= PAGE_POOL_MAX or (text_cap <= 20 and sample_n <= 5):
+        edits = [e for e in edits if e["old_string"] != e["new_string"]]
+        sizes = [len(json.dumps(e, ensure_ascii=False).encode()) for e in edits] or [0]
+        if max(sizes) <= PAGE_POOL_MAX or (text_cap <= 20 and sample_n <= 5 and keep_n == 0):
             break
-        if text_cap > 20:
+        if keep_n > 0:
+            keep_n = keep_n // 2
+        elif text_cap > 20:
             text_cap = 20 if text_cap > 40 else text_cap - 20
         else:
             sample_n = max(5, sample_n // 2)
     return {"edits": edits, "bytes": [len(json.dumps(e, ensure_ascii=False).encode()) for e in edits],
-            "max_bytes": PAGE_POOL_MAX, "sample": min(sample_n, len(doomed)), "totals": totals,
-            "needs_typed_confirm": result["needs_typed_confirm"], "confirm_phrase": result["confirm_phrase"]}
+            "max_bytes": PAGE_POOL_MAX, "sample": min(sample_n, len(doomed)), "kept_sample": min(keep_n, len(staying)),
+            "totals": totals, "needs_typed_confirm": result["needs_typed_confirm"], "confirm_phrase": result["confirm_phrase"]}
 
 
 EXPORT_FIELDS = ["id", "status_url", "date", "type", "community", "likes", "text", "matched_rule"]
@@ -1606,10 +1650,17 @@ def unwrap_export_id(cell):
     return s
 
 
+def _export_rows(path):
+    if str(path).endswith(".json"):
+        data = json.load(open(path, encoding="utf-8"))
+        return data if isinstance(data, list) else []
+    with open(path, newline="", encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
 def export_check(path, include_ids=False):
     """Row count and sha256 of the sorted unwrapped ids. --ids adds the full list."""
-    with open(path, newline="", encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
+    rows = _export_rows(path)
     ids = []
     for row in rows:
         raw = row.get("id") or ""
@@ -1749,11 +1800,11 @@ def _cli(argv=None):
         sp.add_argument("--qa", choices=list(QUICK_IDS))
         sp.add_argument("--handle", default="")
         sp.add_argument("--pins", default="")
-        sp.add_argument("--canvas", help="read old_string from this canvas instead of the shipped page")
         if name == "page-pool":
+            sp.add_argument("--canvas", help="read old_string from this canvas instead of the shipped page")
             sp.add_argument("--apply", action="store_true", help="write the edits into --canvas")
         if name == "export":
-            sp.add_argument("--out", required=True)
+            sp.add_argument("--out", required=True, help="a .csv or .json path")
     chk = sub.add_parser("export-check", help="row count and sha256 of sorted ids")
     chk.add_argument("file")
     chk.add_argument("--ids", action="store_true", help="also print every unwrapped id")
@@ -1794,12 +1845,12 @@ def _cli(argv=None):
         print(json.dumps(card_rules(a.qa, posts, datetime.now(TZ)), ensure_ascii=False))
         return 0
     if a.cmd == "page-state":
-        rules = json.loads(a.rules) if a.rules else None
+        posts = _read_posts(a.posts) if a.posts else None
+        rules = parse_rules_arg(a.rules, posts, datetime.now(TZ)) if a.rules else None
         failed = json.loads(a.failed) if a.failed else None
         totals = json.loads(a.totals) if a.totals else None
         proof = json.loads(a.proof) if a.proof else None
         kept = [x for x in a.kept.split(",") if x] if a.kept else None
-        posts = _read_posts(a.posts) if a.posts else None
         if a.apply and not a.canvas:
             print("page-state --apply needs --canvas"); return 1
         if not any([a.start, a.handle, a.phase, a.run, rules, a.qa is not None, kept, a.lane, a.pace, a.cooling, failed, a.deleted is not None, a.verified is not None, a.left is not None, a.unchecked is not None, a.likes is not None, totals, proof]):
@@ -1838,7 +1889,10 @@ def _cli(argv=None):
             print(json.dumps(payload, ensure_ascii=False))
             return 0
         rows, result = doomed_rows(posts, rules, qa=qa, handle=a.handle, pins=pins, today=today)
-        write_export_csv(a.out, rows, EXPORT_FIELDS)
+        try:
+            write_export(a.out, rows)
+        except ValueError as exc:
+            print(str(exc)); return 1
         print(json.dumps({"rows": len(rows), "out": a.out, "needs_typed_confirm": result["needs_typed_confirm"]}))
         return 0
     if a.cmd == "export-check":
@@ -2005,6 +2059,8 @@ def _cli(argv=None):
         )
         both, both_rep = parse_archive([tmp], "1", today=fixed, manifest_count=2)
         assert both_rep["count_mismatch"] is False and both_rep["parsed_tweets"] == 1 and len(both) == 2
+        assert parse_archive([tmp], "1", today=fixed, manifest_count=3)[1]["count_mismatch"] is False
+        assert parse_archive([tmp], "1", today=fixed, manifest_count=4)[1]["count_mismatch"] is True
         csv_path = os.path.join(tmp, "doomed.csv")
         write_export_csv(csv_path, [{"id": "1234567890123456789", "status_url": "https://x.com/i/web/status/1234567890123456789", "date": "2020-01-01", "type": "post", "community": "false", "likes": 0, "text": "ssn 123-45-6789", "matched_rule": "Delete everything"}], EXPORT_FIELDS)
         checked = export_check(csv_path)
@@ -2015,8 +2071,32 @@ def _cli(argv=None):
         assert "123-45-6789" not in raw_csv and "***-**-6789" in raw_csv
         pool = page_pool_payloads(sample, None, qa="everything", pins=["10"], today=fixed)
         assert pool["bytes"] and max(pool["bytes"]) <= PAGE_POOL_MAX and pool["totals"]["noDate"] == 1
-        pool_text = pool["edits"][-1]["new_string"]
-        assert "replies:" in pool_text and "media:" in pool_text and '"10"' not in pool_text
+        pool_text = next(e["new_string"] for e in pool["edits"] if e["name"] == "POOL")
+        assert "replies:" in pool_text and "media:" in pool_text and '"10"' in pool_text
+        assert all(e["old_string"] != e["new_string"] for e in pool["edits"])
+        assert page_state_edits(run="idle") == []
+        partial = page_state_edits(rules={"posts": True})
+        partial_text = next(e["new_string"] for e in partial if e["name"] == "LOADED_RULES")
+        assert "timeMode:" in partial_text and "posts:true" in partial_text.replace(" ", "")
+        assert partial_text.index("keepMedia") < partial_text.index("selfReplies")
+        assert parse_rules_arg('{"replies":true}')["timeMode"] == "none"
+        rules_path = os.path.join(tmp, "rules.json")
+        open(rules_path, "w", encoding="utf-8").write('{"posts":true}\n')
+        assert parse_rules_arg(rules_path)["posts"] is True and parse_rules_arg(rules_path)["deleteSlurs"] is False
+        json_out = os.path.join(tmp, "doomed.json")
+        write_export(json_out, rows)
+        assert json.load(open(json_out, encoding="utf-8"))[0]["id"] in {r["id"] for r in rows}
+        try:
+            write_export(os.path.join(tmp, "nope.txt"), rows)
+            raise AssertionError("non csv/json export should fail")
+        except ValueError:
+            pass
+        page_del = _page_fixture_verdicts(
+            [{"id": "90", "daysAgo": 10, "type": "post", "likes": 0, "replies": 0, "text": "hi", "summary": "", "media": False}],
+            card_rules("everything", [], fixed), [], "")
+        if page_del is not None:
+            assert page_del["90"]["reason"] == "Delete everything"
+        assert compute_verdicts([{"id": "90", "type": "post", "text": "hi", "daysAgo": 10}], qa="everything", today=fixed)["verdicts"]["90"]["reason"] == "Delete everything"
         quote_posts = [{"id": "q1", "type": "quote", "text": "q", "daysAgo": 5}, {"id": "p1", "type": "post", "text": "p", "daysAgo": 5}]
         qres = compute_verdicts(quote_posts, rules={**base_rules(), "timeMode": "all", "posts": True, "quotes": True, "replies": True, "selfReplies": True, "reposts": True, "community": True}, today=fixed)
         qrows = verdict_totals(qres, {"hasQuoteFields": False})
@@ -2041,6 +2121,11 @@ def _cli(argv=None):
             proc = subprocess.run(["node", script, pool_path], capture_output=True, text=True, env=env)
             assert proc.returncode == 0, proc.stdout + proc.stderr
             assert "ok " in proc.stdout, proc.stdout
+            rules_page = apply_const_edits(base, page_state_edits(rules={"posts": True, "timeMode": "all"}))
+            rules_path = os.path.join(tmp, "rules-page.tsx")
+            open(rules_path, "w", encoding="utf-8", newline="").write(rules_page)
+            proc = subprocess.run(["node", script, rules_path], capture_output=True, text=True, env=env)
+            assert proc.returncode == 0, proc.stdout + proc.stderr
         print(f"xpc_core {__version__} selftest ok · tz={TZ} · wordlists={WORDLIST_SOURCE}"); return 0
     os.makedirs(a.out, exist_ok=True)
     posts, report = parse_archive(a.paths, a.own_id)

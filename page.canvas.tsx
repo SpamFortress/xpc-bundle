@@ -573,6 +573,33 @@ function isStrongKeep(p: Post, r: Rules, pins: string[]): boolean {
   );
 }
 
+function deleteReason(p: Post, r: Rules, qaTitle: string): string {
+  const w = r.deleteWords.find((x) => wordHit(p.text, x));
+  if (w) return `Word: ${maskSsn(w)}`;
+  if (r.deleteSlurs && SLUR_WORDS.some((x) => wordHit(p.text, x))) return "Word: slur";
+  const repliesOnly = r.replies && !r.posts && !r.reposts && !r.quotes && !r.selfReplies;
+  if (repliesOnly) return "Reply to others";
+  if (r.reposts && !r.posts && !r.replies && !r.quotes) return "Reposts";
+  if (r.timeMode === "older") return r.olderDays === 730 ? "Older than 2 years" : `Older than ${r.olderDays} days`;
+  if (r.timeMode === "years") return r.yearFrom === r.yearTo ? `From ${r.yearFrom}` : `${r.yearFrom}-${r.yearTo}`;
+  if (r.timeMode === "all") return "Delete everything";
+  return qaTitle || "Matches";
+}
+
+function rulesEqual(a: Rules, b: Rules): boolean {
+  const keys = Object.keys(BASE) as Array<keyof Rules>;
+  return keys.every((k) => {
+    const av = a[k];
+    const bv = b[k];
+    if (Array.isArray(av) || Array.isArray(bv)) {
+      const left = Array.isArray(av) ? av : [];
+      const right = Array.isArray(bv) ? bv : [];
+      return left.length === right.length && left.every((item, i) => item === right[i]);
+    }
+    return av === bv;
+  });
+}
+
 function computeVerdicts(pool: Post[], r: Rules, pins: string[], qaTitle: string): Map<string, Verdict> {
   const keptThreads = new Set<string>();
   const byId = new Map<string, Post>(pool.map((p: Post) => [p.id, p] as [string, Post]));
@@ -601,8 +628,7 @@ function computeVerdicts(pool: Post[], r: Rules, pins: string[], qaTitle: string
       out.set(p.id, { kind: "keep", reason: "Keep rule: part of a kept thread" });
       continue;
     }
-    const body = qaTitle || parts.join(" · ");
-    out.set(p.id, { kind: "delete", reason: `Matches: ${body.charAt(0).toUpperCase()}${body.slice(1)}` });
+    out.set(p.id, { kind: "delete", reason: deleteReason(p, r, qaTitle) });
   }
   return out;
 }
@@ -883,7 +909,7 @@ export default function App() {
     }
     return next;
   };
-  const qaUnchanged = activeQA !== "" && JSON.stringify(rules) === JSON.stringify(rulesForCard(activeQA));
+  const qaUnchanged = activeQA !== "" && rulesEqual(rules, rulesForCard(activeQA));
   const qaTitle = qaUnchanged ? QUICK.find((q) => q.id === activeQA)?.title || "" : "";
 
   const verdicts = useMemo(() => computeVerdicts(pool, rules, pins, qaTitle), [pool, rules, pins, qaTitle]);
@@ -1759,7 +1785,7 @@ export default function App() {
                 <div id="pick-rules">
                   <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                     <div style={subhead}>Adjust rules</div>
-                    {(activeQA !== "" || JSON.stringify(rules) !== JSON.stringify({ ...BASE, keepWords: rules.keepWords })) && (
+                    {(activeQA !== "" || !rulesEqual(rules, { ...BASE, keepWords: rules.keepWords })) && (
                       <Button
                         label="Clear all rules"
                         variant="quiet"
