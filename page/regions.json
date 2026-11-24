@@ -11,8 +11,8 @@
    "why": "ListView,GroupId"
   },
   {
-   "start": 1733,
-   "end": 1756,
+   "start": 2127,
+   "end": 2150,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -20,8 +20,8 @@
    "why": "const TODAY=new Date();"
   },
   {
-   "start": 1897,
-   "end": 1957,
+   "start": 2291,
+   "end": 2351,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -29,8 +29,8 @@
    "why": "hasVisual"
   },
   {
-   "start": 1958,
-   "end": 2019,
+   "start": 2352,
+   "end": 2413,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -38,8 +38,8 @@
    "why": "isOwnPost"
   },
   {
-   "start": 2059,
-   "end": 2138,
+   "start": 2453,
+   "end": 2532,
    "kind": "body",
    "phase": "B",
    "stub": "{return null as any",
@@ -47,8 +47,8 @@
    "why": "post-only body: effectiveType"
   },
   {
-   "start": 2139,
-   "end": 2489,
+   "start": 2533,
+   "end": 2883,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -56,8 +56,8 @@
    "why": "threadGroupKey"
   },
   {
-   "start": 2490,
-   "end": 2612,
+   "start": 2884,
+   "end": 3006,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -65,8 +65,8 @@
    "why": "yearOf"
   },
   {
-   "start": 2613,
-   "end": 2783,
+   "start": 3007,
+   "end": 3177,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -74,8 +74,8 @@
    "why": "monthYear"
   },
   {
-   "start": 2784,
-   "end": 2943,
+   "start": 3178,
+   "end": 3337,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -83,8 +83,8 @@
    "why": "ageLabel"
   },
   {
-   "start": 2944,
-   "end": 3141,
+   "start": 3338,
+   "end": 3535,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -92,8 +92,8 @@
    "why": "spanLabel"
   },
   {
-   "start": 3142,
-   "end": 3378,
+   "start": 3536,
+   "end": 3772,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -101,8 +101,8 @@
    "why": "const AGE_DAY_OPTIONS=[30,90,180,365,730,monthYearFromDays"
   },
   {
-   "start": 3379,
-   "end": 3464,
+   "start": 3773,
+   "end": 3858,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -110,8 +110,8 @@
    "why": "beforeCutoff"
   },
   {
-   "start": 3465,
-   "end": 3548,
+   "start": 3859,
+   "end": 3942,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -119,8 +119,8 @@
    "why": "sinceCutoff"
   },
   {
-   "start": 3549,
-   "end": 3728,
+   "start": 3943,
+   "end": 4122,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -128,8 +128,8 @@
    "why": "ownLikesCap"
   },
   {
-   "start": 3729,
-   "end": 3957,
+   "start": 4123,
+   "end": 4351,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -137,8 +137,8 @@
    "why": "daysSinceDate"
   },
   {
-   "start": 3958,
-   "end": 4212,
+   "start": 4352,
+   "end": 4606,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -146,8 +146,8 @@
    "why": "formatIsoDate"
   },
   {
-   "start": 4379,
-   "end": 4505,
+   "start": 4773,
+   "end": 4899,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -155,8 +155,8 @@
    "why": "clampWords"
   },
   {
-   "start": 4506,
-   "end": 4748,
+   "start": 4900,
+   "end": 5142,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -164,8 +164,8 @@
    "why": "downloadText"
   },
   {
-   "start": 4749,
-   "end": 5362,
+   "start": 5143,
+   "end": 5756,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -173,8 +173,8 @@
    "why": "const SWEAR_STRONG=[\"shit\",\"fuck\",\"bitch,const SLUR_LIST_SIZE=12;,const SWEAR_MILD=[\"wtf\",\"damn\",\"hell\",\"g,const SWEAR_PRESET=[...SWEAR_STRONG,...S,const ENGAGE_PRESETS=[0,10,100,1000,1000,const LIKES_QUICK_PRESETS=[0,5,10,25,50,,LikesTarget,maskSsn"
   },
   {
-   "start": 5363,
-   "end": 5450,
+   "start": 5757,
+   "end": 5844,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -182,8 +182,8 @@
    "why": "escapeRegExp"
   },
   {
-   "start": 5451,
-   "end": 5763,
+   "start": 5845,
+   "end": 6157,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -191,8 +191,8 @@
    "why": "const LEET:Record<string,string>={\"0\":\"o,const WORD_ENDINGS=[\"\",\"s\",\"es\",\"ed\",\"er,const NAME_LIKE=[\"dick\",\"dyke\",\"coon\",\"c,collapseRepeats"
   },
   {
-   "start": 5764,
-   "end": 6200,
+   "start": 6158,
+   "end": 6594,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -200,8 +200,8 @@
    "why": "normToken"
   },
   {
-   "start": 6201,
-   "end": 7347,
+   "start": 6595,
+   "end": 7741,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -209,8 +209,8 @@
    "why": "wordHit"
   },
   {
-   "start": 7348,
-   "end": 7666,
+   "start": 7742,
+   "end": 8060,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -218,8 +218,8 @@
    "why": "yearOptionList"
   },
   {
-   "start": 7667,
-   "end": 7750,
+   "start": 8061,
+   "end": 8144,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -227,8 +227,8 @@
    "why": "handleOf"
   },
   {
-   "start": 7751,
-   "end": 8330,
+   "start": 8145,
+   "end": 8724,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -236,8 +236,8 @@
    "why": "topicTokens"
   },
   {
-   "start": 8331,
-   "end": 8603,
+   "start": 8725,
+   "end": 8997,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -245,8 +245,8 @@
    "why": "topicHit"
   },
   {
-   "start": 8604,
-   "end": 8736,
+   "start": 8998,
+   "end": 9130,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -254,8 +254,8 @@
    "why": "hasTypeFilter"
   },
   {
-   "start": 8737,
-   "end": 8841,
+   "start": 9131,
+   "end": 9235,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -263,8 +263,8 @@
    "why": "hasMediaFilter"
   },
   {
-   "start": 9022,
-   "end": 9315,
+   "start": 9416,
+   "end": 9709,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -272,8 +272,8 @@
    "why": "hasDeleteScope"
   },
   {
-   "start": 9316,
-   "end": 9614,
+   "start": 9710,
+   "end": 10008,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -281,8 +281,8 @@
    "why": "hasActiveRules"
   },
   {
-   "start": 9729,
-   "end": 9785,
+   "start": 10123,
+   "end": 10179,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -290,8 +290,8 @@
    "why": "usd"
   },
   {
-   "start": 11877,
-   "end": 11974,
+   "start": 12271,
+   "end": 12368,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -299,8 +299,8 @@
    "why": "keepWordHit"
   },
   {
-   "start": 11975,
-   "end": 14670,
+   "start": 12369,
+   "end": 15064,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -308,8 +308,8 @@
    "why": "scopeParts"
   },
   {
-   "start": 14671,
-   "end": 15313,
+   "start": 15065,
+   "end": 15707,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -317,8 +317,8 @@
    "why": "explicitKeep"
   },
   {
-   "start": 15314,
-   "end": 15565,
+   "start": 15708,
+   "end": 15959,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -326,8 +326,8 @@
    "why": "isStrongKeep"
   },
   {
-   "start": 15660,
-   "end": 16495,
+   "start": 16054,
+   "end": 16889,
    "kind": "body",
    "phase": "B",
    "stub": "{return new Map()",
@@ -335,8 +335,8 @@
    "why": "post-only body: computeVerdicts"
   },
   {
-   "start": 17213,
-   "end": 17286,
+   "start": 17607,
+   "end": 17680,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -344,8 +344,8 @@
    "why": "formatEngage"
   },
   {
-   "start": 17287,
-   "end": 17394,
+   "start": 17681,
+   "end": 17788,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -353,8 +353,8 @@
    "why": "likesCapLabel"
   },
   {
-   "start": 17395,
-   "end": 20480,
+   "start": 17789,
+   "end": 20874,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -362,8 +362,8 @@
    "why": "LikesCapPicker"
   },
   {
-   "start": 20481,
-   "end": 23225,
+   "start": 20875,
+   "end": 23619,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -371,8 +371,8 @@
    "why": "EngageControl"
   },
   {
-   "start": 23226,
-   "end": 24252,
+   "start": 23620,
+   "end": 24646,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -380,8 +380,8 @@
    "why": "HighlightedText"
   },
   {
-   "start": 24310,
-   "end": 24400,
+   "start": 24704,
+   "end": 24794,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -389,8 +389,8 @@
    "why": "const _s0:CSSProperties={fontSize:13,fon"
   },
   {
-   "start": 24480,
-   "end": 24558,
+   "start": 24874,
+   "end": 24952,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -398,8 +398,8 @@
    "why": "const _s2:CSSProperties={fontSize:16,fon"
   },
   {
-   "start": 24558,
-   "end": 24732,
+   "start": 24952,
+   "end": 25126,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -407,8 +407,8 @@
    "why": "const _s3:CSSProperties={fontSize:12.5,c,const _s4:CSSProperties={fontSize:13,col"
   },
   {
-   "start": 24732,
-   "end": 24812,
+   "start": 25126,
+   "end": 25206,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -416,8 +416,8 @@
    "why": "const _s5:CSSProperties={fontSize:13,col"
   },
   {
-   "start": 24812,
-   "end": 25074,
+   "start": 25206,
+   "end": 25468,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -425,8 +425,8 @@
    "why": "const _s6:CSSProperties={fontSize:12.5,c,const _s7:CSSProperties={display:\"flex\",,const _s8:CSSProperties={fontSize:12.5,c"
   },
   {
-   "start": 25074,
-   "end": 25139,
+   "start": 25468,
+   "end": 25533,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -434,8 +434,8 @@
    "why": "const _s9:CSSProperties={fontSize:13,col"
   },
   {
-   "start": 25275,
-   "end": 25405,
+   "start": 25669,
+   "end": 25799,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -443,8 +443,8 @@
    "why": "const _s12:CSSProperties={fontSize:14,co,const _s13:CSSProperties={display:\"flex\""
   },
   {
-   "start": 25405,
-   "end": 25511,
+   "start": 25799,
+   "end": 25905,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -452,8 +452,8 @@
    "why": "const _s14:CSSProperties={fontSize:13,co,const _s15:CSSProperties={marginBottom:6"
   },
   {
-   "start": 25811,
-   "end": 25867,
+   "start": 26213,
+   "end": 26269,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -461,8 +461,8 @@
    "why": "const[openGroups,setOpenGroups]=useState"
   },
   {
-   "start": 25910,
-   "end": 26001,
+   "start": 26312,
+   "end": 26403,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -470,8 +470,8 @@
    "why": "const[search,setSearch]=useState(\"\");,const[listView,setListView]=useState<Lis"
   },
   {
-   "start": 26198,
-   "end": 26429,
+   "start": 26600,
+   "end": 26831,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -479,8 +479,8 @@
    "why": "const[keepDraft,setKeepDraft]=useState(\",const[deleteDraft,setDeleteDraft]=useSta,const[pinDraft,setPinDraft]=useState(\"\"),const[keepFind,setKeepFind]=useState(\"\"),const[ignoredWords,setIgnoredWords]=useS"
   },
   {
-   "start": 26476,
-   "end": 26579,
+   "start": 26878,
+   "end": 26981,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -488,8 +488,8 @@
    "why": "const[showFoundSwears,setShowFoundSwears,const[replyQuery,setReplyQuery]=useState"
   },
   {
-   "start": 26579,
-   "end": 26944,
+   "start": 26981,
+   "end": 27346,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -497,8 +497,8 @@
    "why": "const[kitGoogle,setKitGoogle]=useState(f,const[kitGoogleRecheck,setKitGoogleReche,const[kitWayback,setKitWayback]=useState,const[kitWaybackDraft,setKitWaybackDraft,const[kitWaybackRecheck,setKitWaybackRec,const[exportFmt,setExportFmt]=useState(\",const[exportNote,setExportNote]=useState"
   },
   {
-   "start": 26984,
-   "end": 27071,
+   "start": 27386,
+   "end": 27473,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -506,8 +506,8 @@
    "why": "const[likesOn,setLikesOn]=useState(false,const[spendLimit,setSpendLimit]=useState"
   },
   {
-   "start": 27071,
-   "end": 27134,
+   "start": 27473,
+   "end": 27536,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -515,8 +515,8 @@
    "why": "const[likesFocus,setLikesFocus]=useState"
   },
   {
-   "start": 27266,
-   "end": 27530,
+   "start": 27668,
+   "end": 27932,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -524,8 +524,8 @@
    "why": "const[maintOn,setMaintOn]=useState(false,const[autoCont,setAutoCont]=useState(fal,const[rollWin,setRollWin]=useState(\"90\"),const[showFailed,setShowFailed]=useState,const[retryNote,setRetryNote]=useState(\",const[archiveNote,setArchiveNote]=useSta"
   },
   {
-   "start": 27578,
-   "end": 27632,
+   "start": 27980,
+   "end": 28034,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -533,8 +533,8 @@
    "why": "const[kitDisconnect,setKitDisconnect]=us"
   },
   {
-   "start": 28614,
-   "end": 28895,
+   "start": 29016,
+   "end": 29297,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -542,8 +542,8 @@
    "why": "const upd=(patch:Partial<Rules>)=>setRul,const setLikesCap=(t:LikesTarget,n:numbe"
   },
   {
-   "start": 29112,
-   "end": 30110,
+   "start": 29514,
+   "end": 30512,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -551,8 +551,8 @@
    "why": "const swearStrongActive=SWEAR_STRONG.eve,const swearMildActive=SWEAR_MILD.every((,const toggleSwearStrong=()=>{if(swearStr,const toggleSwearMild=()=>{if(swearMildA"
   },
   {
-   "start": 30385,
-   "end": 30646,
+   "start": 30787,
+   "end": 31048,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -560,8 +560,8 @@
    "why": "const qaCounts=useMemo(()=>{const m:Reco"
   },
   {
-   "start": 31039,
-   "end": 31115,
+   "start": 31441,
+   "end": 31517,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -569,8 +569,8 @@
    "why": "const keptByRule=pool.filter((p)=>verdic"
   },
   {
-   "start": 31428,
-   "end": 31543,
+   "start": 31830,
+   "end": 31945,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -578,8 +578,8 @@
    "why": "const fastCost=fastCount*0.01;,const limitUsd=spendLimit===\"\"?Math.ceil"
   },
   {
-   "start": 31668,
-   "end": 31842,
+   "start": 32070,
+   "end": 32244,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -587,8 +587,8 @@
    "why": "const spentSoFar=deletedSoFar*0.01;,const likesTotal=0;,const likesDays=days+Math.ceil(likesTota,const rulesActive=hasActiveRules(rules,a"
   },
   {
-   "start": 31842,
-   "end": 32997,
+   "start": 32244,
+   "end": 33399,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -596,8 +596,8 @@
    "why": "const foundWordRows=useMemo(()=>{const l,const replyHandles=useMemo(()=>{const s=,const topReplied=useMemo(()=>{const m=ne,const swearFound=useMemo(()=>SWEAR_PRESE,const oldestYear=pool.length>0?yearOf(po"
   },
   {
-   "start": 32997,
-   "end": 33181,
+   "start": 33399,
+   "end": 33583,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -605,8 +605,8 @@
    "why": "const knownPinCount=pins.length+(ARCHIVE,const everythingBlocked=knownPinCount==="
   },
   {
-   "start": 33181,
-   "end": 33292,
+   "start": 33583,
+   "end": 33694,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -614,8 +614,8 @@
    "why": "const threadExtraKept=pool.filter((p)=>v"
   },
   {
-   "start": 33409,
-   "end": 33476,
+   "start": 33811,
+   "end": 33878,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -623,8 +623,8 @@
    "why": "const wipePhrase=`DELETE ${matched.toLoc"
   },
   {
-   "start": 33703,
-   "end": 35181,
+   "start": 34105,
+   "end": 35583,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -632,8 +632,8 @@
    "why": "const applyQuick=(id:QAId)=>{if(activeQA,const toggleGroup=(g:GroupId)=>setOpenGr,const togglePin=(id:string)=>setPins(pin,const toggleFoundWord=(word:string)=>{if,const addWord=(kind:\"keep\"|\"delete\")=>{c,const addPinByLink=()=>{const m=pinDraft"
   },
   {
-   "start": 35683,
-   "end": 35820,
+   "start": 36085,
+   "end": 36222,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -641,8 +641,8 @@
    "why": "const jumpToAlwaysKeep=()=>{setOpenGroup"
   },
   {
-   "start": 36209,
-   "end": 37489,
+   "start": 36611,
+   "end": 37891,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -650,8 +650,8 @@
    "why": "const doExport=()=>{const rows=doomed.ma,const doRetry=()=>{if(failedIds.length=="
   },
   {
-   "start": 37594,
-   "end": 37801,
+   "start": 37996,
+   "end": 38203,
    "kind": "stmt",
    "phase": "A",
    "stub": "if(step===\"archive\")return null;",
@@ -659,8 +659,8 @@
    "why": "archive Next hidden until Pick is built"
   },
   {
-   "start": 37894,
-   "end": 37906,
+   "start": 38296,
+   "end": 38308,
    "kind": "expr",
    "phase": "B",
    "stub": "true",
@@ -668,8 +668,8 @@
    "why": "Pick Next button off"
   },
   {
-   "start": 41435,
-   "end": 41537,
+   "start": 41837,
+   "end": 41939,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -677,8 +677,8 @@
    "why": "const subhint:CSSProperties={fontSize:13"
   },
   {
-   "start": 43521,
-   "end": 44379,
+   "start": 44408,
+   "end": 45266,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -686,8 +686,8 @@
    "why": "const paceSafetyNote=(<ul style={{margin"
   },
   {
-   "start": 44379,
-   "end": 51416,
+   "start": 45266,
+   "end": 52303,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -695,8 +695,8 @@
    "why": "const markStyle:CSSProperties={backgroun,const chip=(label:string,onRemove:()=>vo,const timeSummary=rules.timeMode===\"none,const typeList=[rules.posts?\"Posts\":\"\",r,const allTypesCount=ARCHIVE_CAPS.hasQuot,const groupSummary:Record<GroupId,string,const packed:Partial<Record<GroupId,Retu,const groupBox=(id:GroupId,title:string,,const renderRow=(p:Post,i:number)=>{cons,const visiblePosts=sortPosts(pool.filter,const keepFindHits=useMemo(()=>{const q="
   },
   {
-   "start": 52232,
-   "end": 52484,
+   "start": 53119,
+   "end": 53371,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -704,8 +704,8 @@
    "why": "const archiveVsProfileNote=recentOnly?\"Y"
   },
   {
-   "start": 58879,
-   "end": 58908,
+   "start": 59940,
+   "end": 59969,
    "kind": "expr",
    "phase": "B",
    "stub": "(id===\"run\"||id===\"review\")",
@@ -713,8 +713,8 @@
    "why": "stepper: Review locked"
   },
   {
-   "start": 59127,
-   "end": 59133,
+   "start": 60188,
+   "end": 60194,
    "kind": "expr",
    "phase": "A",
    "stub": "locked||id===\"pick\"",
@@ -722,8 +722,8 @@
    "why": "stepper: Pick locked"
   },
   {
-   "start": 60617,
-   "end": 60907,
+   "start": 62363,
+   "end": 62653,
    "kind": "jsx",
    "phase": "B",
    "stub": "{null",
@@ -731,8 +731,8 @@
    "why": "step===\"review\""
   },
   {
-   "start": 66263,
-   "end": 85094,
+   "start": 68009,
+   "end": 86840,
    "kind": "jsx",
    "phase": "A",
    "stub": "{null",
@@ -740,8 +740,8 @@
    "why": "step===\"pick\""
   },
   {
-   "start": 85094,
-   "end": 97876,
+   "start": 86840,
+   "end": 99622,
    "kind": "jsx",
    "phase": "B",
    "stub": "{null",
@@ -749,8 +749,8 @@
    "why": "step===\"review\""
   },
   {
-   "start": 97876,
-   "end": 104503,
+   "start": 99622,
+   "end": 106249,
    "kind": "jsx",
    "phase": "B",
    "stub": "{null",

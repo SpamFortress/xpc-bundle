@@ -36,6 +36,16 @@ type MediaKind = "photo" | "video" | "animated_gif";
 type QAId = "everything" | "oldest" | "era" | "replies" | "reposts" | "best";
 type ListView = "all" | "delete" | "keep";
 type GroupId = "when" | "kind" | "engage" | "words" | "keep" | "more";
+type PageTone = "info" | "warn" | "error" | "ok";
+type PageStatus = { tone: PageTone; lead: string; text: string };
+
+const START_STEP: Step = "signin";
+const START_PHASE: HomePhase = "choose";
+const START_RUN: RunPhase = "idle";
+const SIGNED_IN_HANDLE = "";
+const PAGE_STATUS: PageStatus | null = null;
+const PHONE_FORTRESS_URL = "https://x.ai/bot/a_4tVB4gwbwFBLkUhkTCW";
+const EMAIL_FORTRESS_URL = "https://x.ai/bot/MyKDbPYVwJeJpCNtVTFym";
 
 type Post = {
   id: string;
@@ -816,9 +826,9 @@ export default function App() {
   const theme = useGrokTheme();
   const pool = POOL;
 
-  const [step, setStep] = useState<Step>("signin");
-  const [phase, setPhase] = useState<HomePhase>("choose");
-  const [runPhase, setRunPhase] = useState<RunPhase>("idle");
+  const [step, setStep] = useState<Step>(START_STEP);
+  const [phase, setPhase] = useState<HomePhase>(START_PHASE);
+  const [runPhase, setRunPhase] = useState<RunPhase>(START_RUN);
   const [rules, setRules] = useState<Rules>(BASE);
   const [activeQA, setActiveQA] = useState<QAId | "">("");
   const [openGroups, setOpenGroups] = useState<GroupId[]>([]);
@@ -1277,16 +1287,28 @@ export default function App() {
   const subhint: CSSProperties = { fontSize: 13, color: theme.text.tertiary, margin: "0 0 14px", lineHeight: 1.45 };
   const fortressRow = (key: "phone" | "email", name: string, what: string) => {
     const open = fortressOpen[key];
+    const url = key === "phone" ? PHONE_FORTRESS_URL : EMAIL_FORTRESS_URL;
+    const linked = url !== "";
     return (
       <div>
-        <button
-          type="button"
-          aria-expanded={open}
-          onClick={() => setFortressOpen((s) => ({ ...s, [key]: !s[key] }))}
-          style={{ background: "none", border: 0, padding: 0, color: theme.text.accent, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family, cursor: "pointer", textAlign: "left" }}
-        >
-          {`${name} ${open ? "▾" : "▸"}`}
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {linked ? (
+            <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: theme.text.accent, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family, textDecoration: "underline" }}>
+              {`${name} ↗`}
+            </a>
+          ) : (
+            <span style={{ color: theme.text.primary, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family }}>{name}</span>
+          )}
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-label={`${open ? "Hide" : "Show"} ${name} details`}
+            onClick={() => setFortressOpen((s) => ({ ...s, [key]: !s[key] }))}
+            style={{ background: "none", border: 0, padding: 0, color: theme.text.tertiary, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family, cursor: "pointer" }}
+          >
+            {open ? "▾" : "▸"}
+          </button>
+        </div>
         {open && (
           <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.45, marginTop: 6 }}>
             <div>{what}</div>
@@ -1633,6 +1655,9 @@ export default function App() {
       `}</style>
 
       <div className={narrow && primary && step !== "review" ? "xpc-wrap xpc-wrap-pickbar" : "xpc-wrap"} style={{ fontFamily: theme.font.family, color: theme.text.primary }}>
+        {SIGNED_IN_HANDLE !== "" && (
+          <div style={{ fontSize: 13, color: theme.text.secondary, margin: "0 0 8px", lineHeight: 1.45 }}>{`Signed in as @${SIGNED_IN_HANDLE.replace(/^@/, "")}`}</div>
+        )}
         <div className="xpc-stepper" role="navigation" aria-label="Cleanup steps">
           {(["signin", "archive", "pick", "review", "run"] as Step[]).map((id, i) => {
             const meta = STEP_META[id];
@@ -1650,6 +1675,16 @@ export default function App() {
             );
           })}
         </div>
+        {PAGE_STATUS && (PAGE_STATUS.lead !== "" || PAGE_STATUS.text !== "") && (
+          <div role="status" style={{ margin: "0 0 20px", padding: "12px 14px", borderRadius: 12, border: `1px solid ${theme.border.default}`, background: PAGE_STATUS.tone === "ok" ? theme.fill.successSubtle : PAGE_STATUS.tone === "info" ? theme.fill.accentSubtle : theme.bg.subtle }}>
+            {PAGE_STATUS.lead !== "" && (
+              <div style={{ fontSize: 14, fontWeight: 650, color: PAGE_STATUS.tone === "ok" ? theme.text.success : PAGE_STATUS.tone === "info" ? theme.text.accent : theme.text.warning }}>{PAGE_STATUS.lead}</div>
+            )}
+            {PAGE_STATUS.text !== "" && (
+              <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.45, marginTop: PAGE_STATUS.lead !== "" ? 4 : 0 }}>{PAGE_STATUS.text}</div>
+            )}
+          </div>
+        )}
 
         <div className="xpc-shell">
           <aside className="xpc-rail" aria-label="Sections on this step">

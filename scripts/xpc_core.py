@@ -16,13 +16,15 @@ CLI (all local, read-only on the archive):
   python3 xpc_core.py page-steps --show N            # step N's EditCanvas edits (JSON), nothing else
   python3 xpc_core.py page-verify <file> [--after N] # check a ReadCanvas result against the expected source
   python3 xpc_core.py page-where <file>              # which step a ReadCanvas result is at (resume)
+  python3 xpc_core.py page-status --tone info --lead "..." --text "..."
+                                                 # exact PAGE_STATUS edit (SSNs masked); --apply <file> writes it
 """
 from __future__ import annotations
 import csv, glob, hashlib, io, json, math, os, re, struct, unicodedata, zlib
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-__version__ = "1.1.2"
+__version__ = "1.1.3"
 
 
 def owner_tz():
@@ -733,6 +735,135 @@ def page_show(n, part=None, bundle_dir=BUNDLE_DIR, limit=PAGE_CHUNK_MAX):
     return parts[part - 1]
 
 
+# Boot lines the bot may rewrite with a one-line edit. page-verify and page-where put them
+# back before comparing, so a status or starting-step edit does not fail the build check.
+PAGE_BOOT_DEFAULTS = (
+    ("START_STEP", '"signin"'),
+    ("START_PHASE", '"choose"'),
+    ("START_RUN", '"idle"'),
+    ("SIGNED_IN_HANDLE", '""'),
+    ("PAGE_STATUS", "null"),
+)
+PAGE_STATUS_TONES = ("info", "warn", "error", "ok")
+
+
+def _stmt_end(src, k):
+    quote = None
+    esc = False
+    depth = 0
+    while k < len(src):
+        c = src[k]
+        if quote:
+            if esc:
+                esc = False
+            elif c == "\\":
+                esc = True
+            elif c == quote:
+                quote = None
+        else:
+            if c in "\"'`":
+                quote = c
+            elif c in "({[":
+                depth += 1
+            elif c in ")}]":
+                depth = max(0, depth - 1)
+            elif c == ";" and depth == 0:
+                return k
+        k += 1
+    return None
+
+
+def _const_decl(src, name):
+    """(start, equals, semicolon) of `const name...;` or None."""
+    key = f"const {name}"
+    i = 0
+    while True:
+        i = src.find(key, i)
+        if i < 0:
+            return None
+        before_ok = i == 0 or not (src[i - 1].isalnum() or src[i - 1] == "_")
+        nxt = i + len(key)
+        after_ok = nxt >= len(src) or not (src[nxt].isalnum() or src[nxt] == "_")
+        if before_ok and after_ok:
+            eq = src.find("=", nxt)
+            if eq < 0:
+                return None
+            end = _stmt_end(src, eq + 1)
+            if end is None:
+                return None
+            return i, eq, end
+        i += len(key)
+
+
+def _set_const_initializer(src, name, expr):
+    span = _const_decl(src, name)
+    if span is None:
+        return src
+    _i, eq, end = span
+    return src[:eq + 1] + expr + src[end:]
+
+
+def normalize_page_boot(src):
+    """Reset START_STEP, START_PHASE, START_RUN, SIGNED_IN_HANDLE, and PAGE_STATUS."""
+    if src is None:
+        return None
+    for name, expr in PAGE_BOOT_DEFAULTS:
+        src = _set_const_initializer(src, name, expr)
+    return src
+
+
+def _ts_string(text):
+    out = ['"']
+    for ch in text or "":
+        if ch == "\\":
+            out.append("\\\\")
+        elif ch == '"':
+            out.append('\\"')
+        elif ch == "\n":
+            out.append("\\n")
+        elif ch == "\r":
+            out.append("\\r")
+        elif ch == "\t":
+            out.append("\\t")
+        else:
+            out.append(ch)
+    out.append('"')
+    return "".join(out)
+
+
+def page_status_expr(tone=None, lead="", text=""):
+    """Initializer for PAGE_STATUS. Empty lead and text (after SSN masking) is null, which hides the banner."""
+    lead_m = mask_ssn(lead or "")
+    text_m = mask_ssn(text or "")
+    if tone is None or (lead_m == "" and text_m == ""):
+        return "null"
+    if tone not in PAGE_STATUS_TONES:
+        raise ValueError("tone must be info, warn, error, or ok")
+    return '{tone:"' + tone + '",lead:' + _ts_string(lead_m) + ",text:" + _ts_string(text_m) + "}"
+
+
+def _page_status_decl(bundle_dir=BUNDLE_DIR):
+    src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
+    span = _const_decl(src, "PAGE_STATUS")
+    if span is None:
+        raise ValueError("PAGE_STATUS is not in page.min.tsx")
+    return src, span
+
+
+def page_status_edit(tone=None, lead="", text="", bundle_dir=BUNDLE_DIR):
+    """EditCanvas edit from the shipped PAGE_STATUS line to the masked value.
+    old_string is the whole shipped declaration; new_string keeps that declaration and replaces the initializer."""
+    src, (i, eq, end) = _page_status_decl(bundle_dir)
+    expr = page_status_expr(tone, lead, text)
+    return {"old_string": src[i:end + 1], "new_string": src[i:eq + 1] + expr + ";"}
+
+
+def apply_page_status(src, tone=None, lead="", text=""):
+    if _const_decl(src, "PAGE_STATUS") is None:
+        raise ValueError("PAGE_STATUS declaration not found")
+    return _set_const_initializer(src, "PAGE_STATUS", page_status_expr(tone, lead, text))
+
+
 def _canvas_source(raw):
     """Source text from a saved ReadCanvas result (tool wrapper and header stripped) or a plain file."""
     i = raw.find("import")
@@ -761,8 +892,8 @@ def page_verify(path, after=None, bundle_dir=BUNDLE_DIR):
     """(ok, detail). ok when the saved ReadCanvas result at `path` holds exactly the source
     expected after step `after` (default: the finished page.min.tsx)."""
     want_full = page_expected(after, bundle_dir)
-    want = want_full.rstrip()
-    got = _canvas_source(open(path, encoding="utf-8").read())
+    want = normalize_page_boot(want_full).rstrip()
+    got = normalize_page_boot(_canvas_source(open(path, encoding="utf-8").read()))
     if got is None:
         return False, "no canvas source found in file"
     if got == want:
@@ -775,7 +906,7 @@ def page_verify(path, after=None, bundle_dir=BUNDLE_DIR):
 
 def page_where(path, bundle_dir=BUNDLE_DIR):
     """Which step the canvas at `path` is at (to resume), or None."""
-    got = _canvas_source(open(path, encoding="utf-8").read())
+    got = normalize_page_boot(_canvas_source(open(path, encoding="utf-8").read()))
     plan = page_steps(bundle_dir)
     for st in reversed(plan["steps"]):
         if got is not None and page_expected(st["step"], bundle_dir).rstrip() == got:
@@ -809,6 +940,12 @@ def _cli(argv=None):
     pw = sub.add_parser("page-where", help="which build step a saved ReadCanvas result is at")
     pw.add_argument("file")
     sub.add_parser("page-build", help="release-time: regenerate page/ from page.min.tsx and page/regions.json")
+    pst = sub.add_parser("page-status", help="exact PAGE_STATUS edit; SSN-shaped numbers are masked")
+    pst.add_argument("--tone", choices=list(PAGE_STATUS_TONES))
+    pst.add_argument("--lead", default="")
+    pst.add_argument("--text", default="")
+    pst.add_argument("--clear", action="store_true", help="hide the banner (PAGE_STATUS = null)")
+    pst.add_argument("--apply", metavar="FILE", help="write the edit into this canvas file")
     a = ap.parse_args(argv)
     if a.cmd == "page-build":
         plan = page_build_files()
@@ -824,12 +961,38 @@ def _cli(argv=None):
     if a.cmd == "page-where":
         w = page_where(a.file)
         print(f"page-where step {w}" if w else "page-where unknown (not at any build step)"); return 0 if w else 1
+    if a.cmd == "page-status":
+        if not a.clear and not a.tone and not a.lead and not a.text and not a.apply:
+            _src, (i, _eq, end) = _page_status_decl()
+            sys.stdout.write(_src[i:end + 1] + "\n"); return 0
+        if not a.clear and not a.tone:
+            print("page-status needs --tone or --clear"); return 1
+        tone = None if a.clear else a.tone
+        edit = page_status_edit(tone, a.lead, a.text)
+        if a.apply:
+            raw = open(a.apply, encoding="utf-8").read()
+            open(a.apply, "w", encoding="utf-8", newline="").write(apply_page_status(raw, tone, a.lead, a.text))
+        print(json.dumps(edit, ensure_ascii=False)); return 0
     if a.cmd == "mask":
         sys.stdout.write(mask_ssn(sys.stdin.read())); return 0
     if a.cmd == "selftest":
         assert mask_ssn("id 123-45-6789 / 123 45 6789 / 123456789") == "id ***-**-6789 / ***-**-6789 / ***-**-6789"
         assert find_words("sh1t happens", STRONG) and not find_words("classic assassin cocktail", STRONG)
         assert typed_ok("delete 1,234 posts", 1234) and not typed_ok("yes", 1234)
+        shipped = page_status_edit(None)["old_string"]
+        assert shipped.startswith("const PAGE_STATUS:") and shipped.endswith("=null;")
+        edit = page_status_edit("warn", 'he said "no"\n123-45-6789', "id 123456789")
+        assert edit["old_string"] == shipped
+        assert "123-45-6789" not in edit["new_string"] and "123456789" not in edit["new_string"]
+        assert "***-**-6789" in edit["new_string"] and '\\"no\\"' in edit["new_string"] and "\\n" in edit["new_string"]
+        assert edit["new_string"].startswith(shipped[:shipped.rindex("=") + 1])
+        assert page_status_expr("info", "", "") == "null"
+        base = open(_page_paths()[0], encoding="utf-8").read()
+        changed = apply_page_status(base, "error", "123 45 6789", "still here")
+        changed = _set_const_initializer(changed, "START_STEP", '"pick"')
+        changed = _set_const_initializer(changed, "SIGNED_IN_HANDLE", '"owner"')
+        assert "123 45 6789" not in changed and "***-**-6789" in changed
+        assert normalize_page_boot(changed) == base
         print(f"xpc_core {__version__} selftest ok · tz={TZ} · wordlists={WORDLIST_SOURCE}"); return 0
     os.makedirs(a.out, exist_ok=True)
     posts, report = parse_archive(a.paths, a.own_id)
