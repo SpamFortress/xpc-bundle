@@ -18,13 +18,14 @@ CLI (all local, read-only on the archive):
   python3 xpc_core.py page-where <file>              # which step a ReadCanvas result is at (resume)
   python3 xpc_core.py page-status --tone info --lead "..." --text "..."
                                                  # exact PAGE_STATUS edit (SSNs masked); --apply <file> writes it
+  python3 xpc_core.py page-typecheck             # tsc --strict on every build step (needs XPC_NODE_TOOLS)
 """
 from __future__ import annotations
 import csv, glob, hashlib, io, json, math, os, re, struct, unicodedata, zlib
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-__version__ = "1.1.3"
+__version__ = "1.1.4"
 
 
 def owner_tz():
@@ -711,6 +712,33 @@ def page_build_files(bundle_dir=BUNDLE_DIR, limit=PAGE_CHUNK_MAX):
     return plan
 
 
+def page_step_sources(bundle_dir=BUNDLE_DIR):
+    """(step_number, source) for the first page, each later step, and the finished page."""
+    src_path, d = _page_paths(bundle_dir)
+    src = open(src_path, encoding="utf-8").read()
+    regions = json.load(open(os.path.join(d, "regions.json"), encoding="utf-8"))["regions"]
+    first, steps = page_plan(src, regions)
+    states = page_states(first, steps)
+    if states[-1] != src:
+        raise AssertionError("staged build does not end at page.min.tsx")
+    return [(n, text) for n, text in enumerate(states) if text is not None]
+
+
+def page_typecheck(bundle_dir=BUNDLE_DIR):
+    """tsc --strict (React types) on every build step. Returns (exit_code, output)."""
+    import subprocess, tempfile
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools", "typecheck_page.js")
+    tmp = tempfile.mkdtemp(prefix="xpc-steps-")
+    paths = []
+    for n, text in page_step_sources(bundle_dir):
+        path = os.path.join(tmp, f"step-{n:02d}.tsx")
+        open(path, "w", encoding="utf-8", newline="").write(text)
+        paths.append(path)
+    proc = subprocess.run(["node", script, *paths], capture_output=True, text=True)
+    out = (proc.stdout or "") + (proc.stderr or "")
+    return proc.returncode, out
+
+
 def page_steps(bundle_dir=BUNDLE_DIR):
     return json.load(open(os.path.join(_page_paths(bundle_dir)[1], "plan.json"), encoding="utf-8"))
 
@@ -940,6 +968,7 @@ def _cli(argv=None):
     pw = sub.add_parser("page-where", help="which build step a saved ReadCanvas result is at")
     pw.add_argument("file")
     sub.add_parser("page-build", help="release-time: regenerate page/ from page.min.tsx and page/regions.json")
+    sub.add_parser("page-typecheck", help="tsc --strict on every build step, including the first and final page")
     pst = sub.add_parser("page-status", help="exact PAGE_STATUS edit; SSN-shaped numbers are masked")
     pst.add_argument("--tone", choices=list(PAGE_STATUS_TONES))
     pst.add_argument("--lead", default="")
@@ -950,6 +979,10 @@ def _cli(argv=None):
     if a.cmd == "page-build":
         plan = page_build_files()
         print(f"page-build ok: first page {plan['first_page_bytes']} bytes, {len(plan['steps'])} steps, pick ready after step {plan['pick_ready_after']}, full page after step {plan['full_page_after']}"); return 0
+    if a.cmd == "page-typecheck":
+        code, out = page_typecheck()
+        sys.stdout.write(out)
+        return code
     if a.cmd == "page-steps":
         if a.show is None:
             plan = page_steps()
@@ -993,6 +1026,16 @@ def _cli(argv=None):
         changed = _set_const_initializer(changed, "SIGNED_IN_HANDLE", '"owner"')
         assert "123 45 6789" not in changed and "***-**-6789" in changed
         assert normalize_page_boot(changed) == base
+        i, _eq, end = _const_decl(base, "SIGNED_IN_HANDLE")
+        assert base[i:end + 1] == 'const SIGNED_IN_HANDLE:string="";'
+        for name, literal in (
+            ("PHONE_FORTRESS_URL", "https://x.ai/bot/a_4tVB4gwbwFBLkUhkTCW"),
+            ("EMAIL_FORTRESS_URL", "https://x.ai/bot/MyKDbPYVwJeJpCNtVTFym"),
+        ):
+            j, _eq, jend = _const_decl(base, name)
+            assert base[j:jend + 1] == f'const {name}:string="{literal}";'
+        tcode, tout = page_typecheck()
+        assert tcode == 0, tout
         print(f"xpc_core {__version__} selftest ok · tz={TZ} · wordlists={WORDLIST_SOURCE}"); return 0
     os.makedirs(a.out, exist_ok=True)
     posts, report = parse_archive(a.paths, a.own_id)
