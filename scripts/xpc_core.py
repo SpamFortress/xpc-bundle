@@ -11,16 +11,18 @@ CLI (all local, read-only on the archive):
   python3 xpc_core.py parse <archive.zip|folder|tweets.js ...> --own-id <numeric id> --out /workspace/xpc/state
   python3 xpc_core.py mask < text        # mask SSN-shaped numbers
   python3 xpc_core.py selftest
-  python3 xpc_core.py page-steps            # list the Page build steps (WriteCanvas + EditCanvas)
-  python3 xpc_core.py page-steps --show N   # print step N's exact text to pass, nothing else
-  python3 xpc_core.py page-verify <file>    # check a ReadCanvas result equals page.canvas.tsx
+  python3 xpc_core.py page-steps                     # list the Page build steps (first page, then background)
+  python3 xpc_core.py page-steps --show 1 --part K   # step 1 (first page) text, part K
+  python3 xpc_core.py page-steps --show N            # step N's EditCanvas edits (JSON), nothing else
+  python3 xpc_core.py page-verify <file> [--after N] # check a ReadCanvas result against the expected source
+  python3 xpc_core.py page-where <file>              # which step a ReadCanvas result is at (resume)
 """
 from __future__ import annotations
 import csv, glob, hashlib, io, json, math, os, re, struct, unicodedata, zlib
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 
 
 def owner_tz():
@@ -559,94 +561,181 @@ def risk_rank(p):
     return (tier, p.get("favorite_count") or 0, dt.timestamp() if dt else 0)
 
 
-# ---------------------------------------------------------------- Page build in steps
-# One WriteCanvas call cannot carry the whole Page, and a half-written module does not
-# compile. So the Page is built inside line comments: the skeleton is a tiny Page that
-# compiles, followed by a marker line. Each step replaces the marker with the next slice
-# of the real source, every line prefixed "//~" (a comment, so every step compiles), plus
-# the marker again. The finish step removes the skeleton, the marker and every "//~"
-# prefix in one EditCanvas call, which leaves exactly page.canvas.tsx.
-PAGE_PREFIX = "//~"
-PAGE_MARKER = "//~@@XPC-NEXT@@"
-PAGE_SKELETON = 'import { Page } from "grok/canvas"; export default function XpcBuilding() { return <Page title="X Post Cleaner" width="full" />; }'
-PAGE_CHUNK_MAX = 9500  # bytes per step: small enough that one Shell or Read view shows it whole
+# ---------------------------------------------------------------- Page build in stages
+# The canvas holds page.min.tsx (page.canvas.tsx with comments and spare whitespace removed;
+# see tools/shrink_page.js). It is built in three stages so the owner sees a working page fast:
+#   step 1      WriteCanvas: the FIRST page (page/01-first.tsx). Sign in, Get your archive, and the
+#               shared header, stepper and styles. Pick, Review and Run show as locked steps.
+#               Each left-out part is a stub plus a marker line, chosen by tools/stage_plan.js
+#               (page/regions.json), never by hand.
+#   phase A     EditCanvas steps that fill the Pick screen's parts, then one finish step.
+#   phase B     EditCanvas steps that fill Review, Run and the post-only helpers, then one finish.
+# Filled text goes in as line comments ("//~" lines for A, "//^" for B), so every step compiles;
+# each finish removes that phase's stubs, markers and comment prefixes in one EditCanvas call.
+# After phase B the canvas is page.min.tsx byte for byte.
+PAGE_CHUNK_MAX = 9500  # bytes per step as printed: one Shell or Read view shows it whole
+PAGE_PHASES = {
+    "A": {"P": "//~", "N": "//=", "open": "/*@A*/", "close": "/*@@A*/"},
+    "B": {"P": "//^", "N": "//!", "open": "/*@B*/", "close": "/*@@B*/"},
+}
+PAGE_RESERVED = ("\n//", "@@", "/*@", "\u2028", "\u2029", "\r")
 BUNDLE_DIR = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 
-def page_chunks(src, limit=PAGE_CHUNK_MAX):
-    """Split the source on line boundaries into prefixed slices of at most `limit` bytes."""
-    lines = src.split("\n")
-    if lines and lines[-1] == "":
-        lines = lines[:-1]
-    out, cur, size = [], [], 0
-    for ln in lines:
-        piece = PAGE_PREFIX + ln + "\n"
-        n = len(piece.encode("utf-8"))
-        if cur and size + n > limit:
-            out.append("".join(cur)); cur, size = [], 0
-        cur.append(piece); size += n
-    if cur:
-        out.append("".join(cur))
-    return out
+def _page_paths(bundle_dir=BUNDLE_DIR):
+    return os.path.join(bundle_dir, "page.min.tsx"), os.path.join(bundle_dir, "page")
 
 
-def page_finish_edits():
-    return [
-        {"old_string": PAGE_SKELETON + "\n" + PAGE_PREFIX, "new_string": ""},
-        {"old_string": "\n" + PAGE_MARKER, "new_string": ""},
-        {"old_string": "\n" + PAGE_PREFIX, "new_string": "\n", "replace_all": True},
-    ]
+def _close(ph, r):
+    # regions whose stub ends in a brace get their own closing token, so removing one kind of
+    # closing marker can never eat a brace that belongs to the page
+    return ph["close"] if not r["tail"] else ph["close"][:-2] + "c*/"
 
 
-def page_simulate(skeleton, chunk_texts, edits):
-    """Apply the steps exactly as WriteCanvas/EditCanvas would; returns the final source."""
-    cur = skeleton
-    for t in chunk_texts:
-        assert cur.count(PAGE_MARKER) == 1
-        cur = cur.replace(PAGE_MARKER, t, 1)
+def _apply_edits(cur, edits):
     for e in edits:
+        n = cur.count(e["old_string"])
         if e.get("replace_all"):
+            assert n >= 1, ("no match", e["old_string"][:40])
             cur = cur.replace(e["old_string"], e["new_string"])
         else:
-            assert cur.count(e["old_string"]) == 1, e["old_string"][:40]
+            assert n == 1, ("must match once", n, e["old_string"][:40])
             cur = cur.replace(e["old_string"], e["new_string"], 1)
     return cur
 
 
+def page_plan(src, regions, limit=PAGE_CHUNK_MAX):
+    """(first_page_text, steps). steps: list of {"phase","kind":"fill"|"finish","edits":[...]}."""
+    for bad in PAGE_RESERVED:
+        assert bad not in src, f"page.min.tsx contains reserved {bad!r}"
+    first, pos = [], 0
+    for k, r in enumerate(regions):
+        ph = PAGE_PHASES[r["phase"]]
+        first.append(src[pos:r["start"]])
+        first.append(r["stub"] + ph["open"] + "\n" + ph["P"] + f"@@{k}@@" + "\n" + _close(ph, r) + r["tail"])
+        pos = r["end"]
+    first.append(src[pos:])
+    first = "".join(first)
+    steps = []
+    for phase in ("A", "B"):
+        ph = PAGE_PHASES[phase]
+        cur_edits, cur_size = [], 0
+        def flush():
+            nonlocal cur_edits, cur_size
+            if cur_edits:
+                steps.append({"phase": phase, "kind": "fill", "edits": cur_edits})
+            cur_edits, cur_size = [], 0
+        for k, r in enumerate(regions):
+            if r["phase"] != phase:
+                continue
+            body = src[r["start"]:r["end"]]
+            marker = ph["P"] + f"@@{k}@@"
+            enc = lambda t: t.replace("\n", "\n" + ph["N"])
+            jl = lambda t: len(json.dumps(t, ensure_ascii=False).encode())
+            i = 0
+            while i < len(body):
+                room = limit - cur_size - 2 * len(marker) - 80
+                if room < 600:
+                    flush(); continue
+                lo, hi = i + 1, len(body)
+                if jl(enc(body[i:lo])) > room:
+                    flush(); continue
+                while lo < hi:
+                    mid = (lo + hi + 1) // 2
+                    if jl(enc(body[i:mid])) <= room:
+                        lo = mid
+                    else:
+                        hi = mid - 1
+                piece, i = body[i:lo], lo
+                new = ph["P"] + enc(piece) + ("" if i >= len(body) else "\n" + marker)
+                e = {"old_string": marker, "new_string": new}
+                cur_edits.append(e)
+                cur_size += jl(e["new_string"]) + jl(marker) + 40
+        flush()
+        heads, tails = set(), set()
+        for r in regions:
+            if r["phase"] == phase:
+                heads.add(r["stub"] + ph["open"] + "\n" + ph["P"])
+                tails.add("\n" + _close(ph, r) + r["tail"])
+        fin = [{"old_string": h, "new_string": "", "replace_all": True} for h in sorted(heads, key=lambda x: (-len(x), x))]
+        fin += [{"old_string": t, "new_string": "", "replace_all": True} for t in sorted(tails, key=lambda x: (-len(x), x))]
+        fin.append({"old_string": "\n" + ph["P"], "new_string": "", "replace_all": True})
+        steps.append({"phase": phase, "kind": "finish", "edits": fin})
+    return first, steps
+
+
+def page_states(first, steps):
+    """Exact source after each step: index 1 = first page, index n = after step n."""
+    states = [None, first]
+    cur = first
+    for st in steps:
+        edits = st["edits"]
+        if st["kind"] == "finish":
+            ph = PAGE_PHASES[st["phase"]]
+            if ("\n" + ph["N"]) in cur:
+                edits = edits + [{"old_string": "\n" + ph["N"], "new_string": "\n", "replace_all": True}]
+                st["edits"] = edits
+        cur = _apply_edits(cur, edits)
+        states.append(cur)
+    return states
+
+
 def page_build_files(bundle_dir=BUNDLE_DIR, limit=PAGE_CHUNK_MAX):
-    """Release-time: write page/00-skeleton.tsx, page/NN.txt and page/99-finish.json from
-    page.canvas.tsx, and prove the steps rebuild it byte for byte."""
-    src = open(os.path.join(bundle_dir, "page.canvas.tsx"), encoding="utf-8").read()
-    for bad in ("\n" + PAGE_PREFIX, "XPC-NEXT", "XpcBuilding", "\u2028", "\u2029", "\r"):
-        assert bad not in src, f"page source contains {bad!r}"
-    d = os.path.join(bundle_dir, "page")
-    os.makedirs(d, exist_ok=True)
-    for f in glob.glob(os.path.join(d, "*")):
+    """Release-time: from page.min.tsx and page/regions.json write page/01-first.tsx, page/NN.json
+    (EditCanvas edits for step NN) and page/plan.json; prove the steps end at page.min.tsx."""
+    src_path, d = _page_paths(bundle_dir)
+    src = open(src_path, encoding="utf-8").read()
+    regions = json.load(open(os.path.join(d, "regions.json"), encoding="utf-8"))["regions"]
+    first, steps = page_plan(src, regions, limit)
+    states = page_states(first, steps)
+    assert states[-1] == src, "staged build does not end at page.min.tsx"
+    for f in glob.glob(os.path.join(d, "[0-9][0-9]*")):
         os.remove(f)
-    skel = PAGE_SKELETON + "\n" + PAGE_MARKER + "\n"
-    texts = [c + PAGE_MARKER for c in page_chunks(src, limit)]
-    open(os.path.join(d, "00-skeleton.tsx"), "w", encoding="utf-8", newline="").write(skel)
-    for i, t in enumerate(texts, 1):
-        open(os.path.join(d, f"{i:02d}.txt"), "w", encoding="utf-8", newline="").write(t)
-    json.dump({"edits": page_finish_edits()}, open(os.path.join(d, "99-finish.json"), "w", encoding="utf-8"), indent=1)
-    assert page_simulate(skel, texts, page_finish_edits()) == src
-    return len(texts)
+    open(os.path.join(d, "01-first.tsx"), "w", encoding="utf-8", newline="").write(first)
+    plan = {"result": "page.min.tsx", "result_sha256": hashlib.sha256(src.encode()).hexdigest(),
+            "first_page_bytes": len(first.encode()), "steps": [{"step": 1, "tool": "WriteCanvas", "stage": "first page",
+            "file": "page/01-first.tsx", "bytes": len(first.encode()), "sha256_after": hashlib.sha256(first.encode()).hexdigest()}]}
+    for n, st in enumerate(steps, 2):
+        name = f"{n:02d}.json"
+        body = json.dumps(st["edits"], ensure_ascii=False, indent=0)
+        open(os.path.join(d, name), "w", encoding="utf-8", newline="").write(body)
+        stage = ("Pick screen" if st["phase"] == "A" else "Review and Run") + (" finish" if st["kind"] == "finish" else "")
+        plan["steps"].append({"step": n, "tool": "EditCanvas", "stage": stage, "phase": st["phase"], "kind": st["kind"],
+                              "file": "page/" + name, "bytes": len(body.encode()), "edits": len(st["edits"]),
+                              "sha256_after": hashlib.sha256(states[n].encode()).hexdigest()})
+    plan["pick_ready_after"] = max(s["step"] for s in plan["steps"] if s.get("phase") == "A")
+    plan["full_page_after"] = plan["steps"][-1]["step"]
+    json.dump(plan, open(os.path.join(d, "plan.json"), "w", encoding="utf-8"), indent=1, ensure_ascii=False)
+    return plan
 
 
 def page_steps(bundle_dir=BUNDLE_DIR):
-    d = os.path.join(bundle_dir, "page")
-    parts = sorted(glob.glob(os.path.join(d, "[0-9][0-9].txt")))
-    steps = [{"step": 0, "tool": "WriteCanvas", "title": "X Post Cleaner", "contents_file": os.path.join(d, "00-skeleton.tsx")}]
-    for p in parts:
-        steps.append({"step": int(os.path.basename(p)[:2]), "tool": "EditCanvas", "old_string": PAGE_MARKER,
-                      "new_string_file": p, "bytes": os.path.getsize(p)})
-    steps.append({"step": len(parts) + 1, "tool": "EditCanvas", "edits": page_finish_edits()})
-    return steps
+    return json.load(open(os.path.join(_page_paths(bundle_dir)[1], "plan.json"), encoding="utf-8"))
+
+
+def page_show(n, part=None, bundle_dir=BUNDLE_DIR, limit=PAGE_CHUNK_MAX):
+    """Exact text for step n. Step 1 is long, so it prints in parts (--part 1, 2, ...): the
+    WriteCanvas contents are the parts joined with nothing between them."""
+    plan = page_steps(bundle_dir)
+    st = plan["steps"][n - 1]
+    text = open(os.path.join(bundle_dir, st["file"]), encoding="utf-8").read()
+    if n != 1:
+        return text
+    parts, cur, size = [], [], 0
+    for ch in text:
+        b = len(ch.encode())
+        if size + b > limit:
+            parts.append("".join(cur)); cur, size = [], 0
+        cur.append(ch); size += b
+    parts.append("".join(cur))
+    if part is None:
+        return f"step 1 has {len(parts)} parts: print each with --part N and join them with nothing between\n"
+    return parts[part - 1]
 
 
 def _canvas_source(raw):
     """Source text from a saved ReadCanvas result (tool wrapper and header stripped) or a plain file."""
-    i = raw.find("import {")
+    i = raw.find("import")
     if i < 0:
         return None
     src = raw[i:]
@@ -658,31 +747,40 @@ def _canvas_source(raw):
 
 def page_expected(after=None, bundle_dir=BUNDLE_DIR):
     """Exact source the canvas should hold after step `after` (None = finished page)."""
-    d = os.path.join(bundle_dir, "page")
+    src_path, d = _page_paths(bundle_dir)
     if after is None:
-        return open(os.path.join(bundle_dir, "page.canvas.tsx"), encoding="utf-8").read()
-    cur = open(os.path.join(d, "00-skeleton.tsx"), encoding="utf-8").read()
-    for k in range(1, after + 1):
-        cur = cur.replace(PAGE_MARKER, open(os.path.join(d, f"{k:02d}.txt"), encoding="utf-8").read(), 1)
+        return open(src_path, encoding="utf-8").read()
+    plan = page_steps(bundle_dir)
+    cur = open(os.path.join(d, "01-first.tsx"), encoding="utf-8").read()
+    for st in plan["steps"][1:after]:
+        cur = _apply_edits(cur, json.load(open(os.path.join(bundle_dir, st["file"]), encoding="utf-8")))
     return cur
 
 
 def page_verify(path, after=None, bundle_dir=BUNDLE_DIR):
     """(ok, detail). ok when the saved ReadCanvas result at `path` holds exactly the source
-    expected after step `after` (default: the finished page.canvas.tsx). On a mismatch the
-    detail names the first differing line, so only that step needs redoing."""
-    want = page_expected(after, bundle_dir).rstrip()
+    expected after step `after` (default: the finished page.min.tsx)."""
+    want_full = page_expected(after, bundle_dir)
+    want = want_full.rstrip()
     got = _canvas_source(open(path, encoding="utf-8").read())
     if got is None:
         return False, "no canvas source found in file"
     if got == want:
-        return True, hashlib.sha256(page_expected(after, bundle_dir).encode()).hexdigest()
-    n = 0
-    m = min(len(got), len(want))
+        return True, hashlib.sha256(want_full.encode()).hexdigest()
+    n, m = 0, min(len(got), len(want))
     while n < m and got[n] == want[n]:
         n += 1
-    line = want[:n].count("\n") + 1
-    return False, f"first difference at line {line}: expected {want[n:n+60]!r}, canvas has {got[n:n+60]!r}"
+    return False, f"first difference at character {n}: expected {want[n:n+60]!r}, canvas has {got[n:n+60]!r}"
+
+
+def page_where(path, bundle_dir=BUNDLE_DIR):
+    """Which step the canvas at `path` is at (to resume), or None."""
+    got = _canvas_source(open(path, encoding="utf-8").read())
+    plan = page_steps(bundle_dir)
+    for st in reversed(plan["steps"]):
+        if got is not None and page_expected(st["step"], bundle_dir).rstrip() == got:
+            return st["step"]
+    return None
 
 # ---------------------------------------------------------------- CLI
 def _post_row(p):
@@ -704,23 +802,28 @@ def _cli(argv=None):
     sub.add_parser("selftest")
     ps = sub.add_parser("page-steps", help="the Page build steps")
     ps.add_argument("--show", type=int, help="print only this step's exact text")
+    ps.add_argument("--part", type=int, help="step 1 only: which part to print")
     pv = sub.add_parser("page-verify", help="check a ReadCanvas result")
     pv.add_argument("file")
     pv.add_argument("--after", type=int, help="check the state after this build step instead of the finished page")
-    sub.add_parser("page-build", help="release-time: regenerate page/ from page.canvas.tsx")
+    pw = sub.add_parser("page-where", help="which build step a saved ReadCanvas result is at")
+    pw.add_argument("file")
+    sub.add_parser("page-build", help="release-time: regenerate page/ from page.min.tsx and page/regions.json")
     a = ap.parse_args(argv)
     if a.cmd == "page-build":
-        print(f"{page_build_files()} chunk steps written"); return 0
+        plan = page_build_files()
+        print(f"page-build ok: first page {plan['first_page_bytes']} bytes, {len(plan['steps'])} steps, pick ready after step {plan['pick_ready_after']}, full page after step {plan['full_page_after']}"); return 0
     if a.cmd == "page-steps":
-        steps = page_steps()
         if a.show is None:
-            print(json.dumps(steps, indent=1)); return 0
-        st = steps[a.show]
-        f = st.get("contents_file") or st.get("new_string_file")
-        sys.stdout.write(open(f, encoding="utf-8").read() if f else json.dumps(st["edits"], indent=1)); return 0
+            plan = page_steps()
+            print(json.dumps([{k: v for k, v in st.items() if k != "sha256_after"} for st in plan["steps"]], indent=1)); return 0
+        sys.stdout.write(page_show(a.show, a.part)); return 0
     if a.cmd == "page-verify":
         ok, detail = page_verify(a.file, a.after)
         print(f"page-verify ok {detail}" if ok else f"page-verify MISMATCH {detail}"); return 0 if ok else 1
+    if a.cmd == "page-where":
+        w = page_where(a.file)
+        print(f"page-where step {w}" if w else "page-where unknown (not at any build step)"); return 0 if w else 1
     if a.cmd == "mask":
         sys.stdout.write(mask_ssn(sys.stdin.read())); return 0
     if a.cmd == "selftest":
