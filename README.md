@@ -13,7 +13,7 @@ Changes go only through pull requests. Release tags are never moved or deleted.
 A bot has to type every byte of a Page into WriteCanvas and EditCanvas, so a big page is slow to publish. 1.1.2 makes the first page small and fills in the rest afterwards, into the same canvas.
 
 - page.canvas.tsx is the readable design source. page.min.tsx is the same page with comments, indentation and repeated style objects removed (152,355 bytes down to 106,870). It compiles to exactly the same JavaScript as the design source. This is what the canvas holds when the build is done.
-- page/01-first.tsx (about 34.3 KB) is the first page: the same styles, header and stepper, with the Sign in and Get your archive screens. Pick, Review and Run show as locked steps. It is generated from page.min.tsx, not written by hand. Write it with one WriteCanvas call.
+- page/01-first.tsx (18,352 bytes) is the first page a bot types: the same styles, header, stepper, and status banner, the five state lines, a one-line Sign in note, and the Archive view, including the requested-archive line. Pick, Review and Run show as locked steps. The full Sign in steps and both Where your data goes panels are filled in by a later step. It is generated from page.min.tsx, not written by hand. `page-steps --show 1` prints it in two parts; join them with nothing between.
 - page/02.json through the last numbered JSON file are EditCanvas edit lists. `page/plan.json` names each step. Phase A fills in the Pick screen; Pick unlocks when that phase finishes. Phase B fills in Review and Run; the canvas is page.min.tsx exactly when the last step finishes. Every step compiles on its own, because each missing part waits inside a comment.
 - page/plan.json lists every step with the sha256 the canvas must have after it. page/regions.json records which parts of page.min.tsx each phase adds.
 
@@ -62,7 +62,7 @@ The bot can show where things stand without sending a chat message. These top-le
 - `page-verify` and `page-where` put those five lines back to their defaults before comparing, so a status edit does not fail the build check.
 - `python3 scripts/xpc_core.py page-status --tone info --lead "..." --text "..."` prints one JSON object, `{"old_string","new_string"}`, for EditCanvas. `old_string` is the shipped `const PAGE_STATUS:...=null;` declaration. `new_string` is that same declaration with the initializer replaced. Quotes, backslashes, and newlines are escaped. SSN-shaped numbers are masked as `***-**-NNNN` and the full number is never printed. `--clear` hides the banner. `--apply <file>` writes the initializer into a saved canvas.
 
-`PHONE_FORTRESS_URL` and `EMAIL_FORTRESS_URL` are the share links for Phone Fortress and Email Fortress. On the archive step (first page) and on the finished run step, each name is a real external link that opens in a new tab. An empty URL would have no link styling and no external-link arrow.
+`PHONE_FORTRESS_URL` and `EMAIL_FORTRESS_URL` are the share links for Phone Fortress and Email Fortress. Each name is a real external link that opens in a new tab, on the archive step once the Where your data goes panel is restored and on the finished run step. An empty URL would have no link styling and no external-link arrow.
 
 `python3 scripts/xpc_core.py page-typecheck` type-checks the first page, every later build step, and the finished page with `tsc --strict` and the React types. It must pass before a release is tagged.
 
