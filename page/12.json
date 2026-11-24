@@ -1,6 +1,47 @@
 [
 {
-"old_string": "//^@@83@@",
-"new_string": "//^want it gone.</div><div style={{display:\"flex\",gap:10,flexWrap:\"wrap\"}}><Button label={showFailed?\"Hide links\":\"Show links\"} onClick={()=>setShowFailed(!showFailed)}/><Button label=\"One retry pass\" onClick={doRetry}/></div>{chatNote}{showFailed&&(<Table columns={[\"Link\",\"Why\"]} rows={failedIds.map((id,i)=>[`https://x.com/you/status/${id}`,i===0?\"Button didn't respond\":i===1?\"X asked us to slow down\":\"Still visible after delete\"])}/>)}</>)}</div><div id=\"run-more\"><Section heading=\"Maintenance (optional)\" collapsible defaultOpen={false}><Toggle label=\"Weekly digest after this cleanup finishes\" value={maintOn} onChange={(v:boolean)=>{setMaintOn(v);if(!v)setAutoCont(false);}}/><Toggle label=\"Auto-continue without asking each week\" value={autoCont} onChange={setAutoCont} disabled={!maintOn}/>{maintOn&&(<Select label=\"Rolling cleanup: keep only the last\" value={rollWin} onChange={(v:string)=>setRollWin(v)} options={[{value:\"off\",label:\"Off\"},{value:\"30\",label:\"30 days\"},{value:\"90\",label:\"90 days\"},{value:\"365\",label:\"1 year\"}]}/>)}</Section></div></div>)}"
+"old_string": "(id===\"run\"||id===\"review\")/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "{return null as any/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "{return new Map()/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "{null/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "true/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "/*@B*/\n//^",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "\n/*@@Bc*/}",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "\n/*@@B*/",
+"new_string": "",
+"replace_all": true
+},
+{
+"old_string": "\n//^",
+"new_string": "",
+"replace_all": true
 }
 ]

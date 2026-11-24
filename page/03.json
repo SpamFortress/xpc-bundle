@@ -1,19 +1,19 @@
 [
 {
-"old_string": "//~@@41@@",
+"old_string": "//~@@42@@",
 "new_string": "//~function HighlightedText(props:{text:string;words:string[];markStyle:CSSProperties}){const shown=maskSsn(props.text);const list=props.words.filter((w)=>w.trim()).sort((a,b)=>b.length-a.length);if(list.length===0)return<span>{shown}</span>;const parts:Array<{t:string;hit:boolean}>=[];const re=new RegExp(`(${list.map((w)=>escapeRegExp(w.trim())).join(\"|\")})`,\"gi\");let last=0;let m:RegExpExecArray|null=re.exec(shown);while(m){const start=m.index;const end=start+m[0].length;const before=start===0||/[^A-Za-z0-9_]/.test(shown[start-1]||\"\");const after=end===shown.length||/[^A-Za-z0-9_]/.test(shown[end]||\"\");if(before&&after){if(start>last)parts.push({t:shown.slice(last,start),hit:false});parts.push({t:m[0],hit:true});last=end;} if(m[0].length===0)break;m=re.exec(shown);} if(last<shown.length)parts.push({t:shown.slice(last),hit:false});if(parts.every((p)=>!p.hit))return<span>{shown}</span>;return(<span>{parts.map((p,i)=>p.hit?(<mark key={i} style={props.markStyle}>{p.t}</mark>):(<span key={i}>{p.t}</span>))}</span>);}"
 },
 {
-"old_string": "//~@@44@@",
+"old_string": "//~@@45@@",
 "new_string": "//~const _s3:CSSProperties={fontSize:12.5,color:theme.text.tertiary,marginTop:6,lineHeight:1.45};const _s4:CSSProperties={fontSize:13,color:theme.text.secondary,marginBottom:8};"
 },
 {
-"old_string": "//~@@46@@",
+"old_string": "//~@@47@@",
 "new_string": "//~const _s6:CSSProperties={fontSize:12.5,color:theme.text.tertiary,marginTop:-6,lineHeight:1.45};const _s7:CSSProperties={display:\"flex\",gap:8,alignItems:\"flex-end\",flexWrap:\"wrap\"};const _s8:CSSProperties={fontSize:12.5,color:theme.text.tertiary,lineHeight:1.45};"
 },
 {
 "old_string": "//~@@48@@",
-"new_string": "//~const _s12:CSSProperties={fontSize:14,color:theme.text.secondary};const _s13:CSSProperties={display:\"flex\",flexWrap:\"wrap\",gap:8};"
+"new_string": "//~const _s11:CSSProperties={fontSize:14,color:theme.text.secondary};"
 },
 {
 "old_string": "//~@@50@@",
@@ -24,51 +24,51 @@
 "new_string": "//~const[search,setSearch]=useState(\"\");const[listView,setListView]=useState<ListView>(\"all\");"
 },
 {
-"old_string": "//~@@52@@",
+"old_string": "//~@@53@@",
 "new_string": "//~const[keepDraft,setKeepDraft]=useState(\"\");const[deleteDraft,setDeleteDraft]=useState(\"\");const[pinDraft,setPinDraft]=useState(\"\");const[keepFind,setKeepFind]=useState(\"\");const[ignoredWords,setIgnoredWords]=useState<string[]>([]);"
 },
 {
-"old_string": "//~@@53@@",
+"old_string": "//~@@54@@",
 "new_string": "//~const[showFoundSwears,setShowFoundSwears]=useState(false);const[replyQuery,setReplyQuery]=useState(\"\");"
 },
 {
-"old_string": "//~@@56@@",
+"old_string": "//~@@57@@",
 "new_string": "//~const[likesFocus,setLikesFocus]=useState<LikesTarget>(\"posts\");"
 },
 {
-"old_string": "//~@@59@@",
+"old_string": "//~@@60@@",
 "new_string": "//~const upd=(patch:Partial<Rules>)=>setRules({...rules,...patch});const setLikesCap=(t:LikesTarget,n:number)=>{if(n>=0)setLikesLast((prev)=>({...prev,[t]:n}));if(t===\"posts\")upd({postsLikesMax:n,...(n>=0?{posts:true}:{})});else upd({repliesLikesMax:n,...(n>=0?{replies:true}:{})});};"
 },
 {
-"old_string": "//~@@61@@",
+"old_string": "//~@@62@@",
 "new_string": "//~const qaCounts=useMemo(()=>{const m:Record<string,number>={};for(const q of QUICK){const v=computeVerdicts(pool,mergeQA(q.id,rules.keepWords),pins,q.title);let n=0;v.forEach((x)=>{if(x.kind===\"delete\")n+=1;});m[q.id]=n;} return m;},[pool,rules.keepWords,pins]);"
 },
 {
-"old_string": "//~@@65@@",
+"old_string": "//~@@66@@",
 "new_string": "//~const foundWordRows=useMemo(()=>{const lookFor=Array.from(new Set([...rules.deleteWords,...ignoredWords]));return lookFor.map((word)=>({word,count:pool.filter((p)=>wordHit(p.text,word)).length,checked:rules.deleteWords.includes(word),})).filter((row)=>row.count>0).sort((a,b)=>b.count-a.count||a.word.localeCompare(b.word));},[pool,rules.deleteWords,ignoredWords]);const replyHandles=useMemo(()=>{const s=new Set<string>();for(const p of pool)if(p.type===\"reply\"&&p.replyTo)s.add(p.replyTo);return Array.from(s).sort();},[pool]);const topReplied=useMemo(()=>{const m=new Map<string,number>();for(const p of pool)if(p.type===\"reply\"&&p.replyTo)m.set(p.replyTo,(m.get(p.replyTo)||0)+1);return Array.from(m.entries()).map(([handle,count])=>({handle,count})).sort((a,b)=>b.count-a.count||a.handle.localeCompare(b.handle)).slice(0,20);},[pool]);const swearFound=useMemo(()=>SWEAR_PRESET.map((word)=>({word,count:pool.filter((p)=>wordHit(p.text,word)).length})).filter((row)=>row.count>0).sort((a,b)=>b.count-a.count||a.word.localeCompare(b.word)),[pool]);const oldestYear=pool.length>0?yearOf(pool.reduce((mx,p)=>Math.max(mx,p.daysAgo),0)):TODAY.getFullYear();"
 },
 {
-"old_string": "//~@@67@@",
+"old_string": "//~@@68@@",
 "new_string": "//~const threadExtraKept=pool.filter((p)=>verdicts.get(p.id)?.reason===\"Keep rule: part of a kept thread\").length;"
 },
 {
-"old_string": "//~@@69@@",
+"old_string": "//~@@70@@",
 "new_string": "//~const applyQuick=(id:QAId)=>{if(activeQA===id){setActiveQA(\"\");setRules({...BASE,keepWords:rules.keepWords});return;} const next=mergeQA(id,rules.keepWords);if(id===\"era\"){next.yearFrom=rules.timeMode===\"years\"?rules.yearFrom:oldestYear;next.yearTo=rules.timeMode===\"years\"?rules.yearTo:TODAY.getFullYear();} setActiveQA(id);setRules(next);if(id===\"everything\")setOrder(\"newest\");setListView(\"all\");};const toggleGroup=(g:GroupId)=>setOpenGroups(openGroups.includes(g)?openGroups.filter((x)=>x!==g):[...openGroups,g]);const togglePin=(id:string)=>setPins(pins.includes(id)?pins.filter((x)=>x!==id):[...pins,id]);const toggleFoundWord=(word:string)=>{if(rules.deleteWords.includes(word)){upd({deleteWords:rules.deleteWords.filter((x)=>x!==word)});if(!ignoredWords.includes(word))setIgnoredWords([...ignoredWords,word]);} else{setIgnoredWords(ignoredWords.filter((x)=>x!==word));if(!rules.deleteWords.includes(word))upd({deleteWords:[...rules.deleteWords,word]});}};const addWord=(kind:\"keep\"|\"delete\")=>{const raw=(kind===\"keep\"?keepDraft:deleteDraft).trim();if(!raw)return;const list=kind===\"keep\"?rules.keepWords:rules.deleteWords;if(!list.includes(raw))upd(kind===\"keep\"?{keepWords:[...list,raw]}:{deleteWords:[...list,raw]});if(kind===\"keep\")setKeepDraft(\"\");else{setDeleteDraft(\"\");setIgnoredWords(ignoredWords.filter((w)=>w!==raw));}};const addPinByLink=()=>{const m=pinDraft.match(/(\\d{6,})/);if(!m)return;if(!pins.includes(m[1]))setPins([...pins,m[1]]);setPinDraft(\"\");};"
 },
 {
-"old_string": "//~@@70@@",
+"old_string": "//~@@71@@",
 "new_string": "//~const jumpToAlwaysKeep=()=>{setOpenGroups((g)=>(g.includes(\"keep\")?g:[...g,\"keep\"]));window.setTimeout(()=>scrollToId(\"rules-keep\"),0);};"
 },
 {
-"old_string": "//~@@72@@",
+"old_string": "//~@@73@@",
 "new_string": "//~if(step===\"archive\"){if(phase===\"choose\")return null;if(phase===\"ready\")return{label:\"Next: choose what goes →\",action:()=>goStep(\"pick\")};return{label:\"Next: choose what goes →\",action:()=>goStep(\"pick\")};}"
 },
 {
-"old_string": "//~@@74@@",
+"old_string": "//~@@75@@",
 "new_string": "//~const subhint:CSSProperties={fontSize:13,color:theme.text.tertiary,margin:\"0 0 14px\",lineHeight:1.45};"
 },
 {
-"old_string": "//~@@76@@",
-"new_string": "//~const markStyle:CSSProperties={background:theme.fill.accentSubtle,color:theme.text.primary,borderRadius:3,padding:\"0 2px\",fontWeight:650,};const chip=(label:string,onRemove:()=>void,key?:string)=>(<button key={key||label} type=\"button\" onClick={onRemove} title=\"Remove\" style={{borderRadius:999,padding:\"5px 12px\",background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.secondary,fontSize:13,fontFamily:theme.font.family,cursor:\"pointer\"}}>{label} ×</button>);const timeSummary=rules.timeMode===\"none\"?\"No time range picked\":rules.timeMode===\"all\"?\"From the beginning\":rules.timeMode===\"older\"?rules.olderDate?`Before ${formatIsoDate(rules.olderDate)}`:`Older than ${spanLabel(rules.olderDays)}`:`${rules.yearFrom}–${rules.yearTo}`;const typeList=[rules.posts?\"Posts\":\"\",rules.replies?\"Replies\":\"\",rules.reposts?\"Reposts\":\"\",ARCHIVE_CAPS.hasQuoteFields&&rules.quotes?\"Quotes\":\"\",rules.community?\"Community\":\"\"].filter(Boolean);const allTypesCount=ARCHIVE_CAPS.hasQuoteFields?5:4;const groupSummary:Record<GroupId,string>={when:`${timeSummary}${rules.protectDate?` · never touch on or after ${formatIsoDate(rules.protectDate)}`:rules.protectDays>0?` · never the last ${spanLabel(rules.protectDays)}`:\"\"}`,kind:`${typeList.length===allTypesCount?\"All types\":typeList.join(\", \")||\"No types\"}${[rules.mediaPhotos?\"photos\":\"\",rules.mediaVideos?\"videos\":\"\",rules.mediaGifs?\"GIFs\":\"\",rules.mediaText?\"text only\":\"\"].filter(Boolean).join(\", \")?` · ${[rules.mediaPhotos?\"photos\":\"\",rules.mediaVideos?\"videos\":\"\",rules.mediaGifs?\"GIFs\":\"\",rules.mediaText?\"text only\":\"\"].filter(Boolean).join(\", \")}`:\"\"}${rules.repostOf.trim()?` · undo my reposts of @${handleOf(rules.repostOf)}`:\"\"}`,engage:[rules.postsLikesMax>=0?(rules.postsLikesMax===0?\"posts with zero likes\":`posts with at most ${rules.postsLikesMax.toLocaleString(\"en-US\")} likes`):\"\",rules.repliesLikesMax>=0?(rules.repliesLikesMax===0?\"replies with zero likes\":`replies with at most ${rules.repliesLikesMax.toLocaleString(\"en-US\")} likes`):\"\",rules.replyHandles.length===1?`replies to or mentions of @${rules.replyHandles[0]}`:rules.replyHandles.length>1?`replies to or mentions of ${rules.replyHandles.length} accounts`:\"\"].filter(Boolean).join(\" · \")||\"No likes rule\",words:[rules.deleteWords.length?`${rules.deleteWords.length} delete word${rules.deleteWords.length>1?\"s\":\"\"}`:\n//~@@76@@"
+"old_string": "//~@@77@@",
+"new_string": "//~const markStyle:CSSProperties={background:theme.fill.accentSubtle,color:theme.text.primary,borderRadius:3,padding:\"0 2px\",fontWeight:650,};const chip=(label:string,onRemove:()=>void,key?:string)=>(<button key={key||label} type=\"button\" onClick={onRemove} title=\"Remove\" style={{borderRadius:999,padding:\"5px 12px\",background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.secondary,fontSize:13,fontFamily:theme.font.family,cursor:\"pointer\"}}>{label} ×</button>);const timeSummary=rules.timeMode===\"none\"?\"No time range picked\":rules.timeMode===\"all\"?\"From the beginning\":rules.timeMode===\"older\"?rules.olderDate?`Before ${formatIsoDate(rules.olderDate)}`:`Older than ${spanLabel(rules.olderDays)}`:`${rules.yearFrom}–${rules.yearTo}`;const typeList=[rules.posts?\"Posts\":\"\",rules.replies?\"Replies\":\"\",rules.reposts?\"Reposts\":\"\",ARCHIVE_CAPS.hasQuoteFields&&rules.quotes?\"Quotes\":\"\",rules.community?\"Community\":\"\"].filter(Boolean);const allTypesCount=ARCHIVE_CAPS.hasQuoteFields?5:4;const groupSummary:Record<GroupId,string>={when:`${timeSummary}${rules.protectDate?` · never touch on or after ${formatIsoDate(rules.protectDate)}`:rules.protectDays>0?` · never the last ${spanLabel(rules.protectDays)}`:\"\"}`,kind:`${typeList.length===allTypesCount?\"All types\":typeList.join(\", \")||\"No types\"}${[rules.mediaPhotos?\"photos\":\"\",rules.mediaVideos?\"videos\":\"\",rules.mediaGifs?\"GIFs\":\"\",rules.mediaText?\"text only\":\"\"].filter(Boolean).join(\", \")?` · ${[rules.mediaPhotos?\"photos\":\"\",rules.mediaVideos?\"videos\":\"\",rules.mediaGifs?\"GIFs\":\"\",rules.mediaText?\"text only\":\"\"].filter(Boolean).join(\", \")}`:\"\"}${rules.repostOf.trim()?` · undo my reposts of @${handleOf(rules.repostOf)}`:\"\"}`,engage:[rules.postsLikesMax>=0?(rules.postsLikesMax===0?\"posts with zero likes\":`posts with at most ${rules.postsLikesMax.toLocaleString(\"en-US\")} likes`):\"\",rules.repliesLikesMax>=0?(rules.repliesLikesMax===0?\"replies with zero likes\":`replies with at most ${rules.repliesLikesMax.toLocaleString(\"en-US\")} likes`):\"\",rules.replyHandles.length===1?`replies to or mentions of @${rules.replyHandles[0]}`:rules.replyHandles.length>1?`replies to or mentions of ${rules.replyHandles.length} accounts`:\"\"].filter(Boolean).join(\" · \")||\"No likes rule\",words:[rules.deleteWords.length?`${rules.deleteWords.length} delete word${rules.deleteWords.length>1?\"s\":\"\"}`:\"\",rules.keepWords.length?`${rules.keepWords.length} keep word${ru\n//~@@77@@"
 }
 ]

@@ -1,15 +1,15 @@
 {
  "result": "page.min.tsx",
- "result_sha256": "9c5bcbaff9311cee5836c21c0e65dd140eece9242eb9db89bdd17b454ad68df6",
- "first_page_bytes": 36029,
+ "result_sha256": "a49a108e1b6068a69ee3f877c7850ba12c6750b6e810804ee17bb974a8e8dc23",
+ "first_page_bytes": 34809,
  "steps": [
   {
    "step": 1,
    "tool": "WriteCanvas",
    "stage": "first page",
    "file": "page/01-first.tsx",
-   "bytes": 36029,
-   "sha256_after": "f65c523ab433b5b6618efe81bf492f345502d6ca35e053125a111e59bbb94de3"
+   "bytes": 34809,
+   "sha256_after": "e39d54197063e784091f026a81d50d8f653e7dc82f7d93fa44012a14bfe0e132"
   },
   {
    "step": 2,
@@ -18,9 +18,9 @@
    "phase": "A",
    "kind": "fill",
    "file": "page/02.json",
-   "bytes": 9214,
+   "bytes": 9215,
    "edits": 21,
-   "sha256_after": "15a7a22b6027025667e33eab84ff21557ea416340b0e18304373b7af577c491c"
+   "sha256_after": "94e9beb39d885cbecd1476f251a16b78e073538d2efde7173135c1038e18a8b4"
   },
   {
    "step": 3,
@@ -31,7 +31,7 @@
    "file": "page/03.json",
    "bytes": 9397,
    "edits": 18,
-   "sha256_after": "392e55758869fed6fbdb35ee8f1a6630af4fdd9d7b4de4bb274275ae88cb4c9e"
+   "sha256_after": "c19ec2c8d9a5c9f3ace56be6b86da467cc8faa78a1a5f39a89da1ea8920c27e5"
   },
   {
    "step": 4,
@@ -42,7 +42,7 @@
    "file": "page/04.json",
    "bytes": 9457,
    "edits": 3,
-   "sha256_after": "15774d1e837f6c2dfd1cd526f6843f2c44f51209dc5e07f9b031fb5ba85948d9"
+   "sha256_after": "d595ce499b2117aa424628c949c8c3f665f98198ab6b9e7dcba4494eef9881f3"
   },
   {
    "step": 5,
@@ -53,7 +53,7 @@
    "file": "page/05.json",
    "bytes": 9465,
    "edits": 1,
-   "sha256_after": "03ae5ea917c53f82ee979053ffd056fadc4eb059bc9a514a74a3a1057cfcc0a4"
+   "sha256_after": "1851711330a6a24bc73392b383934ebc9f186e3f6521be8ccbe1cf870a9b487a"
   },
   {
    "step": 6,
@@ -62,9 +62,9 @@
    "phase": "A",
    "kind": "fill",
    "file": "page/06.json",
-   "bytes": 5504,
+   "bytes": 5511,
    "edits": 1,
-   "sha256_after": "4831502efa5d476a6718be66263eeed3ca02f65ba7b3f6dd30836ecc810a8663"
+   "sha256_after": "1f5895e10bc4c4db8543037291104e4c1ab7cb7b4a98b100d19bcf2771ea08e9"
   },
   {
    "step": 7,
@@ -75,7 +75,7 @@
    "file": "page/07.json",
    "bytes": 558,
    "edits": 7,
-   "sha256_after": "26e0aacaff09949c2a2dc26afd8e4cc4c5f98d2998daf1aa3bf98aecb7528719"
+   "sha256_after": "99e17f53cc2171ea5275933fa253f4e07d8c4e589b2f2705832765c0a63d3633"
   },
   {
    "step": 8,
@@ -84,9 +84,9 @@
    "phase": "B",
    "kind": "fill",
    "file": "page/08.json",
-   "bytes": 9389,
-   "edits": 20,
-   "sha256_after": "d8b84b35ce1689ee2db564483f0e4bc23926c8177e4b0c148f0df6d14f3e4397"
+   "bytes": 9385,
+   "edits": 21,
+   "sha256_after": "8813298be259335f119b43370d153eb154c93c24c0f0cfa82e68f3998a9602a1"
   },
   {
    "step": 9,
@@ -95,9 +95,9 @@
    "phase": "B",
    "kind": "fill",
    "file": "page/09.json",
-   "bytes": 8792,
-   "edits": 22,
-   "sha256_after": "68d05418d63c6d2c95337eb44db2064d98a12099db88f74c91a864a67741a1c8"
+   "bytes": 9377,
+   "edits": 23,
+   "sha256_after": "018aa36b21edd2b371eb81326050dea88c16ce3a8fac6bd5287efea62309f7a2"
   },
   {
    "step": 10,
@@ -108,7 +108,7 @@
    "file": "page/10.json",
    "bytes": 9465,
    "edits": 1,
-   "sha256_after": "7b7fcca3cc7570ba4c57301c63f589f4e1b355e0bf879d74d784ae5ef1e51391"
+   "sha256_after": "213af7b04fe0ff6d5f2685667943b473e0947ba740e110031b8d17ecaac22adb"
   },
   {
    "step": 11,
@@ -117,33 +117,22 @@
    "phase": "B",
    "kind": "fill",
    "file": "page/11.json",
-   "bytes": 9461,
+   "bytes": 8998,
    "edits": 2,
-   "sha256_after": "db544f52ab4315b7f17ce66f7ab1138189f2b30e5c44ea45ddbc6d367a51ee7a"
+   "sha256_after": "1bf422028819c5dcce06d6ceb1f22fccde284c8372fc97da3f8f2b4d3bdbbd30"
   },
   {
    "step": 12,
    "tool": "EditCanvas",
-   "stage": "Review and Run",
-   "phase": "B",
-   "kind": "fill",
-   "file": "page/12.json",
-   "bytes": 1167,
-   "edits": 1,
-   "sha256_after": "1f588ec031f963848ae7af37c2053fba1fd09121ab3162214dca8e2a3e31fec7"
-  },
-  {
-   "step": 13,
-   "tool": "EditCanvas",
    "stage": "Review and Run finish",
    "phase": "B",
    "kind": "finish",
-   "file": "page/13.json",
+   "file": "page/12.json",
    "bytes": 718,
    "edits": 9,
-   "sha256_after": "9c5bcbaff9311cee5836c21c0e65dd140eece9242eb9db89bdd17b454ad68df6"
+   "sha256_after": "a49a108e1b6068a69ee3f877c7850ba12c6750b6e810804ee17bb974a8e8dc23"
   }
  ],
  "pick_ready_after": 7,
- "full_page_after": 13
+ "full_page_after": 12
 }

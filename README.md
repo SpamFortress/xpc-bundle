@@ -14,7 +14,7 @@ A bot has to type every byte of a Page into WriteCanvas and EditCanvas, so a big
 
 - page.canvas.tsx is the readable design source. page.min.tsx is the same page with comments, indentation and repeated style objects removed (152,355 bytes down to 106,870). It compiles to exactly the same JavaScript as the design source. This is what the canvas holds when the build is done.
 - page/01-first.tsx (about 34.3 KB) is the first page: the same styles, header and stepper, with the Sign in and Get your archive screens. Pick, Review and Run show as locked steps. It is generated from page.min.tsx, not written by hand. Write it with one WriteCanvas call.
-- page/02.json to page/13.json are EditCanvas edit lists. Steps 2 to 7 (phase A) fill in the Pick screen; after step 7 Pick unlocks. Steps 8 to 13 (phase B) fill in Review and Run; after step 13 the canvas is page.min.tsx exactly and Review unlocks. Every step compiles on its own, because each missing part waits inside a comment.
+- page/02.json through the last numbered JSON file are EditCanvas edit lists. `page/plan.json` names each step. Phase A fills in the Pick screen; Pick unlocks when that phase finishes. Phase B fills in Review and Run; the canvas is page.min.tsx exactly when the last step finishes. Every step compiles on its own, because each missing part waits inside a comment.
 - page/plan.json lists every step with the sha256 the canvas must have after it. page/regions.json records which parts of page.min.tsx each phase adds.
 
 Commands:
@@ -25,6 +25,28 @@ Commands:
 - `python3 scripts/xpc_core.py page-build` regenerates page/ from page.min.tsx and page/regions.json and checks that every step reassembles byte for byte.
 
 Release-time only (bots never need these): `node tools/shrink_page.js page.canvas.tsx page.min.tsx` and `node tools/stage_plan.js page.min.tsx page/regions.json`. They need Node with the typescript and esbuild packages; set XPC_NODE_TOOLS to a folder that has them installed.
+
+## Order (1.1.5)
+
+Sign-in happens first, in parallel with the Page build.
+
+1. The bot's first message.
+2. The Page build starts in the background, and the X sign-in window opens at the same time.
+3. The Page card appears. Sign-in may already be finished.
+4. Archive.
+
+The sign-in line on the Page reads the same either way: "Sign in in the X window in the chat. If you already signed in, you're set." There is no Sign in button. A Page button cannot drive the browser.
+
+If sign-in finished before the Page existed, the first write can open on the archive step with the handle already filled. The shipped page still starts at sign-in with an empty handle, so nothing identifies anyone before sign-in.
+
+- `python3 scripts/xpc_core.py page-steps --show 1 --part K --start archive --handle HANDLE` prints that first page. Join the parts with nothing between them.
+- `python3 scripts/xpc_core.py page-state --start archive --handle HANDLE` prints the exact `START_STEP` and `SIGNED_IN_HANDLE` edits for a page that was written with the defaults.
+
+`page-verify` and `page-where` put those lines back to the defaults before comparing, so either start still matches the build.
+
+Bot actions are not buttons. A plain line names the tap card in the chat (approve, grab the archive, recent posts, retry, removal requests, and the rest). Buttons that only change the Page, such as rules, filters, Keep on the preview list, sort, and download, stay.
+
+`selftest` and `page-typecheck` look for typescript and `@types/react` in `XPC_NODE_TOOLS`, or in `/workspace/xpc-node-tools` when that variable is unset. If those packages are missing, the script installs `typescript@5.6.3`, `esbuild@0.28.2`, and `@types/react@18.3.18` there. If that install cannot run, the type-check is skipped and selftest still finishes.
 
 ## Page status (1.1.3)
 

@@ -1,86 +1,86 @@
 [
 {
-"old_string": "//~@@0@@",
+"old_string": "//~@@1@@",
 "new_string": "//~type ListView=\"all\"|\"delete\"|\"keep\";type GroupId=\"when\"|\"kind\"|\"engage\"|\"words\"|\"keep\"|\"more\";"
 },
 {
-"old_string": "//~@@1@@",
+"old_string": "//~@@2@@",
 "new_string": "//~const TODAY=new Date();"
 },
 {
-"old_string": "//~@@6@@",
+"old_string": "//~@@7@@",
 "new_string": "//~function yearOf(days:number):number{const d=new Date(TODAY.getTime());d.setDate(d.getDate()-days);return d.getFullYear();}"
 },
 {
-"old_string": "//~@@7@@",
+"old_string": "//~@@8@@",
 "new_string": "//~function monthYear(days:number):string{const d=new Date(TODAY.getTime());d.setDate(d.getDate()-days);return d.toLocaleDateString(\"en-US\",{month:\"short\",year:\"numeric\"});}"
 },
 {
-"old_string": "//~@@8@@",
+"old_string": "//~@@9@@",
 "new_string": "//~function ageLabel(days:number):string{if(days>=365)return`${Math.round(days/365)}y ago`;if(days>=30)return`${Math.round(days/30)}mo ago`;return`${days}d ago`;}"
 },
 {
-"old_string": "//~@@9@@",
+"old_string": "//~@@10@@",
 "new_string": "//~function spanLabel(days:number):string{if(days>=365)return`${Math.round(days/365)} year${days>=730?\"s\":\"\"}`;if(days>=30)return`${Math.round(days/30)} month${days>=60?\"s\":\"\"}`;return`${days} days`;}"
 },
 {
-"old_string": "//~@@10@@",
+"old_string": "//~@@11@@",
 "new_string": "//~const AGE_DAY_OPTIONS=[30,90,180,365,730,1095,1825,3650,5475];function monthYearFromDays(days:number):string{const d=new Date(TODAY.getTime());d.setDate(d.getDate()-days);return d.toLocaleString(\"en-US\",{month:\"short\",year:\"numeric\"});}"
 },
 {
-"old_string": "//~@@11@@",
+"old_string": "//~@@12@@",
 "new_string": "//~function beforeCutoff(days:number):string{return`before ${monthYearFromDays(days)}`;}"
 },
 {
-"old_string": "//~@@12@@",
+"old_string": "//~@@13@@",
 "new_string": "//~function sinceCutoff(days:number):string{return`since ${monthYearFromDays(days)}`;}"
 },
 {
-"old_string": "//~@@15@@",
+"old_string": "//~@@16@@",
 "new_string": "//~function formatIsoDate(iso:string):string{const m=/^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(iso.trim());if(!m)return iso;const d=new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));return d.toLocaleDateString(\"en-US\",{month:\"short\",day:\"numeric\",year:\"numeric\"});}"
 },
 {
-"old_string": "//~@@16@@",
+"old_string": "//~@@17@@",
 "new_string": "//~function clampWords(s:string,max:number):string{const w=s.split(/\\s+/);return w.length<=max?s:`${w.slice(0,max).join(\" \")}…`;}"
 },
 {
-"old_string": "//~@@18@@",
+"old_string": "//~@@19@@",
 "new_string": "//~const SWEAR_STRONG=[\"shit\",\"fuck\",\"bitch\",\"asshole\",\"bastard\",\"piss\",\"crap\",\"dick\",\"cunt\",\"motherfucker\",\"bullshit\",\"cock\",\"pussy\",\"whore\",\"slut\"];const SLUR_LIST_SIZE=12;const SWEAR_MILD=[\"wtf\",\"damn\",\"hell\",\"goddamn\"];const SWEAR_PRESET=[...SWEAR_STRONG,...SWEAR_MILD];const ENGAGE_PRESETS=[0,10,100,1000,10000,20000];const LIKES_QUICK_PRESETS=[0,5,10,25,50,100];type LikesTarget=\"posts\"|\"replies\";function maskSsn(s:string):string{return s.replace(/(?<![\\dA-Za-z_])(\\d{3})[ \\-\\u2010-\\u2015.]?(\\d{2})[ \\-\\u2010-\\u2015.]?(\\d{4})(?![\\dA-Za-z_])/g,(_m:string,_a:string,_b:string,last4:string)=>`***-**-${last4}`);}"
 },
 {
-"old_string": "//~@@19@@",
+"old_string": "//~@@20@@",
 "new_string": "//~function escapeRegExp(s:string):string{return s.replace(/[.*+?^${}()|[\\]\\\\]/g,\"\\\\$&\");}"
 },
 {
-"old_string": "//~@@20@@",
+"old_string": "//~@@21@@",
 "new_string": "//~const LEET:Record<string,string>={\"0\":\"o\",\"1\":\"i\",\"3\":\"e\",\"4\":\"a\",\"5\":\"s\",\"7\":\"t\",\"@\":\"a\",\"$\":\"s\",\"!\":\"i\",\"|\":\"i\"};const WORD_ENDINGS=[\"\",\"s\",\"es\",\"ed\",\"er\",\"ers\",\"ing\",\"in\",\"y\",\"ty\",\"ies\"];const NAME_LIKE=[\"dick\",\"dyke\",\"coon\",\"cock\"];function collapseRepeats(s:string):string{return s.replace(/(.)\\1+/g,\"$1\");}"
 },
 {
-"old_string": "//~@@21@@",
+"old_string": "//~@@22@@",
 "new_string": "//~function normToken(raw:string):{tok:string;hashtag:boolean;camel:string[]}{const hashtag=raw.startsWith(\"#\");const t=raw.replace(/^#+/,\"\").replace(/^[^\\w$@]+|[^\\w*]+$/g,\"\");const camel=hashtag?(t.match(/[A-Z][a-z]+|[a-z]+|[A-Z]+(?![a-z])/g)||[]).map((c:string)=>c.toLowerCase()):[];let low=t.toLowerCase();if(/[a-z]/.test(low))low=low.split(\"\").map((c:string)=>LEET[c]??c).join(\"\");return{tok:low.replace(/^'+|'+$/g,\"\"),hashtag,camel};}"
 },
 {
-"old_string": "//~@@22@@",
+"old_string": "//~@@23@@",
 "new_string": "//~function wordHit(text:string,word:string):boolean{const w=word.trim();if(!w)return false;if(!w.startsWith(\"@\")&&!/\\s/.test(w)){const wl=w.toLowerCase().replace(/^#/,\"\");const forms=new Set(WORD_ENDINGS.map((e:string)=>collapseRepeats(wl+e)));const toks=text.match(/#?[\\w@$!|*']+/g)||[];for(let i=0;i<toks.length;i++){const raw=toks[i];const n=normToken(raw);if(!n.tok)continue;if(w.startsWith(\"#\")){if(n.hashtag&&n.tok===wl)return true;continue;} if(NAME_LIKE.includes(wl)&&/^[A-Z][a-z]/.test(raw)){const prev=i>0?toks[i-1]:\"\";const next=toks[i+1]||\"\";if((i>0&&/^[A-Z]/.test(prev))||/^[A-Z]/.test(next))continue;} let ok=[collapseRepeats(n.tok),...n.camel.map((c:string)=>collapseRepeats(c))].some((p:string)=>forms.has(p));if(!ok&&n.tok.includes(\"*\")){const re=new RegExp(`^${escapeRegExp(n.tok).replace(/\\\\\\*/g,\"[a-z]\")}$`);ok=WORD_ENDINGS.some((e:string)=>re.test(wl+e));} if(!ok&&n.hashtag&&wl.length>=4)ok=n.tok.startsWith(wl)||n.tok.endsWith(wl);if(ok)return true;} return false;} try{return new RegExp(`(?:^|[^A-Za-z0-9_])${escapeRegExp(w)}(?:[^A-Za-z0-9_]|$)`,\"i\").test(text);} catch{return text.toLowerCase().includes(w.toLowerCase());}}"
 },
 {
-"old_string": "//~@@23@@",
+"old_string": "//~@@24@@",
 "new_string": "//~function yearOptionList(extra:number[]):Array<{value:string;label:string}>{const set=new Set<number>();const y0=2006;for(let y=y0;y<=TODAY.getFullYear();y++)set.add(y);for(const y of extra)if(Number.isFinite(y)&&y>=2006)set.add(y);return Array.from(set).sort((a,b)=>a-b).map((y)=>({value:String(y),label:String(y)}));}"
 },
 {
-"old_string": "//~@@24@@",
+"old_string": "//~@@25@@",
 "new_string": "//~function handleOf(s:string):string{return s.replace(/^@/,\"\").trim().toLowerCase();}"
 },
 {
-"old_string": "//~@@37@@",
+"old_string": "//~@@38@@",
 "new_string": "//~function formatEngage(n:number):string{return n.toLocaleString(\"en-US\");}"
 },
 {
-"old_string": "//~@@38@@",
+"old_string": "//~@@39@@",
 "new_string": "//~function likesCapLabel(name:string,n:number):string{return n<0?`${name} —`:`${name} ≤ ${formatEngage(n)}`;}"
 },
 {
-"old_string": "//~@@39@@",
+"old_string": "//~@@40@@",
 "new_string": "//~function LikesCapPicker(props:{postsCap:number;repliesCap:number;focus:LikesTarget;restore:{posts:number;replies:number};onFocus:(t:LikesTarget)=>void;onChange:(t:LikesTarget,n:number)=>void;presets:number[]}){const theme=useGrokTheme();const cap=props.focus===\"posts\"?props.postsCap:props.repliesCap;const off=cap<0;const apply=(n:number)=>{if(n<0){props.onChange(props.focus,-1);return;} props.onChange(props.focus,Math.min(1000000,n));};const bump=(dir:1|-1)=>{if(off){if(dir>0)apply(0);return;} const next=cap+dir;apply(next<0?-1:next);};const onTyped=(v:string)=>{const t=v.replace(/[^\\d]/g,\"\");if(t===\"\"){apply(-1);return;} const n=parseInt(t,10);if(Number.isFinite(n))apply(n);};const row=(t:LikesTarget,value:number,name:string)=>{const on=value>=0;const selected=props.focus===t;return(<div key={t} role=\"button\" tabIndex={0} onClick={()=>props.onFocus(t)} onKeyDown={(e:{key:string})=>{if(e.key===\"Enter\"||e.key===\" \")props.onFocus(t);}} style={{display:\"flex\",alignItems:\"center\",gap:8,minWidth:0,width:\"100%\",boxSizing:\"border-box\",padding:\"8px 10px\",borderRadius:10,border:`${selected?1.5:1}px solid ${selected?theme.border.focus:theme.border.default}`,background:selected?theme.fill.accentSubtle:theme.bg.base,cursor:\"pointer\",fontFamily:theme.font.family,}}><input type=\"checkbox\" checked={on} aria-label={name} onClick={(e:{stopPropagation:()=>void})=>e.stopPropagation()} onChange={()=>{props.onFocus(t);props.onChange(t,on?-1:props.restore[t]);}}/><span style={{fontSize:13,fontWeight:600,color:theme.text.primary,whiteSpace:\"nowrap\"}}>{likesCapLabel(name,value)}</span></div>);};const chipStyle=(on:boolean)=>({background:on?theme.fill.accentSubtle:theme.bg.base,border:`${on?1.5:1}px solid ${on?theme.border.focus:theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family,});const stepStyle={background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family,};return(<div className=\"xpc-likes-pick\" style={{display:\"flex\",flexDirection:\"column\",gap:8,minWidth:0,width:\"100%\"}}>{row(\"posts\",props.postsCap,\"Posts\")}{row(\"replies\",props.repliesCap,\"Replies\")}<div className=\"xpc-engage-row\"><button type=\"button\" className=\"xpc-engage-step\" aria-label=\"Decrease\" onClick={()=>bump(-1)} style={stepStyle}>−</button><input className=\"xpc-engage-num\" type=\"text\" inputMode=\"numeric\" pattern=\"[0-9]*\" aria-label={props.focus===\"posts\"?\"Posts like cap\":\"Replies like cap\"} value={off?\"\":String(cap)} placeholder=\"—\" onChange={(e:{target:{value:string}})=>onTyped(e.target.value)} style={{background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}/><button type=\"button\" className=\"xpc-engage-step\" aria-label=\"Increase\" onClick={()=>bump(1)} style={stepStyle}>+</button></div><div className=\"xpc-engage-chips\">{props.presets.map((n)=>{const on=!off&&cap===n;return(<button key={n} type=\"button\" aria-pressed={on} onClick={()=>apply(n)} className=\"xpc-engage-chip\" style={chipStyle(on)}>{formatEngage(n)}</button>);})}</div></div>);}"
 }
 ]

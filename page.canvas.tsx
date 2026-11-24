@@ -847,10 +847,7 @@ export default function App() {
   const [wipeConfirm, setWipeConfirm] = useState("");
   const [showFoundSwears, setShowFoundSwears] = useState(false);
   const [replyQuery, setReplyQuery] = useState("");
-  const [kitGoogle, setKitGoogle] = useState(false);
   const [kitGoogleRecheck, setKitGoogleRecheck] = useState(false);
-  const [kitWayback, setKitWayback] = useState(false);
-  const [kitWaybackDraft, setKitWaybackDraft] = useState(false);
   const [kitWaybackRecheck, setKitWaybackRecheck] = useState(false);
   const [exportFmt, setExportFmt] = useState("csv");
   const [exportNote, setExportNote] = useState("");
@@ -858,14 +855,11 @@ export default function App() {
   const [likesOn, setLikesOn] = useState(false);
   const [spendLimit, setSpendLimit] = useState("");
   const [likesFocus, setLikesFocus] = useState<LikesTarget>("posts");
-  const [fortressOpen, setFortressOpen] = useState({ phone: false, email: false });
   const [likesLast, setLikesLast] = useState({ posts: 5, replies: 5 });
   const [maintOn, setMaintOn] = useState(false);
   const [autoCont, setAutoCont] = useState(false);
   const [rollWin, setRollWin] = useState("90");
   const [showFailed, setShowFailed] = useState(true);
-  const [retryNote, setRetryNote] = useState("");
-  const [archiveNote, setArchiveNote] = useState("");
   const [recentOnly, setRecentOnly] = useState(false);
   const [kitDisconnect, setKitDisconnect] = useState(false);
   const [failedIds, setFailedIds] = useState<string[]>([]);
@@ -1115,11 +1109,6 @@ export default function App() {
     setStep(id);
   };
 
-  // A Page tap is never Approve. Only the owner's chat reply (typed or a widget tap) is Approve.
-  const approve = () => {
-    scrollToId("rev-approve");
-  };
-
   useEffect(() => {
     let cancelled = false;
     const run = () => {
@@ -1164,14 +1153,6 @@ export default function App() {
     }
   };
 
-  const doRetry = () => {
-    if (failedIds.length === 0) return;
-    const remaining = failedIds.slice(0, 1);
-    setFailedIds(remaining);
-    setShowFailed(true);
-    setRetryNote(`Retry cleared ${failedIds.length - remaining.length}. ${remaining.length} still need a manual tap.`);
-  };
-
   const primary = ((): { label: string; action: () => void; disabled?: boolean } | null => {
     if (step === "signin") return null;
     if (step === "archive") {
@@ -1180,18 +1161,7 @@ export default function App() {
       return { label: "Next: choose what goes →", action: () => goStep("pick") };
     }
     if (step === "pick") return { label: "Next: review my list →", action: () => goStep("review"), disabled: !rulesActive };
-    if (step === "review") {
-      if (lane === "fast" && fastSetup !== "ready") {
-        return {
-          label: "Set it up for me",
-          action: () => {
-            setFastSetup(fastSetup === "manual" ? "manual" : "guide");
-            scrollToId("rev-pace");
-          },
-        };
-      }
-      return { label: "Approve this cleanup", action: approve, disabled: !archiveReady || matched === 0 || (isFullWipe && !wipeOk) };
-    }
+    if (step === "review") return null;
     if (failedCount > 0) return { label: "Open failure tray", action: () => scrollToId("run-tray") };
     return null;
   })();
@@ -1286,40 +1256,26 @@ export default function App() {
   const subhead: CSSProperties = { fontSize: 17, fontWeight: 650, margin: "0 0 4px", color: theme.text.primary };
   const subhint: CSSProperties = { fontSize: 13, color: theme.text.tertiary, margin: "0 0 14px", lineHeight: 1.45 };
   const fortressRow = (key: "phone" | "email", name: string, what: string) => {
-    const open = fortressOpen[key];
     const url = key === "phone" ? PHONE_FORTRESS_URL : EMAIL_FORTRESS_URL;
     const linked = url !== "";
     return (
       <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {linked ? (
-            <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: theme.text.accent, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family, textDecoration: "underline" }}>
-              {`${name} ↗`}
-            </a>
-          ) : (
-            <span style={{ color: theme.text.primary, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family }}>{name}</span>
-          )}
-          <button
-            type="button"
-            aria-expanded={open}
-            aria-label={`${open ? "Hide" : "Show"} ${name} details`}
-            onClick={() => setFortressOpen((s) => ({ ...s, [key]: !s[key] }))}
-            style={{ background: "none", border: 0, padding: 0, color: theme.text.tertiary, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family, cursor: "pointer" }}
-          >
-            {open ? "▾" : "▸"}
-          </button>
-        </div>
-        {open && (
-          <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.45, marginTop: 6 }}>
-            <div>{what}</div>
-            <div style={{ marginTop: 6 }}>{`To open it, use the Grok Bot sidebar and choose ${name} from your bots.`}</div>
-          </div>
+        {linked ? (
+          <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: theme.text.accent, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family, textDecoration: "underline" }}>
+            {`${name} ↗`}
+          </a>
+        ) : (
+          <span style={{ color: theme.text.primary, fontSize: 14, fontWeight: 600, fontFamily: theme.font.family }}>{name}</span>
         )}
+        <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.45, marginTop: 6 }}>
+          <div>{what}</div>
+          <div style={{ marginTop: 6 }}>{`To open it, use the Grok Bot sidebar and choose ${name} from your bots.`}</div>
+        </div>
       </div>
     );
   };
-  const chatNote = (
-    <div style={{ fontSize: 13, color: theme.text.secondary, marginTop: 10, lineHeight: 1.45 }}>Opens in the chat</div>
+  const tapLine = (sentence: string) => (
+    <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5, marginTop: 10 }}>{sentence}</div>
   );
   const xDownloadLink = (
     <div style={{ fontSize: 13, color: theme.text.secondary, marginTop: 10, lineHeight: 1.45 }}>
@@ -1330,12 +1286,7 @@ export default function App() {
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Optional, while you wait for the archive: start with your recent posts only (about the last 3,200). This is not your full history, and it still needs a preview and one Approve.</div>
       <div>
-        <Button
-          label="Start with recent posts only"
-          variant="quiet"
-          onClick={() => {}}
-        />
-        {chatNote}
+        {tapLine("Start with recent posts only with the tap card in the chat.")}
       </div>
     </div>
   );
@@ -1721,15 +1672,12 @@ export default function App() {
                 <div id="sig-start" style={{ ...panel, background: theme.fill.accentSubtle, padding: "28px 28px" }}>
                   <Rows
                     rows={[
-                      { title: "1. Open", detail: "The bot opens X's sign-in page in its own browser." },
+                      { title: "1. Open", detail: "The X sign-in window opens below the Page in the chat." },
                       { title: "2. Sign in", detail: "You type your password and any 2FA code yourself. The bot never sees them." },
                       { title: "3. Next", detail: "The bot reads your handle from X and moves you on to your archive." },
                     ]}
                   />
-                  <div style={{ marginTop: 18 }}>
-                    <Button label="Sign in to X" variant="primary" onClick={() => {}} />
-                    {chatNote}
-                  </div>
+                  <div style={{ marginTop: 18, fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Sign in in the X window in the chat. If you already signed in, you're set.</div>
                 </div>
 
                 <div id="sig-data">
@@ -1761,8 +1709,7 @@ export default function App() {
                           ]}
                         />
                         <div style={{ marginTop: 18 }}>
-                          <Button label="Have the bot grab it" variant="primary" onClick={() => {}} />
-                          {chatNote}
+                          {tapLine("Have the bot grab your archive with the tap card in the chat.")}
                           {xDownloadLink}
                         </div>
                       </div>
@@ -1815,14 +1762,7 @@ export default function App() {
                       )}
                       {recentOnly && (
                         <div>
-                          <Button
-                            label="Wait for the full archive instead"
-                            variant="quiet"
-                            onClick={() => {
-                              setRecentOnly(false);
-                              setPhase("waiting");
-                            }}
-                          />{chatNote}
+                          {tapLine("Wait for the full archive with the tap card in the chat.")}
                         </div>
                       )}
                     </>
@@ -2421,30 +2361,20 @@ export default function App() {
                         </div>
                       )}
                       <div style={{ fontSize: 13, color: theme.text.tertiary, lineHeight: 1.5 }}>We never take money or see your card. Keys stay in your vault; revoke them anytime in X settings. This lane uses only X's official API — no browser clicking — so it stays inside X's developer rules. It deletes posts only (not likes).</div>
-                      {fastSetup !== "ready" && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                          <Button
-                            label="Set it up for me: about 2 minutes of your time (sign in, accept X's terms, add credits)."
-                            variant="primary"
-                            onClick={() => setFastSetup("guide")}
-                          />
-                          <Button label="I'll do it myself: about 10–15 minutes." variant="quiet" onClick={() => setFastSetup("manual")} />
-                        </div>
-                      )}
+                      <div style={{ ...panel, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600 }}>Set it up for me: about 2 minutes of your time (sign in, accept X's terms, add credits)</div>
+                        <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>The bot does the clicking in its browser: open the X developer console, create the project and app, set read and write permissions, create the user access token, and save the keys to your vault.</div>
+                        <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>You step in only to sign in (and 2FA), accept X's developer terms, and add your card or credits on X.</div>
+                        {tapLine("Set it up for me with the tap card in the chat.")}
+                      </div>
                       {fastSetup === "ready" && <div style={{ fontSize: 13, color: theme.text.success, lineHeight: 1.5 }}>Your key is saved in your vault.</div>}
-                      {fastSetup === "guide" && (
-                        <div style={{ ...panel, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-                          <div style={{ fontSize: 14, fontWeight: 600 }}>Set it up for me: about 2 minutes of your time (sign in, accept X's terms, add credits)</div>
-                          <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>The bot does the clicking in its browser: open the X developer console, create the project and app, set read and write permissions, create the user access token, and save the keys to your vault.</div>
-                          <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>You step in only to sign in (and 2FA), accept X's developer terms, and add your card or credits on X.</div>
-                          {chatNote}
-                        </div>
-                      )}
+                      <div>
+                        <Button label="I'll do it myself: about 10–15 minutes." variant="quiet" onClick={() => setFastSetup(fastSetup === "manual" ? "idle" : "manual")} />
+                      </div>
                       {fastSetup === "manual" && (
                         <div style={{ ...panel, padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
                           <div style={{ fontSize: 14, fontWeight: 600 }}>I'll do it myself: about 10–15 minutes</div>
-                          <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>1. Open console.x.com and sign in. 2. Accept X's developer terms. 3. Create a project and app with read and write access, then a user access token. 4. Add a card or credits on X. 5. Tell the bot you're done — it saves the keys to your vault. Never paste keys in chat.</div>
-                          {chatNote}
+                          <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>1. Open console.x.com and sign in. 2. Accept X's developer terms. 3. Create a project and app with read and write access, then a user access token. 4. Add a card or credits on X. 5. Tell the bot you're done. It saves the keys to your vault. Never paste keys in chat.</div>
                         </div>
                       )}
                     </div>
@@ -2547,8 +2477,7 @@ export default function App() {
                 </div>
 
                 <div id="rev-approve" style={{ paddingTop: 4 }}>
-                  <Button label="Approve this cleanup" variant="primary" disabled={!archiveReady || matched === 0 || (isFullWipe && !wipeOk)} onClick={approve} />
-                  {chatNote}
+                  {tapLine("Approve this cleanup with the tap card in the chat.")}
                 </div>
               </div>
             )}
@@ -2605,18 +2534,15 @@ export default function App() {
                         <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>Remove outdated results</div>
                         <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5, flex: 1 }}>The bot files Google's Remove Outdated Content requests for deleted post URLs. You sign in to Google once. Removal isn't guaranteed.</div>
                         <div style={{ fontSize: 13, color: theme.text.secondary }}>Bot files the requests after you sign in to Google.</div>
-                        <Button label={kitGoogle ? "Requests queued" : "File removal requests"} onClick={() => setKitGoogle(true)} />{chatNote}
-                        {kitGoogle && <div style={{ fontSize: 13, color: theme.text.success }}>Sign in to Google once, then the bot files the requests. Removal isn't guaranteed.</div>}
+                        {tapLine("File removal requests with the tap card in the chat.")}
                         <Toggle label="Recheck in 30 days" value={kitGoogleRecheck} onChange={setKitGoogleRecheck} />
                       </div>
                       <div style={{ borderRadius: 14, border: `1px solid ${theme.border.default}`, background: theme.bg.subtle, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
                         <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>Wayback Machine</div>
                         <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5, flex: 1 }}>The bot finds archived copies of your deleted posts, shows short clickable links, and prepares a removal-request email for you to review and send.</div>
                         <div style={{ fontSize: 13, color: theme.text.tertiary }}>Links to archived copies appear here after the run.</div>
-                        {kitWayback && <div style={{ fontSize: 13, color: theme.text.secondary }}>Short links to archived copies of your deleted posts.</div>}
                         <div style={{ fontSize: 13, color: theme.text.secondary }}>Bot finds the copies and drafts the email. You review it and press Send.</div>
-                        <Button label={kitWaybackDraft ? "Draft ready" : "Prepare removal email"} onClick={() => setKitWaybackDraft(true)} />{chatNote}
-                        {kitWaybackDraft && <div style={{ fontSize: 13, color: theme.text.primary, lineHeight: 1.5 }}>Draft to info@archive.org, subject "Removal request for archived copies of deleted posts," with the short links above. You review it and press Send.</div>}
+                        {tapLine("Prepare the removal email with the tap card in the chat.")}
                         <Toggle label="Recheck in 30 days" value={kitWaybackRecheck} onChange={setKitWaybackRecheck} />
                       </div>
                       <div style={{ borderRadius: 14, border: `1px solid ${theme.border.default}`, background: theme.bg.subtle, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
@@ -2625,9 +2551,8 @@ export default function App() {
                       </div>
                     </div>
                     <div>
-                      <Button label="Delete the archive copy from the bot's computer" onClick={() => setArchiveNote("This deletes the archive and parsed copies from the bot's computer after you confirm.")} />{chatNote}
+                      {tapLine("Delete the archive copy from the bot's computer with the tap card in the chat.")}
                     </div>
-                    {archiveNote !== "" && <Text>{archiveNote}</Text>}
                     {!maintOn ? (
                       <div style={{ ...panel, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
                         <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>Disconnect when you're done</div>
@@ -2649,15 +2574,13 @@ export default function App() {
 
                 <div id="run-tray" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   <div style={subhead}>{failedCount > 0 ? `Failure tray · ${failedCount} need a manual tap` : "Failure tray is clear"}</div>
-                  {retryNote !== "" && <div style={{ fontSize: 13, color: theme.text.success }}>{retryNote}</div>}
                   {failedCount > 0 && (
                     <>
                       <div style={{ fontSize: 14, color: theme.text.secondary }}>These didn't delete automatically. Open each link on X and delete it yourself if you still want it gone.</div>
                       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                         <Button label={showFailed ? "Hide links" : "Show links"} onClick={() => setShowFailed(!showFailed)} />
-                        <Button label="One retry pass" onClick={doRetry} />
                       </div>
-                      {chatNote}
+                      {tapLine("Retry the failed posts with the tap card in the chat.")}
                       {showFailed && (
                         <Table
                           columns={["Link", "Why"]}
