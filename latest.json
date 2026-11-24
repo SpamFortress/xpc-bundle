@@ -1,6 +1,6 @@
 {
- "version": "1.1.1",
- "tag": "xpc-v1.1.1",
- "manifest_sha256": "7a227e6e94dcaad48d55799e9777ce6eb3e99d0cf2416b95f991c2702d74e2f7",
- "notes": "The page now builds in small steps, so it publishes reliably on a brand-new bot. The page looks and works the same."
+ "version": "1.1.2",
+ "tag": "xpc-v1.1.2",
+ "manifest_sha256": "c3e672847187f38bd9825ca525ffef2918d152d8ce9662475bd79eeeb7d7dbce",
+ "notes": "The page now appears much sooner: a small first page opens right away and the rest fills in while you sign in. Buttons look the same as before; ones the bot finishes in the chat carry a short \"Opens in the chat\" note."
 }
