@@ -31,16 +31,18 @@ Release-time only (bots never need these): `node tools/shrink_page.js page.canva
 Sign-in happens first, in parallel with the Page build.
 
 1. The bot's first message.
-2. The Page build starts in the background, and the X sign-in window opens at the same time.
-3. The Page card appears. Sign-in may already be finished.
-4. Archive.
+2. The X sign-in window opens immediately, while the Page builds in the background.
+3. On sign-in the bot requests the archive itself. There is no grab button and no grab tap card.
+4. The Page card appears. Once the archive is requested (`START_PHASE` `grabbing` or `waiting`), the Archive step shows one plain line: "Your archive has been requested. X usually takes 1 to 3 days. The bot will pull it in automatically and let you know when it's ready. Meanwhile, set up your rules." There is no spinner. The owner can open Pick and set rules while X prepares the file. When the archive is ready, the Page shows the archive-ready view as designed.
 
 The sign-in line on the Page reads the same either way: "Sign in in the X window in the chat. If you already signed in, you're set." There is no Sign in button. A Page button cannot drive the browser.
 
 If sign-in finished before the Page existed, the first write can open on the archive step with the handle already filled. The shipped page still starts at sign-in with an empty handle, so nothing identifies anyone before sign-in.
 
-- `python3 scripts/xpc_core.py page-steps --show 1 --part K --start archive --handle HANDLE` prints that first page. Join the parts with nothing between them.
-- `python3 scripts/xpc_core.py page-state --start archive --handle HANDLE` prints the exact `START_STEP` and `SIGNED_IN_HANDLE` edits for a page that was written with the defaults.
+- `python3 scripts/xpc_core.py page-steps --show 1 --part K --start archive --handle HANDLE --phase grabbing` prints that first page. Join the parts with nothing between them.
+- `python3 scripts/xpc_core.py page-state --start archive --handle HANDLE --phase grabbing` prints the exact `START_STEP`, `SIGNED_IN_HANDLE`, and `START_PHASE` edits. `page-state --phase grabbing` or `--phase waiting` is the one-line edit for the requested-archive line. `page-state --phase ready` is the one-line edit for the archive-ready view.
+
+The full archive is the default. If X is slow, the bot can offer recent posts with a tap card. "Wait for the full archive" stays a tap-card line only on the recent-only view.
 
 `page-verify` and `page-where` put those lines back to the defaults before comparing, so either start still matches the build.
 

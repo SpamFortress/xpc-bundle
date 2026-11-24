@@ -1709,7 +1709,6 @@ export default function App() {
                           ]}
                         />
                         <div style={{ marginTop: 18 }}>
-                          {tapLine("Have the bot grab your archive with the tap card in the chat.")}
                           {xDownloadLink}
                         </div>
                       </div>
@@ -1726,17 +1725,7 @@ export default function App() {
                     </>
                   )}
                   {(phase === "grabbing" || phase === "waiting") && (
-                    <>
-                      <Callout tone="info" lead={phase === "grabbing" ? "Requesting your archive" : "Archive building, usually 1–3 days"}>
-                        {phase === "grabbing"
-                          ? "The bot is opening X settings and starting the official download. Nothing is deleted at this stage."
-                          : "X is preparing your file. The bot watches for the email and loads it when it lands."}
-                      </Callout>
-                      <div>
-                        <Button label="I'll drop the file myself" variant="quiet" onClick={() => setPhase("manual")} />
-                      </div>
-                      {recentOnlyOffer}
-                    </>
+                    <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Your archive has been requested. X usually takes 1 to 3 days. The bot will pull it in automatically and let you know when it's ready. Meanwhile, set up your rules.</div>
                   )}
                   {phase === "manual" && (
                     <>

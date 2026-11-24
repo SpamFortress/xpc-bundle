@@ -757,12 +757,15 @@ def ensure_node_tools():
     return d, ready
 
 
-def apply_page_boot(src, start=None, handle=None):
-    """First-write variant: START_STEP and SIGNED_IN_HANDLE already set. Empty handle leaves the default."""
+def apply_page_boot(src, start=None, handle=None, phase=None):
+    """First-write variant: START_STEP, SIGNED_IN_HANDLE, and START_PHASE already set.
+    Empty handle leaves the default. phase is grabbing, waiting, or ready while the bot fetches."""
     if start:
         src = _set_const_initializer(src, "START_STEP", '"' + start + '"')
     if handle:
         src = _set_const_initializer(src, "SIGNED_IN_HANDLE", _ts_string(mask_ssn(handle)))
+    if phase:
+        src = _set_const_initializer(src, "START_PHASE", '"' + phase + '"')
     return src
 
 
@@ -786,7 +789,10 @@ def page_typecheck(bundle_dir=BUNDLE_DIR):
             first = text
     if first is not None:
         path = os.path.join(tmp, "step-01-archive.tsx")
-        open(path, "w", encoding="utf-8", newline="").write(apply_page_boot(first, "archive", "example"))
+        open(path, "w", encoding="utf-8", newline="").write(apply_page_boot(first, "archive", "example", "grabbing"))
+        paths.append(path)
+        path = os.path.join(tmp, "step-01-ready.tsx")
+        open(path, "w", encoding="utf-8", newline="").write(apply_page_boot(first, "archive", "example", "ready"))
         paths.append(path)
     env = os.environ.copy()
     env["XPC_NODE_TOOLS"] = tools
@@ -799,16 +805,16 @@ def page_steps(bundle_dir=BUNDLE_DIR):
     return json.load(open(os.path.join(_page_paths(bundle_dir)[1], "plan.json"), encoding="utf-8"))
 
 
-def page_show(n, part=None, bundle_dir=BUNDLE_DIR, limit=PAGE_CHUNK_MAX, start=None, handle=None):
+def page_show(n, part=None, bundle_dir=BUNDLE_DIR, limit=PAGE_CHUNK_MAX, start=None, handle=None, phase=None):
     """Exact text for step n. Step 1 is long, so it prints in parts (--part 1, 2, ...): the
     WriteCanvas contents are the parts joined with nothing between them.
-    --start and --handle rewrite the boot lines before the first page is split, so the
-    first write can open on the archive step when sign-in already finished."""
+    --start, --handle, and --phase rewrite the boot lines before the first page is split,
+    so the first write can open on the archive step already fetching."""
     plan = page_steps(bundle_dir)
     st = plan["steps"][n - 1]
     text = open(os.path.join(bundle_dir, st["file"]), encoding="utf-8").read()
-    if n == 1 and (start or handle):
-        text = apply_page_boot(text, start, handle)
+    if n == 1 and (start or handle or phase):
+        text = apply_page_boot(text, start, handle, phase)
     if n != 1:
         return text
     parts, cur, size = [], [], 0
@@ -946,8 +952,8 @@ def page_status_edit(tone=None, lead="", text="", bundle_dir=BUNDLE_DIR):
     return {"old_string": src[i:end + 1], "new_string": src[i:eq + 1] + expr + ";"}
 
 
-def page_state_edits(start=None, handle=None, bundle_dir=BUNDLE_DIR):
-    """Exact one-line edits for START_STEP and SIGNED_IN_HANDLE, from the shipped declarations."""
+def page_state_edits(start=None, handle=None, phase=None, bundle_dir=BUNDLE_DIR):
+    """Exact one-line edits for START_STEP, SIGNED_IN_HANDLE, and START_PHASE."""
     src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
     edits = []
     if start:
@@ -956,6 +962,9 @@ def page_state_edits(start=None, handle=None, bundle_dir=BUNDLE_DIR):
     if handle:
         i, eq, end = _const_decl(src, "SIGNED_IN_HANDLE")
         edits.append({"name": "SIGNED_IN_HANDLE", "old_string": src[i:end + 1], "new_string": src[i:eq + 1] + _ts_string(mask_ssn(handle)) + ";"})
+    if phase:
+        i, eq, end = _const_decl(src, "START_PHASE")
+        edits.append({"name": "START_PHASE", "old_string": src[i:end + 1], "new_string": src[i:eq + 1] + '"' + phase + '"' + ";"})
     return edits
 
 
@@ -1037,9 +1046,11 @@ def _cli(argv=None):
     ps.add_argument("--part", type=int, help="step 1 only: which part to print")
     ps.add_argument("--start", choices=["signin", "archive", "pick", "review", "run"], help="step 1 only: START_STEP already set")
     ps.add_argument("--handle", default="", help="step 1 only: SIGNED_IN_HANDLE already filled")
-    pstate = sub.add_parser("page-state", help="exact START_STEP and SIGNED_IN_HANDLE edits")
+    ps.add_argument("--phase", choices=["choose", "grabbing", "waiting", "ready", "manual"], help="step 1 only: START_PHASE already set")
+    pstate = sub.add_parser("page-state", help="exact START_STEP, SIGNED_IN_HANDLE, and START_PHASE edits")
     pstate.add_argument("--start", choices=["signin", "archive", "pick", "review", "run"])
     pstate.add_argument("--handle", default="")
+    pstate.add_argument("--phase", choices=["choose", "grabbing", "waiting", "ready", "manual"])
     pv = sub.add_parser("page-verify", help="check a ReadCanvas result")
     pv.add_argument("file")
     pv.add_argument("--after", type=int, help="check the state after this build step instead of the finished page")
@@ -1065,11 +1076,11 @@ def _cli(argv=None):
         if a.show is None:
             plan = page_steps()
             print(json.dumps([{k: v for k, v in st.items() if k != "sha256_after"} for st in plan["steps"]], indent=1)); return 0
-        sys.stdout.write(page_show(a.show, a.part, start=a.start, handle=a.handle or None)); return 0
+        sys.stdout.write(page_show(a.show, a.part, start=a.start, handle=a.handle or None, phase=a.phase)); return 0
     if a.cmd == "page-state":
-        if not a.start and not a.handle:
-            print("page-state needs --start or --handle"); return 1
-        print(json.dumps(page_state_edits(a.start, a.handle or None), ensure_ascii=False)); return 0
+        if not a.start and not a.handle and not a.phase:
+            print("page-state needs --start, --handle, or --phase"); return 1
+        print(json.dumps(page_state_edits(a.start, a.handle or None, a.phase), ensure_ascii=False)); return 0
     if a.cmd == "page-verify":
         ok, detail = page_verify(a.file, a.after)
         print(f"page-verify ok {detail}" if ok else f"page-verify MISMATCH {detail}"); return 0 if ok else 1
@@ -1117,20 +1128,23 @@ def _cli(argv=None):
             j, _eq, jend = _const_decl(base, name)
             assert base[j:jend + 1] == f'const {name}:string="{literal}";'
         first = open(os.path.join(_page_paths()[1], "01-first.tsx"), encoding="utf-8").read()
-        booted = apply_page_boot(first, "archive", "example")
+        booted = apply_page_boot(first, "archive", "example", "grabbing")
         assert 'const START_STEP:Step="archive";' in booted
         assert 'const SIGNED_IN_HANDLE:string="example";' in booted
+        assert 'const START_PHASE:HomePhase="grabbing";' in booted
         assert normalize_page_boot(booted) == first
-        edits = page_state_edits("archive", "example")
+        edits = page_state_edits("archive", "example", "grabbing")
         assert edits[0]["old_string"] == 'const START_STEP:Step="signin";'
         assert edits[0]["new_string"] == 'const START_STEP:Step="archive";'
         assert edits[1]["old_string"] == 'const SIGNED_IN_HANDLE:string="";'
         assert edits[1]["new_string"] == 'const SIGNED_IN_HANDLE:string="example";'
+        assert edits[2]["old_string"] == 'const START_PHASE:HomePhase="choose";'
+        assert edits[2]["new_string"] == 'const START_PHASE:HomePhase="grabbing";'
         tcode, tout = page_typecheck()
         assert tcode == 0, tout
         if "skipped" not in tout:
             final = page_steps()["full_page_after"]
-            for label in ("ok step-01.tsx", "ok step-07.tsx", f"ok step-{final:02d}.tsx", "ok step-01-archive.tsx"):
+            for label in ("ok step-01.tsx", "ok step-07.tsx", f"ok step-{final:02d}.tsx", "ok step-01-archive.tsx", "ok step-01-ready.tsx"):
                 assert label in tout, tout
         print(f"xpc_core {__version__} selftest ok · tz={TZ} · wordlists={WORDLIST_SOURCE}"); return 0
     os.makedirs(a.out, exist_ok=True)
