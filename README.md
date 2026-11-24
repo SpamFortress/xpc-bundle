@@ -31,11 +31,14 @@ Release-time only (bots never need these): `node tools/shrink_page.js page.canva
 The bot can show where things stand without sending a chat message. These top-level lines are the ones it edits:
 
 - `PAGE_STATUS` is `null` when the banner is hidden. Otherwise it is `{tone, lead, text}` with tone `info`, `warn`, `error`, or `ok`. The banner sits under the stepper on every step, including the first page. Empty lead and text stay hidden.
-- `START_STEP`, `START_PHASE`, `START_RUN`, and `SIGNED_IN_HANDLE` are the starting step, archive phase, run phase, and signed-in handle. Each is one line. An empty handle is not shown.
+- `START_STEP`, `START_PHASE`, `START_RUN`, and `SIGNED_IN_HANDLE` are the starting step, archive phase, run phase, and signed-in handle. Each is one line. An empty handle is not shown. The shipped handle line is exactly `const SIGNED_IN_HANDLE:string="";` (the `:string` keeps the canvas type-check from treating it as the literal `""`).
+- `PHONE_FORTRESS_URL` and `EMAIL_FORTRESS_URL` are also annotated `:string`, so comparing them to `""` type-checks. Shipped lines: `const PHONE_FORTRESS_URL:string="https://x.ai/bot/a_4tVB4gwbwFBLkUhkTCW";` and `const EMAIL_FORTRESS_URL:string="https://x.ai/bot/MyKDbPYVwJeJpCNtVTFym";`.
 - `page-verify` and `page-where` put those five lines back to their defaults before comparing, so a status edit does not fail the build check.
 - `python3 scripts/xpc_core.py page-status --tone info --lead "..." --text "..."` prints one JSON object, `{"old_string","new_string"}`, for EditCanvas. `old_string` is the shipped `const PAGE_STATUS:...=null;` declaration. `new_string` is that same declaration with the initializer replaced. Quotes, backslashes, and newlines are escaped. SSN-shaped numbers are masked as `***-**-NNNN` and the full number is never printed. `--clear` hides the banner. `--apply <file>` writes the initializer into a saved canvas.
 
 `PHONE_FORTRESS_URL` and `EMAIL_FORTRESS_URL` are the share links for Phone Fortress and Email Fortress. On the archive step (first page) and on the finished run step, each name is a real external link that opens in a new tab. An empty URL would have no link styling and no external-link arrow.
+
+`python3 scripts/xpc_core.py page-typecheck` type-checks the first page, every later build step, and the finished page with `tsc --strict` and the React types. It must pass before a release is tagged.
 
 ## Page controls in 1.1.2
 

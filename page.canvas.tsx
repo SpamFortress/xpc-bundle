@@ -42,10 +42,10 @@ type PageStatus = { tone: PageTone; lead: string; text: string };
 const START_STEP: Step = "signin";
 const START_PHASE: HomePhase = "choose";
 const START_RUN: RunPhase = "idle";
-const SIGNED_IN_HANDLE = "";
+const SIGNED_IN_HANDLE: string = "";
 const PAGE_STATUS: PageStatus | null = null;
-const PHONE_FORTRESS_URL = "https://x.ai/bot/a_4tVB4gwbwFBLkUhkTCW";
-const EMAIL_FORTRESS_URL = "https://x.ai/bot/MyKDbPYVwJeJpCNtVTFym";
+const PHONE_FORTRESS_URL: string = "https://x.ai/bot/a_4tVB4gwbwFBLkUhkTCW";
+const EMAIL_FORTRESS_URL: string = "https://x.ai/bot/MyKDbPYVwJeJpCNtVTFym";
 
 type Post = {
   id: string;
@@ -112,7 +112,7 @@ const ARCHIVE_CAPS = {
   hasQuoteFields: false,
 };
 const ARCHIVE_POST_COUNT = 0;
-const PROFILE_POST_COUNT_LABEL = "";
+const PROFILE_POST_COUNT_LABEL: string = "";
 
 function hasVisual(p: Post): boolean {
   return p.media || !!p.gif;
