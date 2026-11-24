@@ -13,7 +13,7 @@ Changes go only through pull requests. Release tags are never moved or deleted.
 A bot has to type every byte of a Page into WriteCanvas and EditCanvas, so a big page is slow to publish. 1.1.2 makes the first page small and fills in the rest afterwards, into the same canvas.
 
 - page.canvas.tsx is the readable design source. page.min.tsx is the same page with comments, indentation and repeated style objects removed (152,355 bytes down to 106,870). It compiles to exactly the same JavaScript as the design source. This is what the canvas holds when the build is done.
-- page/01-first.tsx (18,352 bytes) is the first page a bot types: the same styles, header, stepper, and status banner, the five state lines, a one-line Sign in note, and the Archive view, including the requested-archive line. Pick, Review and Run show as locked steps. The full Sign in steps and both Where your data goes panels are filled in by a later step. It is generated from page.min.tsx, not written by hand. `page-steps --show 1` prints it in two parts; join them with nothing between.
+- page/01-first.tsx (14,527 bytes) is the first page a bot types: the same styles, header, stepper, and status banner, the five state lines, a one-line Sign in note, and the Archive view, including the requested-archive line. Pick, Review and Run show as locked steps. The full Sign in steps and both Where your data goes panels are filled in by a later step. It is generated from page.min.tsx, not written by hand. `page-steps --show 1` prints it in two parts; join them with nothing between.
 - page/02.json through the last numbered JSON file are EditCanvas edit lists. `page/plan.json` names each step. Phase A fills in the Pick screen; Pick unlocks when that phase finishes. Phase B fills in Review and Run; the canvas is page.min.tsx exactly when the last step finishes. Every step compiles on its own, because each missing part waits inside a comment.
 - page/plan.json lists every step with the sha256 the canvas must have after it. page/regions.json records which parts of page.min.tsx each phase adds.
 
@@ -49,6 +49,18 @@ The full archive is the default. If X is slow, the bot can offer recent posts wi
 Bot actions are not buttons. A plain line names the tap card in the chat (approve, grab the archive, recent posts, retry, removal requests, and the rest). Buttons that only change the Page, such as rules, filters, Keep on the preview list, sort, and download, stay.
 
 `python3 scripts/xpc_core.py selftest --no-typecheck` is the first-turn fast path: it checks the Python logic and that every file in manifest.json matches its bytes and sha256, and it does not run Node. The full `selftest` is the release gate. It also type-checks every build step. `page-typecheck` looks for typescript and `@types/react` in `XPC_NODE_TOOLS`, or in `/workspace/xpc-node-tools` when that variable is unset. If those packages are missing, the script installs `typescript@5.6.3`, `esbuild@0.28.2`, and `@types/react@18.3.18` there. If that install cannot run, the type-check is skipped and the full selftest still finishes.
+
+## Archive data on the Page (1.1.6)
+
+The Page never holds every post. Python computes the totals. The Page shows those totals plus a sample of at most 50 posts (the Worst 50 first). Each EditCanvas payload from `page-pool` is at most 20,000 bytes. `page-steps` parts stay at most 9,500 bytes. `page.min.tsx` in this release is 98,427 bytes. The Pick, Review, and Run controls are still in that file.
+
+- `python3 scripts/xpc_core.py verdict posts.jsonl [--rules rules.json | --qa everything|oldest|era|replies|reposts|best] [--handle HANDLE] [--pins id,id]` prints full-archive counts, the no-date count, and whether Delete everything needs the typed phrase.
+- `python3 scripts/xpc_core.py page-pool posts.jsonl [--qa ...] [--handle HANDLE]` prints the EditCanvas edits for `ARCHIVE_CAPS`, `ARCHIVE_POST_COUNT`, `LOADED_TOTALS`, and `POOL`.
+- `python3 scripts/xpc_core.py export posts.jsonl --out list.csv [--qa ...] [--handle HANDLE]` writes the doomed list. Free-text fields are SSN-masked. Ids are `="..."`.
+- `python3 scripts/xpc_core.py export-check list.csv` prints the row count and the ids unwrapped from `="..."`.
+- `python3 scripts/xpc_core.py page-state --run running` edits `START_RUN`. `--qa`, `--kept`, `--lane`, `--pace`, `--cooling on|off`, `--rules`, `--failed`, `--deleted`, `--verified`, `--left`, `--unchecked`, `--likes`, and `--totals` edit the loadable constants. Clear all rules still uses `BASE`, not those constants.
+
+Posts with no readable date are left out of deletes and counted. Replies-to-others does not delete replies in your own threads. A past era starts at the oldest year and the year after it. `page-verify` and `page-where` ignore `POOL`, the archive caps, and the loaded constants, so a canvas still matches after data is loaded.
 
 Page 1 is the small file a bot types first: styles, header, stepper, the status banner, the five state lines, a one-line Sign in note, and the Archive view. The full Sign in steps and the Where your data goes panels are filled in by a later step.
 

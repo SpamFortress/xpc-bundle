@@ -1,94 +1,37 @@
 [
 {
-"old_string": "//^@@0@@",
-"new_string": "//^type Speed=\"steady\"|\"faster\"|\"fastest\";type Lane=\"free\"|\"fast\";type FastSetup=\"idle\"|\"guide\"|\"manual\"|\"ready\";"
+"old_string": "if(step===\"archive\")return null;/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@4@@",
-"new_string": "//^const SHOW_NEXT_BAR=true;"
+"old_string": "locked||id===\"pick\"/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@7@@",
-"new_string": "//^const ARCHIVE_POST_COUNT=0;const PROFILE_POST_COUNT_LABEL:string=\"\";"
+"old_string": "{null/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@22@@",
-"new_string": "//^function finishDate(d:number):string{const t=new Date();t.setDate(t.getDate()+d);return t.toLocaleDateString(\"en-US\",{weekday:\"short\",month:\"short\",day:\"numeric\"});}"
+"old_string": "/*@A*/\n//~",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@24@@",
-"new_string": "//^function downloadText(filename:string,body:string,mime:string){const blob=new Blob([body],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement(\"a\");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);}"
+"old_string": "\n/*@@Ac*/}",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@38@@",
-"new_string": "//^function hasActiveRules(r:Rules,qa:QAId|\"\",keptCount:number):boolean{if(qa!==\"\")return true;if(keptCount>0)return true;if(hasDeleteScope(r))return true;if(r.keepMedia||r.keepThreads||r.keepWords.length>0)return true;if(r.protectDays!==BASE.protectDays||r.protectDate!==\"\")return true;return false;}"
+"old_string": "\n/*@@A*/",
+"new_string": "",
+"replace_all": true
 },
 {
-"old_string": "//^@@39@@",
-"new_string": "//^function dailyCap(speed:Speed):number{if(speed===\"faster\")return 200;if(speed===\"fastest\")return 350;return 100;}"
-},
-{
-"old_string": "//^@@40@@",
-"new_string": "//^function usd(n:number):string{return`$${n.toFixed(2)}`;}"
-},
-{
-"old_string": "//^@@50@@",
-"new_string": "//^function EngageControl(props:{label:string;value:number;offValue:number;offLabel?:string;onChange:(n:number)=>void;disabled?:boolean;hint?:string}){const theme=useGrokTheme();const off=props.offValue===0?props.value<=0:props.value<0;const apply=(n:number)=>{if(props.disabled)return;if(n<0){props.onChange(props.offValue===0?0:-1);return;} props.onChange(Math.min(1000000,n));};const bump=(dir:1|-1)=>{if(props.disabled)return;if(off){if(dir>0)apply(props.offValue===0?1:0);return;} const next=props.value+dir;if(next<0){apply(props.offValue);return;} apply(next);};const onTyped=(v:string)=>{const t=v.replace(/[^\\d]/g,\"\");if(t===\"\"){apply(props.offValue);return;} const n=parseInt(t,10);if(Number.isFinite(n))apply(n);};return(<div className=\"xpc-engage\" style={{opacity:props.disabled?0.55:1}}><div style={{fontSize:13,color:theme.text.secondary}}>{props.label}</div><div className=\"xpc-engage-row\"><button type=\"button\" className=\"xpc-engage-off\" aria-pressed={off} disabled={props.disabled} onClick={()=>apply(props.offValue)} style={{background:off?theme.fill.accentSubtle:theme.bg.base,border:`${off?1.5:1}px solid ${off?theme.border.focus:theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>{props.offLabel??\"Off\"}</button><button type=\"button\" className=\"xpc-engage-step\" aria-label=\"Decrease\" disabled={props.disabled||off} onClick={()=>bump(-1)} style={{background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>−</button><input className=\"xpc-engage-num\" type=\"text\" inputMode=\"numeric\" pattern=\"[0-9]*\" aria-label={props.label} disabled={props.disabled} value={off?\"\":String(props.value)} placeholder=\"Off\" onChange={(e:{target:{value:string}})=>onTyped(e.target.value)} style={{background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}/><button type=\"button\" className=\"xpc-engage-step\" aria-label=\"Increase\" disabled={props.disabled} onClick={()=>bump(1)} style={{background:theme.bg.base,border:`1px solid ${theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>+</button></div><div className=\"xpc-engage-chips\">{ENGAGE_PRESETS.map((n)=>{const on=!off&&props.value===n;return(<button key={n} type=\"button\" aria-pressed={on} disabled={props.disabled} onClick={()=>apply(n)} className=\"xpc-engage-chip\" style={{background:on?theme.fill.accentSubtle:theme.bg.base,border:`${on?1.5:1}px solid ${on?theme.border.focus:theme.border.default}`,color:theme.text.primary,fontFamily:theme.font.family}}>{formatEngage(n)}</button>);})}</div>{props.hint?<div style={{fontSize:13,color:theme.text.secondary,lineHeight:1.45}}>{props.hint}</div>:null}</div>);}"
-},
-{
-"old_string": "//^@@52@@",
-"new_string": "//^const _s1:CSSProperties={fontSize:13,fontWeight:650,color:theme.text.primary,marginTop:8};const _s2:CSSProperties={fontSize:16,fontWeight:650,color:theme.text.primary};"
-},
-{
-"old_string": "//^@@54@@",
-"new_string": "//^const _s5:CSSProperties={fontSize:13,color:theme.text.secondary,lineHeight:1.5};"
-},
-{
-"old_string": "//^@@57@@",
-"new_string": "//^const _s12:CSSProperties={fontSize:13,color:theme.text.secondary};const _s13:CSSProperties={marginBottom:6};"
-},
-{
-"old_string": "//^@@59@@",
-"new_string": "//^const[speed,setSpeed]=useState<Speed>(\"steady\");const[lane,setLane]=useState<Lane>(\"free\");const[fastSetup,setFastSetup]=useState<FastSetup>(\"idle\");"
-},
-{
-"old_string": "//^@@61@@",
-"new_string": "//^const[wipeConfirm,setWipeConfirm]=useState(\"\");"
-},
-{
-"old_string": "//^@@63@@",
-"new_string": "//^const[kitGoogleRecheck,setKitGoogleRecheck]=useState(false);const[kitWaybackRecheck,setKitWaybackRecheck]=useState(false);const[exportFmt,setExportFmt]=useState(\"csv\");const[exportNote,setExportNote]=useState(\"\");const[coolOn,setCoolOn]=useState(false);const[likesOn,setLikesOn]=useState(false);const[spendLimit,setSpendLimit]=useState(\"\");"
-},
-{
-"old_string": "//^@@65@@",
-"new_string": "//^const[maintOn,setMaintOn]=useState(false);const[autoCont,setAutoCont]=useState(false);const[rollWin,setRollWin]=useState(\"90\");const[showFailed,setShowFailed]=useState(true);"
-},
-{
-"old_string": "//^@@66@@",
-"new_string": "//^const[kitDisconnect,setKitDisconnect]=useState(false);"
-},
-{
-"old_string": "//^@@69@@",
-"new_string": "//^const swearStrongActive=SWEAR_STRONG.every((w)=>rules.deleteWords.includes(w));const swearMildActive=SWEAR_MILD.every((w)=>rules.deleteWords.includes(w));const toggleSwearStrong=()=>{if(swearStrongActive){upd({deleteWords:rules.deleteWords.filter((w)=>!SWEAR_PRESET.includes(w))});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_PRESET.includes(w)));return;} const next=[...rules.deleteWords];for(const w of SWEAR_STRONG)if(!next.includes(w))next.push(w);upd({deleteWords:next});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_STRONG.includes(w)));};const toggleSwearMild=()=>{if(swearMildActive){upd({deleteWords:rules.deleteWords.filter((w)=>!SWEAR_MILD.includes(w))});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_MILD.includes(w)));return;} const next=[...rules.deleteWords];for(const w of SWEAR_STRONG)if(!next.includes(w))next.push(w);for(const w of SWEAR_MILD)if(!next.includes(w))next.push(w);upd({deleteWords:next});setIgnoredWords(ignoredWords.filter((w)=>!SWEAR_PRESET.includes(w)));};"
-},
-{
-"old_string": "//^@@72@@",
-"new_string": "//^const keptByRule=pool.filter((p)=>verdicts.get(p.id)?.kind===\"keep\").length;const fastCount=doomed.filter((p:Post)=>effectiveType(p)!==\"repost\").length;const fastReposts=matched-fastCount;const daily=lane===\"fast\"?4000:dailyCap(speed);const days=matched===0?0:(lane===\"fast\"?Math.max(Math.ceil(fastCount/4000),Math.ceil(fastReposts/dailyCap(speed))):Math.ceil(matched/daily))+(coolOn?1:0);const fastCost=fastCount*0.01;const limitUsd=spendLimit===\"\"?Math.ceil(fastCost):Math.max(0,Number(spendLimit)||0);"
-},
-{
-"old_string": "//^@@73@@",
-"new_string": "//^const deletedSoFar=runPhase===\"done\"?Math.max(0,matched-failedCount):Math.min(matched,12);const spentSoFar=deletedSoFar*0.01;const likesTotal=0;const likesDays=days+Math.ceil(likesTotal/dailyCap(speed));const rulesActive=hasActiveRules(rules,activeQA,pins.length);"
-},
-{
-"old_string": "//^@@75@@",
-"new_string": "//^const knownPinCount=pins.length+(ARCHIVE_CAPS.hasPinFlag&&rules.keepProfilePin?pool.filter((p)=>p.profilePin&&!pins.includes(p.id)).length:0);const everythingBlocked=knownPinCount===0;"
-},
-{
-"old_string": "//^@@77@@",
-"new_string": "//^const isFullWipe=archiveReady&&matched>0&&(activeQA===\"everything\"||matched>=10000||matched/Math.max(1,scanned)>0.5);const wipePhrase=`DELETE ${matched.toLocaleString(\"en-US\")} POSTS`;const wipeMatch=/^DELETE ([\\d, ]+) POSTS?$/.exec(wipeConfirm.trim().toUpperCase().replace(/\\s+/g,\" \"));const wipeOk=!!wipeMatch&&Number(wipeMatch[1].replace(/[, ]/g,\"\"))===matched;useEffect(()=>{setWipeConfirm(\"\");},[matched]);"
-},
-{
-"old_string": "//^@@81@@",
-"new_string": "//^const doExport=()=>{const rows=doomed.map((p)=>({id:p.id,status_url:`https://x.com/you/status/${p.id}`,posted:monthYear(p.daysAgo),type:p.community?`community ${p.type}`:p.type,likes:p.likes,replies:p.replies,reply_to:p.replyTo||\"\",matched_rule:verdicts.get(p.id)?.reason||\"\",about:maskSsn(p.summary),text:maskSsn(p.text),}));if(exportFmt===\"json\"){downloadText(\"xpc-delete-list.json\",JSON.stringify({scanned,kept,to_delete:matched,posts:rows},null,2),\"application/json\");setExportNote(`Downloaded JSON with ${matched} posts.`);} else{const q=(s:string)=>`\"${s.replace(/\"/g,'\"\"')}\"`;const header=\"id,status_url,posted,type,likes,replies,reply_to,matched_rule,about,text\";const safe=(s:string)=>(/^[=+\\-@\\t\\r]/.test(s)?`'${\n//^@@81@@"
+"old_string": "\n//~",
+"new_string": "",
+"replace_all": true
 }
 ]

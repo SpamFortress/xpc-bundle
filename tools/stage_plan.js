@@ -90,7 +90,7 @@ app.body.statements.forEach((s) => {
   if (raw.startsWith("useEffect") && raw.includes("railItems.map")) {
     forced.push({ start: s.getStart(sf), end: s.end, kind: "stmt", phase: "A", stub: "", tail: "", why: "rail scroll effect" });
   }
-  if (raw.startsWith("totalsRows.push") || (raw.startsWith("useEffect") && raw.includes("setWipeConfirm"))) {
+  if (raw.startsWith("const totalsRows") || raw.startsWith("if(!LOADED_TOTALS)") || raw.startsWith("if (!LOADED_TOTALS)") || raw.startsWith("totalsRows.push") || (raw.startsWith("useEffect") && raw.includes("setWipeConfirm"))) {
     forced.push({ start: s.getStart(sf), end: s.end, kind: "stmt", phase: "B", stub: "", tail: "", why: raw.slice(0, 48) });
   }
   if (raw.startsWith("useEffect") && (raw.includes("setNarrow") || raw.includes("scrollPageTop"))) {

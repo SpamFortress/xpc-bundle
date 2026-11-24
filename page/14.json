@@ -1,37 +1,6 @@
 [
 {
-"old_string": "(id===\"run\"||id===\"review\")/*@B*/\n//^",
-"new_string": "",
-"replace_all": true
-},
-{
-"old_string": "{null/*@B*/\n//^",
-"new_string": "",
-"replace_all": true
-},
-{
-"old_string": "true/*@B*/\n//^",
-"new_string": "",
-"replace_all": true
-},
-{
-"old_string": "/*@B*/\n//^",
-"new_string": "",
-"replace_all": true
-},
-{
-"old_string": "\n/*@@Bc*/}",
-"new_string": "",
-"replace_all": true
-},
-{
-"old_string": "\n/*@@B*/",
-"new_string": "",
-"replace_all": true
-},
-{
-"old_string": "\n//^",
-"new_string": "",
-"replace_all": true
+"old_string": "//^@@103@@",
+"new_string": "//^bled} onClick={primary.action} style={{height:32,padding:\"0 14px\",borderRadius:8,border:0,background:primary.disabled?theme.fill.secondary:theme.fill.primary,color:primary.disabled?theme.text.tertiary:theme.text.onPrimary,fontFamily:theme.font.family,fontSize:13,fontWeight:650,cursor:primary.disabled?\"not-allowed\":\"pointer\",whiteSpace:\"nowrap\",flex:\"0 0 auto\",}}>{primary.label}</button></div></>):(<Floating edge=\"bottom\" align=\"end\"><BackToTop/></Floating>))}"
 }
 ]

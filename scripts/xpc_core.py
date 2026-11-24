@@ -16,8 +16,16 @@ CLI (all local, read-only on the archive):
   python3 xpc_core.py page-steps --show 1 --part K --start archive --handle HANDLE
                                                  # same, already on the archive step with the handle filled
   python3 xpc_core.py page-steps --show N            # step N's EditCanvas edits (JSON), nothing else
-  python3 xpc_core.py page-state --start archive --handle HANDLE
-                                                 # exact START_STEP and SIGNED_IN_HANDLE edits
+  python3 xpc_core.py page-state --start archive --handle HANDLE --run running
+                                                 # exact boot-line edits, including START_RUN
+  python3 xpc_core.py page-state --qa era --kept id1,id2 --lane free --pace steady --cooling on
+                                                 # load rules, kept ids, lane, pace, cooling-off
+  python3 xpc_core.py page-state --deleted 10 --verified 8 --left 2 --unchecked 1 --likes 40
+  python3 xpc_core.py verdict posts.jsonl [--rules rules.json | --qa everything] [--handle HANDLE]
+  python3 xpc_core.py page-pool posts.jsonl [--qa everything] [--handle HANDLE]
+                                                 # EditCanvas payloads, each <= 20000 bytes
+  python3 xpc_core.py export posts.jsonl --out list.csv [--qa everything]
+  python3 xpc_core.py export-check list.csv      # row count, exact ids, unwrap ="id"
   python3 xpc_core.py page-verify <file> [--after N] # check a ReadCanvas result against the expected source
   python3 xpc_core.py page-where <file>              # which step a ReadCanvas result is at (resume)
   python3 xpc_core.py page-status --tone info --lead "..." --text "..."
@@ -304,7 +312,12 @@ def parse_archive(paths, own_id, today=None, manifest_count=None):
     report["manifest_count"] = manifest_count
     n_tweets = sum(1 for p in posts if not p["community"])
     report["parsed_tweets"] = n_tweets
-    report["count_mismatch"] = manifest_count is not None and manifest_count != n_tweets + report["duplicates"]
+    skipped_tweets = sum(1 for s in report["skipped"] if not str(s.get("where") or "").startswith("community"))
+    report["skipped_counted"] = skipped_tweets
+    report["unreadable"] = len(report["date_issues"]) + skipped_tweets
+    accounted = n_tweets + report["duplicates"] + skipped_tweets
+    report["accounted"] = accounted
+    report["count_mismatch"] = manifest_count is not None and manifest_count != accounted
     report["ready_for_review"] = not report["partial"] and not report["count_mismatch"] and bool(tweet_files(src))
     return posts, report
 
@@ -396,9 +409,13 @@ def load_wordlists(path=None):
     try:
         with open(path, encoding="utf-8") as f:
             d = json.load(f)
-        return {k: d.get(k, v) for k, v in _BUILTIN.items()}, path
+        out = {k: d.get(k, v) for k, v in _BUILTIN.items()}
+        out["suffixes"] = list(d.get("suffixes") or ["", "s", "es", "ed", "er", "ers", "ing", "in", "y", "ty", "ies", "head", "heads", "face"])
+        return out, path
     except Exception:
-        return dict(_BUILTIN), "builtin"
+        builtin = dict(_BUILTIN)
+        builtin["suffixes"] = ["", "s", "es", "ed", "er", "ers", "ing", "in", "y", "ty", "ies", "head", "heads", "face"]
+        return builtin, "builtin"
 
 
 _WL, WORDLIST_SOURCE = load_wordlists()
@@ -408,7 +425,7 @@ SLURS = list(_WL["slurs"])
 NAME_LIKE = set(_WL["name_like"])  # also common surnames/names: skip "Dick Van Dyke"-style Title Case names
 FIGHTY = list(_WL["fighty"])
 GIVEAWAY = list(_WL["giveaway"])
-SUFFIXES = ["", "s", "es", "ed", "er", "ers", "ing", "in", "y", "ty", "ies", "head", "heads", "face"]
+SUFFIXES = list(_WL["suffixes"])
 LEET = {"0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "!": "i", "|": "i"}
 TOKEN_RE = re.compile(r"#?[\w@$!|*']+", re.U)
 
@@ -500,7 +517,12 @@ TYPED_CONFIRM_SHARE = 0.5
 TYPED_CONFIRM_COUNT = 10_000
 
 
-def needs_typed_confirm(to_delete, scanned):
+def needs_typed_confirm(to_delete, scanned, delete_everything=False):
+    """Delete everything always needs the typed phrase, and so does a large or majority cleanup."""
+    if to_delete <= 0:
+        return False
+    if delete_everything:
+        return True
     return to_delete >= TYPED_CONFIRM_COUNT or (scanned > 0 and to_delete / scanned > TYPED_CONFIRM_SHARE)
 
 
@@ -544,10 +566,8 @@ def write_export_csv(path, rows, fields):
                 v = r.get(k)
                 if k == "id":
                     v = f"=\"{v}\""  # keeps 19-digit ids as text in Excel/Sheets
-                elif k == "text":
-                    v = csv_safe(mask_ssn(v or ""))
                 else:
-                    v = csv_safe(v)
+                    v = csv_safe(mask_ssn("" if v is None else str(v)))
                 out.append(v)
             w.writerow(out)
 
@@ -897,12 +917,30 @@ def _set_const_initializer(src, name, expr):
     return src[:eq + 1] + expr + src[end:]
 
 
-def normalize_page_boot(src):
-    """Reset START_STEP, START_PHASE, START_RUN, SIGNED_IN_HANDLE, and PAGE_STATUS."""
+PAGE_DATA_CONSTS = (
+    "POOL", "ARCHIVE_CAPS", "ARCHIVE_POST_COUNT", "PROFILE_POST_COUNT_LABEL",
+    "LOADED_RULES", "LOADED_QA", "LOADED_KEPT", "LOADED_LANE", "LOADED_PACE",
+    "LOADED_COOLING", "LOADED_FAILED", "LOADED_DELETED", "LOADED_VERIFIED",
+    "LOADED_LEFT", "LOADED_UNCHECKED", "LOADED_LIKES", "LOADED_TOTALS",
+)
+
+
+def normalize_page_boot(src, canonical=None):
+    """Reset boot lines and loaded archive data so verify still matches the shipped page.
+    POOL, archive caps, profile counts, and the LOADED_* constants are put back to the
+    shipped initializers. Rules the owner edits with Clear all rules stay in BASE."""
     if src is None:
         return None
     for name, expr in PAGE_BOOT_DEFAULTS:
         src = _set_const_initializer(src, name, expr)
+    if canonical is None:
+        canonical = open(_page_paths()[0], encoding="utf-8").read()
+    for name in PAGE_DATA_CONSTS:
+        have = _const_decl(canonical, name)
+        if have is None or _const_decl(src, name) is None:
+            continue
+        _i, eq, end = have
+        src = _set_const_initializer(src, name, canonical[eq + 1:end])
     return src
 
 
@@ -952,19 +990,69 @@ def page_status_edit(tone=None, lead="", text="", bundle_dir=BUNDLE_DIR):
     return {"old_string": src[i:end + 1], "new_string": src[i:eq + 1] + expr + ";"}
 
 
-def page_state_edits(start=None, handle=None, phase=None, bundle_dir=BUNDLE_DIR):
-    """Exact one-line edits for START_STEP, SIGNED_IN_HANDLE, and START_PHASE."""
+def _ts_value(v):
+    if v is None:
+        return "null"
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, int) and not isinstance(v, bool):
+        return str(v)
+    if isinstance(v, float):
+        return str(v)
+    if isinstance(v, str):
+        return _ts_string(mask_ssn(v))
+    if isinstance(v, (list, tuple)):
+        return "[" + ",".join(_ts_value(x) for x in v) + "]"
+    if isinstance(v, dict):
+        return "{" + ",".join(f"{k}:{_ts_value(val)}" for k, val in v.items()) + "}"
+    raise TypeError(type(v).__name__)
+
+
+def _const_edit(src, name, expr):
+    i, eq, end = _const_decl(src, name)
+    return {"name": name, "old_string": src[i:end + 1], "new_string": src[i:eq + 1] + expr + ";"}
+
+
+def page_state_edits(start=None, handle=None, phase=None, run=None, rules=None, qa=None, kept=None,
+                     lane=None, pace=None, cooling=None, failed=None, deleted=None, verified=None,
+                     left=None, unchecked=None, likes=None, totals=None, bundle_dir=BUNDLE_DIR):
+    """Exact one-line edits for boot lines and the loadable data constants."""
     src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
     edits = []
     if start:
-        i, eq, end = _const_decl(src, "START_STEP")
-        edits.append({"name": "START_STEP", "old_string": src[i:end + 1], "new_string": src[i:eq + 1] + '"' + start + '"' + ";"})
+        edits.append(_const_edit(src, "START_STEP", '"' + start + '"'))
+    if run:
+        edits.append(_const_edit(src, "START_RUN", '"' + run + '"'))
     if handle:
-        i, eq, end = _const_decl(src, "SIGNED_IN_HANDLE")
-        edits.append({"name": "SIGNED_IN_HANDLE", "old_string": src[i:end + 1], "new_string": src[i:eq + 1] + _ts_string(mask_ssn(handle)) + ";"})
+        edits.append(_const_edit(src, "SIGNED_IN_HANDLE", _ts_string(mask_ssn(handle))))
     if phase:
-        i, eq, end = _const_decl(src, "START_PHASE")
-        edits.append({"name": "START_PHASE", "old_string": src[i:end + 1], "new_string": src[i:eq + 1] + '"' + phase + '"' + ";"})
+        edits.append(_const_edit(src, "START_PHASE", '"' + phase + '"'))
+    if rules is not None:
+        edits.append(_const_edit(src, "LOADED_RULES", _ts_value(rules)))
+    if qa is not None:
+        edits.append(_const_edit(src, "LOADED_QA", _ts_string(qa)))
+    if kept is not None:
+        edits.append(_const_edit(src, "LOADED_KEPT", _ts_value(list(kept))))
+    if lane is not None:
+        edits.append(_const_edit(src, "LOADED_LANE", _ts_string(lane)))
+    if pace is not None:
+        edits.append(_const_edit(src, "LOADED_PACE", _ts_string(pace)))
+    if cooling is not None:
+        edits.append(_const_edit(src, "LOADED_COOLING", "true" if cooling else "false"))
+    if failed is not None:
+        edits.append(_const_edit(src, "LOADED_FAILED", _ts_value(failed)))
+    if deleted is not None:
+        edits.append(_const_edit(src, "LOADED_DELETED", str(int(deleted))))
+    if verified is not None:
+        edits.append(_const_edit(src, "LOADED_VERIFIED", str(int(verified))))
+    if left is not None:
+        edits.append(_const_edit(src, "LOADED_LEFT", str(int(left))))
+    if unchecked is not None:
+        edits.append(_const_edit(src, "LOADED_UNCHECKED", str(int(unchecked))))
+    if likes is not None:
+        edits.append(_const_edit(src, "LOADED_LIKES", str(int(likes))))
+    if totals is not None:
+        edits.append(_const_edit(src, "LOADED_TOTALS", _ts_value(totals)))
     return edits
 
 
@@ -1023,6 +1111,401 @@ def page_where(path, bundle_dir=BUNDLE_DIR):
             return st["step"]
     return None
 
+# ---------------------------------------------------------------- verdicts shared with the Page
+PAGE_POOL_MAX = 20000  # one EditCanvas payload, old_string + new_string, in bytes
+PAGE_SAMPLE_CAP = 50
+QUICK_IDS = ("everything", "oldest", "era", "replies", "reposts", "best")
+
+
+def base_rules():
+    """The Page's BASE. Clear all rules returns here. Loaded rules are a separate constant."""
+    return {
+        "timeMode": "none", "olderDays": 365, "olderDate": "", "yearFrom": 2023, "yearTo": 2026,
+        "protectDays": 0, "protectDate": "", "posts": False, "replies": False, "selfReplies": False,
+        "reposts": False, "quotes": False, "community": False, "mediaPhotos": False, "mediaVideos": False,
+        "mediaGifs": False, "mediaText": False, "postsLikesMax": -1, "repliesLikesMax": -1, "repliesMax": -1,
+        "deleteWords": [], "keepWords": [], "replyHandles": [], "repostOf": "", "topic": "",
+        "skipMentions": False, "keepThreads": False, "keepProfilePin": True, "keepMedia": False,
+        "deleteSlurs": False,
+    }
+
+
+def _handle(s):
+    return re.sub(r"^@", "", (s or "").strip()).lower()
+
+
+def _post_days(p, today):
+    if p.get("daysAgo") is not None and p.get("daysAgo") != "":
+        return int(p["daysAgo"])
+    if p.get("date_note"):
+        return -1
+    dt = p.get("created_at_dt") or p.get("created_at")
+    if isinstance(dt, str):
+        dt = parse_date(dt)
+    if not isinstance(dt, datetime):
+        return -1
+    return (today.date() - dt.astimezone(TZ).date()).days
+
+
+def _year_of(days, today):
+    return (today.date() - timedelta(days=max(0, int(days)))).year
+
+
+def normalize_post(p, today):
+    typ = p.get("type") or "post"
+    self_reply = typ == "self_reply" or bool(p.get("selfReply"))
+    if typ == "self_reply":
+        typ = "reply"
+    if typ not in ("post", "reply", "repost", "quote"):
+        typ = "post"
+    kinds = p.get("media_kinds") or []
+    return {
+        "id": str(p.get("id") or ""),
+        "daysAgo": _post_days(p, today),
+        "type": typ,
+        "likes": int(p.get("likes") if p.get("likes") is not None else (p.get("favorite_count") or 0)),
+        "replies": int(p.get("replies") or p.get("reply_count") or 0),
+        "text": p.get("text") or "",
+        "summary": p.get("summary") or "",
+        "community": bool(p.get("community")),
+        "selfReply": self_reply,
+        "replyTo": p.get("replyTo") or p.get("in_reply_to_screen_name") or "",
+        "inReplyToId": str(p.get("inReplyToId") or p.get("in_reply_to") or ""),
+        "media": bool(p.get("media") or any(k in ("photo", "video", "animated_gif") for k in kinds)),
+        "gif": bool(p.get("gif") or "animated_gif" in kinds),
+        "mediaKind": p.get("mediaKind") or (kinds[0] if kinds else ""),
+        "profilePin": bool(p.get("profilePin") or p.get("profile_pin")),
+        "extraMentions": bool(p.get("extraMentions")) or len(p.get("typed_mentions") or []) > 0,
+        "repostOf": p.get("repostOf") or p.get("repost_of") or "",
+        "thread": p.get("thread") or "",
+    }
+
+
+def card_rules(qa, posts, today):
+    """Quick-card rules. Replies are to other people only. Past era is oldest through oldest+1."""
+    r = base_rules()
+    posts = posts or []
+    if qa == "everything":
+        r.update(timeMode="all", posts=True, replies=True, selfReplies=True, reposts=True, quotes=True, community=True, protectDays=0, protectDate="")
+    elif qa == "oldest":
+        r.update(timeMode="older", olderDays=730, olderDate="", posts=True, replies=True, selfReplies=True, reposts=True, quotes=True, community=True, protectDays=0, protectDate="")
+    elif qa == "era":
+        dated = [normalize_post(p, today)["daysAgo"] for p in posts]
+        dated = [d for d in dated if d >= 0]
+        oldest = _year_of(max(dated), today) if dated else today.year
+        r.update(timeMode="years", yearFrom=oldest, yearTo=oldest + 1, posts=True, replies=True, selfReplies=True, reposts=True, quotes=True, community=True, protectDays=0, protectDate="")
+    elif qa == "replies":
+        r.update(timeMode="all", posts=False, replies=True, selfReplies=False, reposts=False, quotes=False, community=False, protectDays=0, protectDate="")
+    elif qa == "reposts":
+        r.update(timeMode="all", posts=False, replies=False, selfReplies=False, reposts=True, quotes=False, community=False, protectDays=0, protectDate="")
+    elif qa == "best":
+        r.update(timeMode="all", posts=False, replies=False, selfReplies=False, reposts=False, quotes=False, community=False, postsLikesMax=-1, repliesLikesMax=-1, keepThreads=False, protectDays=0, protectDate="")
+    return r
+
+
+def _is_self_reply(p, handle):
+    if p.get("selfReply"):
+        return True
+    if p.get("type") != "reply":
+        return False
+    me = _handle(handle)
+    return me != "" and _handle(p.get("replyTo") or "") == me
+
+
+def _scope_parts(p, r, handle, today):
+    if p["daysAgo"] < 0:
+        return None
+    topic = (r.get("topic") or "").strip()
+    repost_of = _handle(r.get("repostOf") or "")
+    has_scope = (
+        r.get("timeMode") not in (None, "none") or r.get("deleteWords") or r.get("deleteSlurs") or topic
+        or repost_of or (r.get("postsLikesMax") or -1) >= 0 or (r.get("repliesLikesMax") or -1) >= 0
+        or r.get("replyHandles") or r.get("posts") or r.get("replies") or r.get("reposts") or r.get("quotes") or r.get("community")
+        or r.get("mediaPhotos") or r.get("mediaVideos") or r.get("mediaGifs") or r.get("mediaText")
+    )
+    if not has_scope:
+        return None
+    parts = []
+    mode = r.get("timeMode")
+    if mode == "all":
+        parts.append("everything")
+    if mode == "older":
+        older = r.get("olderDate") or ""
+        if older:
+            try:
+                cut = datetime.strptime(older, "%Y-%m-%d").replace(tzinfo=TZ)
+                min_days = (today.date() - cut.date()).days
+            except Exception:
+                min_days = -1
+        else:
+            min_days = int(r.get("olderDays") or 0)
+        if min_days < 0 or p["daysAgo"] < min_days:
+            return None
+        parts.append("older")
+    if mode == "years":
+        y = _year_of(p["daysAgo"], today)
+        if y < int(r.get("yearFrom") or 0) or y > int(r.get("yearTo") or 0):
+            return None
+        parts.append("years")
+    typ = p["type"]
+    if p["community"]:
+        type_ok = bool(r.get("community"))
+    elif _is_self_reply(p, handle):
+        type_ok = bool(r.get("selfReplies"))
+    elif typ == "post":
+        type_ok = bool(r.get("posts"))
+    elif typ == "reply":
+        type_ok = bool(r.get("replies"))
+    elif typ == "quote":
+        type_ok = bool(r.get("quotes"))
+    else:
+        type_ok = bool(r.get("reposts"))
+    if not type_ok:
+        return None
+    like_cap = -1
+    if typ != "repost" and not p["community"]:
+        like_cap = int(r.get("repliesLikesMax") if typ == "reply" else r.get("postsLikesMax") or -1)
+    if like_cap >= 0 and p["likes"] > like_cap:
+        return None
+    words = list(r.get("deleteWords") or [])
+    if words or r.get("deleteSlurs"):
+        hit = next((w for w in words if find_words(p["text"], [w])), "")
+        slur = (not hit) and r.get("deleteSlurs") and bool(find_words(p["text"], SLURS))
+        if not hit and not slur:
+            return None
+        parts.append("slur" if slur else "word")
+    if repost_of:
+        if p["type"] != "repost" or _handle(p.get("repostOf") or "") != repost_of:
+            return None
+    handles = list(r.get("replyHandles") or [])
+    if handles:
+        ok = any(_handle(h) == _handle(p.get("replyTo") or "") or find_words(p["text"], ["@" + _handle(h)]) for h in handles)
+        if not ok:
+            return None
+    return parts or ["match"]
+
+
+def _keep_reason(p, r, pins):
+    if p["id"] in pins:
+        return "Kept by you"
+    if (r.get("keepWords") or []) and any(find_words(p["text"], [w]) for w in r["keepWords"]):
+        return "keep word"
+    return ""
+
+
+def compute_verdicts(posts, rules=None, pins=None, qa="", today=None, handle=""):
+    """Same decisions as the Page's computeVerdicts. Posts with no readable date are not deleted."""
+    today = today or datetime.now(TZ)
+    pins = set(str(x) for x in (pins or []))
+    rules = card_rules(qa, posts, today) if qa else {**base_rules(), **(rules or {})}
+    if qa == "" and rules.get("timeMode") == "years" and int(rules.get("yearFrom") or 0) == 0:
+        dated = [normalize_post(p, today)["daysAgo"] for p in posts]
+        dated = [d for d in dated if d >= 0]
+        if dated:
+            oldest = _year_of(max(dated), today)
+            rules["yearFrom"], rules["yearTo"] = oldest, oldest + 1
+    norm = [normalize_post(p, today) for p in posts]
+    by_id = {p["id"]: p for p in norm}
+    kept_threads = set()
+    if rules.get("keepThreads"):
+        for p in norm:
+            if p["id"] in pins or _keep_reason(p, rules, pins):
+                key = p.get("thread") or p.get("inReplyToId") or p["id"]
+                kept_threads.add(key)
+    out = {}
+    for p in norm:
+        if p["daysAgo"] < 0:
+            out[p["id"]] = {"kind": "none", "reason": "no readable date"}
+            continue
+        if p["id"] in pins:
+            out[p["id"]] = {"kind": "keep", "reason": "Kept by you"}
+            continue
+        parts = _scope_parts(p, rules, handle, today)
+        if not parts:
+            out[p["id"]] = {"kind": "none", "reason": ""}
+            continue
+        why = _keep_reason(p, rules, pins)
+        if why:
+            out[p["id"]] = {"kind": "keep", "reason": why}
+            continue
+        key = p.get("thread") or p.get("inReplyToId") or p["id"]
+        if rules.get("keepThreads") and key in kept_threads and p["id"] not in pins:
+            out[p["id"]] = {"kind": "keep", "reason": "part of a kept thread"}
+            continue
+        out[p["id"]] = {"kind": "delete", "reason": "Matches"}
+    no_date = sum(1 for p in norm if p["daysAgo"] < 0)
+    matched = [p for p in norm if out[p["id"]]["kind"] == "delete"]
+    kept = len(norm) - len(matched)
+    fast = sum(1 for p in matched if p["type"] != "repost")
+    delete_everything = qa == "everything" or (
+        rules.get("timeMode") == "all" and rules.get("posts") and rules.get("replies") and rules.get("selfReplies")
+        and rules.get("reposts") and rules.get("quotes") and rules.get("community") and not rules.get("deleteWords")
+        and not rules.get("deleteSlurs") and (rules.get("postsLikesMax") or -1) < 0 and (rules.get("repliesLikesMax") or -1) < 0
+    )
+    return {
+        "posts": norm, "verdicts": out, "rules": rules, "scanned": len(norm), "matched": len(matched),
+        "kept": kept, "no_date": no_date, "fast_count": fast,
+        "needs_typed_confirm": needs_typed_confirm(len(matched), len(norm), delete_everything),
+        "confirm_phrase": confirm_phrase(len(matched)) if needs_typed_confirm(len(matched), len(norm), delete_everything) else "",
+    }
+
+
+def verdict_totals(result, caps):
+    groups = [
+        ("Posts", lambda p: not p["community"] and p["type"] == "post"),
+        ("Replies", lambda p: not p["community"] and p["type"] == "reply"),
+        ("Reposts", lambda p: p["type"] == "repost"),
+        ("Quotes", lambda p: not p["community"] and p["type"] == "quote"),
+        ("Community", lambda p: p["community"]),
+    ]
+    rows = []
+    for label, pred in groups:
+        if label == "Quotes" and not caps.get("hasQuoteFields"):
+            rows.append(["Quotes", "n/a", "not available from this archive"])
+            continue
+        allp = [p for p in result["posts"] if pred(p)]
+        dele = [p for p in allp if result["verdicts"][p["id"]]["kind"] == "delete"]
+        rows.append([label, str(len(dele)), str(len(allp) - len(dele))])
+    return {
+        "scanned": result["scanned"], "matched": result["matched"], "kept": result["kept"],
+        "noDate": result["no_date"], "fastCount": result["fast_count"], "byType": rows,
+    }
+
+
+def _worst_key(p):
+    text = p.get("text") or ""
+    leak = bool(SSN_RE.search(text) or PHONE_RE.search(text) or EMAIL_RE.search(text))
+    slur = bool(find_words(text, SLURS))
+    strong = bool(find_words(text, STRONG))
+    tier = 0 if leak else 1 if slur else 2 if strong else 4
+    days = p.get("daysAgo") if p.get("daysAgo", -1) >= 0 else -1
+    return (tier, p.get("likes") or 0, -days)
+
+
+def _compact_post(p, text_cap):
+    text = mask_ssn(p.get("text") or "")
+    if len(text) > text_cap:
+        text = text[:text_cap].rstrip() + "…"
+    row = {"id": p["id"], "daysAgo": p["daysAgo"], "type": p["type"], "likes": p["likes"], "text": text, "summary": mask_ssn((p.get("summary") or text)[:60])}
+    if p.get("selfReply"):
+        row["selfReply"] = True
+    if p.get("replyTo"):
+        row["replyTo"] = p["replyTo"]
+    if p.get("community"):
+        row["community"] = True
+    if p.get("media"):
+        row["media"] = True
+    if p.get("repostOf"):
+        row["repostOf"] = p["repostOf"]
+    return row
+
+
+def _read_posts(path):
+    posts = []
+    with open(path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                posts.append(json.loads(line))
+    return posts
+
+
+def load_rules_file(path, qa, posts, today):
+    if qa:
+        return card_rules(qa, posts, today), qa
+    if not path:
+        return base_rules(), ""
+    raw = json.load(open(path, encoding="utf-8"))
+    qa_in = raw.get("qa") or ""
+    if qa_in:
+        return card_rules(qa_in, posts, today), qa_in
+    return {**base_rules(), **raw.get("rules", raw)}, ""
+
+
+def page_pool_payloads(posts, rules, qa="", handle="", today=None, bundle_dir=BUNDLE_DIR):
+    """Edits that load a capped sample plus full-archive totals. Each edit is <= PAGE_POOL_MAX bytes."""
+    today = today or datetime.now(TZ)
+    result = compute_verdicts(posts, rules if not qa else None, qa=qa, today=today, handle=handle)
+    caps = {
+        "hasPinFlag": any(p.get("profilePin") for p in result["posts"]),
+        "hasReplyCount": any(p.get("replies") for p in result["posts"]),
+        "hasQuoteFields": any(p["type"] == "quote" for p in result["posts"]),
+    }
+    totals = verdict_totals(result, caps)
+    doomed = [p for p in result["posts"] if result["verdicts"][p["id"]]["kind"] == "delete"]
+    doomed.sort(key=_worst_key)
+    src = open(_page_paths(bundle_dir)[0], encoding="utf-8").read()
+    count = sum(1 for p in result["posts"] if not p["community"])
+    sample_n, text_cap = PAGE_SAMPLE_CAP, 80
+    edits = []
+    while True:
+        sample = [_compact_post(p, text_cap) for p in doomed[:sample_n]]
+        edits = [
+            _const_edit(src, "ARCHIVE_CAPS", _ts_value(caps)),
+            _const_edit(src, "ARCHIVE_POST_COUNT", str(count)),
+            _const_edit(src, "LOADED_TOTALS", _ts_value(totals)),
+            _const_edit(src, "POOL", _ts_value(sample)),
+        ]
+        sizes = [len(json.dumps(e, ensure_ascii=False).encode()) for e in edits]
+        if max(sizes) <= PAGE_POOL_MAX or (text_cap <= 20 and sample_n <= 5):
+            break
+        if text_cap > 20:
+            text_cap = 20 if text_cap > 40 else text_cap - 20
+        else:
+            sample_n = max(5, sample_n // 2)
+    return {"edits": edits, "bytes": [len(json.dumps(e, ensure_ascii=False).encode()) for e in edits],
+            "max_bytes": PAGE_POOL_MAX, "sample": min(sample_n, len(doomed)), "totals": totals,
+            "needs_typed_confirm": result["needs_typed_confirm"], "confirm_phrase": result["confirm_phrase"]}
+
+
+def doomed_rows(posts, rules, qa="", handle="", today=None):
+    today = today or datetime.now(TZ)
+    result = compute_verdicts(posts, None if qa else rules, qa=qa, today=today, handle=handle)
+    h = _handle(handle)
+    rows = []
+    for p in result["posts"]:
+        if result["verdicts"][p["id"]]["kind"] != "delete":
+            continue
+        url = f"https://x.com/{h}/status/{p['id']}" if h else f"https://x.com/i/web/status/{p['id']}"
+        rows.append({
+            "id": p["id"], "status_url": url, "type": p["type"], "likes": p["likes"],
+            "about": p.get("summary") or "", "text": p.get("text") or "",
+            "matched_rule": result["verdicts"][p["id"]]["reason"],
+        })
+    return rows, result
+
+
+def unwrap_export_id(cell):
+    s = (cell or "").strip()
+    if s.startswith("'"):
+        s = s[1:]
+    m = re.fullmatch(r'="(.*)"', s)
+    if m:
+        return m.group(1)
+    if len(s) >= 2 and s[0] == '"' and s[-1] == '"':
+        return s[1:-1]
+    return s
+
+
+def export_check(path):
+    """Doomed export: row count, ids exact, ids unwrapped from =\"...\"."""
+    with open(path, newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+    ids = []
+    for row in rows:
+        raw = row.get("id") or ""
+        uid = unwrap_export_id(raw)
+        if not re.fullmatch(r"\d{1,20}", uid):
+            return {"ok": False, "rows": len(rows), "ids": ids, "error": f"bad id {raw!r}"}
+        ids.append(uid)
+        for key, val in row.items():
+            if key == "id" or not val:
+                continue
+            if SSN_RE.search(val):
+                return {"ok": False, "rows": len(rows), "ids": ids, "error": f"unmasked number in {key}"}
+    return {"ok": True, "rows": len(rows), "ids": ids}
+
+
 # ---------------------------------------------------------------- CLI
 def _post_row(p):
     r = dict(p)
@@ -1048,10 +1531,39 @@ def _cli(argv=None):
     ps.add_argument("--start", choices=["signin", "archive", "pick", "review", "run"], help="step 1 only: START_STEP already set")
     ps.add_argument("--handle", default="", help="step 1 only: SIGNED_IN_HANDLE already filled")
     ps.add_argument("--phase", choices=["choose", "grabbing", "waiting", "ready", "manual"], help="step 1 only: START_PHASE already set")
-    pstate = sub.add_parser("page-state", help="exact START_STEP, SIGNED_IN_HANDLE, and START_PHASE edits")
+    pstate = sub.add_parser("page-state", help="exact boot-line and loaded-data edits")
     pstate.add_argument("--start", choices=["signin", "archive", "pick", "review", "run"])
+    pstate.add_argument("--run", choices=["idle", "running", "done"])
     pstate.add_argument("--handle", default="")
     pstate.add_argument("--phase", choices=["choose", "grabbing", "waiting", "ready", "manual"])
+    pstate.add_argument("--rules", help="JSON object merged over BASE for LOADED_RULES")
+    pstate.add_argument("--qa", choices=["", *QUICK_IDS])
+    pstate.add_argument("--kept", default="", help="comma-separated kept post ids")
+    pstate.add_argument("--lane", choices=["free", "fast"])
+    pstate.add_argument("--pace", choices=["steady", "faster", "fastest"])
+    pstate.add_argument("--cooling", choices=["on", "off"])
+    pstate.add_argument("--failed", help='JSON array of {"id","reason"}')
+    pstate.add_argument("--deleted", type=int)
+    pstate.add_argument("--verified", type=int)
+    pstate.add_argument("--left", type=int)
+    pstate.add_argument("--unchecked", type=int)
+    pstate.add_argument("--likes", type=int)
+    pstate.add_argument("--totals", help="JSON LoadedTotals object")
+    for name, help_ in (
+        ("verdict", "full-archive counts using the Page's rules"),
+        ("page-pool", "compact Page edits, each payload <= 20000 bytes"),
+        ("export", "doomed-post CSV with masked free text"),
+    ):
+        sp = sub.add_parser(name, help=help_)
+        sp.add_argument("posts")
+        sp.add_argument("--rules")
+        sp.add_argument("--qa", choices=list(QUICK_IDS))
+        sp.add_argument("--handle", default="")
+        sp.add_argument("--pins", default="")
+        if name == "export":
+            sp.add_argument("--out", required=True)
+    chk = sub.add_parser("export-check", help="count doomed-export rows and unwrap ids")
+    chk.add_argument("file")
     pv = sub.add_parser("page-verify", help="check a ReadCanvas result")
     pv.add_argument("file")
     pv.add_argument("--after", type=int, help="check the state after this build step instead of the finished page")
@@ -1082,9 +1594,45 @@ def _cli(argv=None):
             print(f"the plan has {nsteps} steps"); return 1
         sys.stdout.write(page_show(a.show, a.part, start=a.start, handle=a.handle or None, phase=a.phase)); return 0
     if a.cmd == "page-state":
-        if not a.start and not a.handle and not a.phase:
-            print("page-state needs --start, --handle, or --phase"); return 1
-        print(json.dumps(page_state_edits(a.start, a.handle or None, a.phase), ensure_ascii=False)); return 0
+        rules = json.loads(a.rules) if a.rules else None
+        failed = json.loads(a.failed) if a.failed else None
+        totals = json.loads(a.totals) if a.totals else None
+        kept = [x for x in a.kept.split(",") if x] if a.kept else None
+        if not any([a.start, a.handle, a.phase, a.run, rules, a.qa is not None, kept, a.lane, a.pace, a.cooling, failed, a.deleted is not None, a.verified is not None, a.left is not None, a.unchecked is not None, a.likes is not None, totals]):
+            print("page-state needs a flag"); return 1
+        edits = page_state_edits(
+            a.start, a.handle or None, a.phase, run=a.run, rules=rules, qa=a.qa, kept=kept,
+            lane=a.lane, pace=a.pace, cooling=(a.cooling == "on") if a.cooling else None,
+            failed=failed, deleted=a.deleted, verified=a.verified, left=a.left,
+            unchecked=a.unchecked, likes=a.likes, totals=totals,
+        )
+        print(json.dumps(edits, ensure_ascii=False)); return 0
+    if a.cmd in ("verdict", "page-pool", "export"):
+        posts = _read_posts(a.posts)
+        today = datetime.now(TZ)
+        rules, qa = load_rules_file(a.rules, a.qa, posts, today)
+        pins = [x for x in (a.pins or "").split(",") if x]
+        if a.cmd == "verdict":
+            result = compute_verdicts(posts, rules, pins=pins, qa=qa, today=today, handle=a.handle)
+            caps = {"hasQuoteFields": any(p["type"] == "quote" for p in result["posts"]), "hasPinFlag": False, "hasReplyCount": False}
+            print(json.dumps({**verdict_totals(result, caps), "needs_typed_confirm": result["needs_typed_confirm"], "confirm_phrase": result["confirm_phrase"]}, ensure_ascii=False))
+            return 0
+        if a.cmd == "page-pool":
+            payload = page_pool_payloads(posts, rules, qa=qa, handle=a.handle, today=today)
+            if any(n > PAGE_POOL_MAX for n in payload["bytes"]):
+                print(json.dumps({"ok": False, "error": "payload over 20000 bytes", "bytes": payload["bytes"]}))
+                return 1
+            print(json.dumps(payload, ensure_ascii=False))
+            return 0
+        rows, result = doomed_rows(posts, rules, qa=qa, handle=a.handle, today=today)
+        fields = ["id", "status_url", "type", "likes", "about", "text", "matched_rule"]
+        write_export_csv(a.out, rows, fields)
+        print(json.dumps({"rows": len(rows), "out": a.out, "needs_typed_confirm": result["needs_typed_confirm"]}))
+        return 0
+    if a.cmd == "export-check":
+        report = export_check(a.file)
+        print(json.dumps(report, ensure_ascii=False))
+        return 0 if report["ok"] else 1
     if a.cmd == "page-verify":
         ok, detail = page_verify(a.file, a.after)
         print(f"page-verify ok {detail}" if ok else f"page-verify MISMATCH {detail}"); return 0 if ok else 1
@@ -1145,9 +1693,69 @@ def _cli(argv=None):
         assert edits[2]["old_string"] == 'const START_PHASE:HomePhase="choose";'
         assert edits[2]["new_string"] == 'const START_PHASE:HomePhase="grabbing";'
         man = json.load(open(os.path.join(BUNDLE_DIR, "manifest.json"), encoding="utf-8"))
+        listed = {item["path"] for item in man["files"]}
+        for rel in man["page_build"]["steps"]:
+            assert rel in listed, rel
+            assert os.path.isfile(os.path.join(BUNDLE_DIR, rel)), rel
         for item in man["files"]:
             data = open(os.path.join(BUNDLE_DIR, item["path"]), "rb").read()
             assert hashlib.sha256(data).hexdigest() == item["sha256"] and len(data) == item["bytes"], item["path"]
+        assert "daysAgo<0" in base and "oldestYear+1" in base
+        assert "https://x.com/i/web/status/" in base and "Button didn't respond" not in base
+        assert "2023-01-01" not in base and "2026-10-15" not in base and "One click" not in base
+        assert "$8" not in base and "$99" not in base and "selfReplies:false" in base
+        endings = re.search(r"const WORD_ENDINGS(?::string\[\])?=\[(.*?)\];", base)
+        slurs = re.search(r"const SLUR_WORDS(?::string\[\])?=\[(.*?)\];", base)
+        assert endings and json.loads("[" + endings.group(1) + "]") == SUFFIXES
+        assert slurs and json.loads("[" + slurs.group(1) + "]") == SLURS
+        assert "head" in SUFFIXES and "heads" in SUFFIXES and "face" in SUFFIXES
+        qc = json.load(open(os.path.join(DATA_DIR, "quick-cleanups.json"), encoding="utf-8"))
+        replies = next(c for c in qc["quick_cleanups"] if c["id"] == "all_replies")
+        era = next(c for c in qc["quick_cleanups"] if c["id"] == "past_era")
+        assert replies["rule"]["types"] == ["reply"] and "self_reply" not in replies["rule"]["types"]
+        assert era["rule"]["year_to"] == "oldest+1" and qc["typed_confirm"]["delete_everything"] is True
+        fixed = datetime(2026, 11, 24, tzinfo=TZ)
+        sample = [
+            {"id": "10", "type": "post", "text": "hello", "favorite_count": 1, "created_at": "2020-01-01T00:00:00+00:00"},
+            {"id": "11", "type": "reply", "text": "to them", "favorite_count": 0, "created_at": "2020-06-01T00:00:00+00:00", "in_reply_to_screen_name": "other"},
+            {"id": "12", "type": "self_reply", "text": "own thread", "favorite_count": 0, "created_at": "2020-06-02T00:00:00+00:00"},
+            {"id": "13", "type": "post", "text": "ssn 123-45-6789", "favorite_count": 0, "date_note": "date unreadable"},
+        ]
+        replied = compute_verdicts(sample, qa="replies", today=fixed, handle="me")
+        assert replied["verdicts"]["11"]["kind"] == "delete" and replied["verdicts"]["12"]["kind"] != "delete"
+        assert replied["verdicts"]["10"]["kind"] != "delete"
+        wiped = compute_verdicts(sample, qa="everything", today=fixed)
+        assert wiped["verdicts"]["13"]["kind"] == "none" and wiped["no_date"] == 1 and wiped["needs_typed_confirm"] is True
+        assert wiped["verdicts"]["10"]["kind"] == "delete" and wiped["verdicts"]["12"]["kind"] == "delete"
+        era_v = compute_verdicts(sample, qa="era", today=fixed)
+        assert era_v["rules"]["yearFrom"] == 2020 and era_v["rules"]["yearTo"] == 2021
+        assert era_v["verdicts"]["13"]["kind"] == "none"
+        assert needs_typed_confirm(3, 100, True) and not needs_typed_confirm(3, 100, False)
+        loaded = _set_const_initializer(base, "LOADED_DELETED", "4")
+        loaded = _set_const_initializer(loaded, "POOL", "[{id:\"1\",daysAgo:-1,type:\"post\",likes:0,replies:0,text:\"x\",summary:\"x\"}]")
+        assert normalize_page_boot(loaded) == base
+        run_edit = page_state_edits(run="running")
+        assert run_edit[0]["name"] == "START_RUN" and run_edit[0]["new_string"].endswith('"running";')
+        import tempfile
+        tmp = tempfile.mkdtemp()
+        open(os.path.join(tmp, "tweets.js"), "w", encoding="utf-8").write(
+            'window.YTD.tweets.part0 = ['
+            '{"tweet":{"id_str":"100","created_at":"Wed Jan 01 00:00:00 +0000 2020","full_text":"ok","favorite_count":0}},'
+            '{"tweet":{"id_str":"bad id","created_at":"Wed Jan 01 00:00:00 +0000 2020","full_text":"nope","favorite_count":0}}'
+            ']'
+        )
+        _posts, rep = parse_archive([tmp], "1", today=fixed, manifest_count=2)
+        assert rep["count_mismatch"] is False and rep["skipped_counted"] == 1 and rep["ready_for_review"] is True
+        _posts, rep = parse_archive([tmp], "1", today=fixed, manifest_count=3)
+        assert rep["count_mismatch"] is True and rep["ready_for_review"] is False
+        csv_path = os.path.join(tmp, "doomed.csv")
+        write_export_csv(csv_path, [{"id": "1234567890123456789", "status_url": "https://x.com/i/web/status/1234567890123456789", "type": "post", "likes": 0, "about": "ssn 123-45-6789", "text": "fine", "matched_rule": "Matches"}], ["id", "status_url", "type", "likes", "about", "text", "matched_rule"])
+        checked = export_check(csv_path)
+        assert checked["ok"] and checked["rows"] == 1 and checked["ids"] == ["1234567890123456789"]
+        raw_csv = open(csv_path, encoding="utf-8").read()
+        assert "123-45-6789" not in raw_csv and "***-**-6789" in raw_csv
+        pool = page_pool_payloads(sample, None, qa="everything", today=fixed)
+        assert pool["bytes"] and max(pool["bytes"]) <= PAGE_POOL_MAX and pool["totals"]["noDate"] == 1
         if not a.no_typecheck:
             tcode, tout = page_typecheck()
             assert tcode == 0, tout
@@ -1173,7 +1781,9 @@ def _cli(argv=None):
     with open(os.path.join(a.out, "import_meta.json"), "w", encoding="utf-8") as f:
         json.dump(meta, f, ensure_ascii=False, indent=1, default=str)
     print(json.dumps({"total": len(posts), "counts_by_type": counts, "ready_for_review": report["ready_for_review"],
-                      "partial": report["partial"], "count_mismatch": report["count_mismatch"]}))
+                      "partial": report["partial"], "count_mismatch": report["count_mismatch"],
+                      "skipped": report.get("skipped_counted", 0), "unreadable": report.get("unreadable", 0),
+                      "accounted": report.get("accounted")}))
     return 0
 
 

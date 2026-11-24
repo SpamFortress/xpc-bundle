@@ -38,11 +38,10 @@
   {
    "id": "all_replies",
    "title": "Delete all my replies",
-   "detail": "Removes your replies only. Your own posts, quote posts and reposts stay.",
+   "detail": "Replies to other people only. Your own threads, posts, quote posts and reposts stay.",
    "rule": {
     "types": [
-     "reply",
-     "self_reply"
+     "reply"
     ]
    }
   },
@@ -92,6 +91,7 @@
  "typed_confirm": {
   "share_over": 0.5,
   "count_at_least": 10000,
+  "delete_everything": true,
   "phrase": "DELETE {n} POSTS"
  },
  "proof_pass_days": [

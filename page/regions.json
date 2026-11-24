@@ -2,8 +2,8 @@
  "source": "page.min.tsx",
  "regions": [
   {
-   "start": 394,
-   "end": 504,
+   "start": 383,
+   "end": 493,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -11,8 +11,8 @@
    "why": "Speed,Lane,FastSetup"
   },
   {
-   "start": 504,
-   "end": 539,
+   "start": 493,
+   "end": 528,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -20,8 +20,8 @@
    "why": "Order"
   },
   {
-   "start": 674,
-   "end": 833,
+   "start": 663,
+   "end": 822,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -29,8 +29,8 @@
    "why": "QAId,ListView,GroupId"
   },
   {
-   "start": 1063,
-   "end": 1121,
+   "start": 1052,
+   "end": 1110,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -38,8 +38,8 @@
    "why": "const SHOW_SIGNIN_DETAILS=true;,const SHOW_WHERE_DATA=true;"
   },
   {
-   "start": 1121,
-   "end": 1146,
+   "start": 1110,
+   "end": 1135,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -47,8 +47,8 @@
    "why": "const SHOW_NEXT_BAR=true;"
   },
   {
-   "start": 1185,
-   "end": 1331,
+   "start": 1174,
+   "end": 1320,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -56,8 +56,8 @@
    "why": "const PHONE_FORTRESS_URL:string=\"https:/,const EMAIL_FORTRESS_URL:string=\"https:/"
   },
   {
-   "start": 2174,
-   "end": 2334,
+   "start": 2222,
+   "end": 2382,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -65,8 +65,8 @@
    "why": "Verdict,const TODAY=new Date();,const ARCHIVE_CAPS={hasPinFlag:false,has"
   },
   {
-   "start": 2334,
-   "end": 2402,
+   "start": 2382,
+   "end": 2450,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -74,8 +74,8 @@
    "why": "const ARCHIVE_POST_COUNT=0;,const PROFILE_POST_COUNT_LABEL:string=\"\""
   },
   {
-   "start": 2402,
-   "end": 2462,
+   "start": 2450,
+   "end": 2510,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -83,8 +83,8 @@
    "why": "hasVisual"
   },
   {
-   "start": 2463,
-   "end": 2524,
+   "start": 2511,
+   "end": 2572,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -92,8 +92,8 @@
    "why": "isOwnPost"
   },
   {
-   "start": 2525,
-   "end": 2643,
+   "start": 2573,
+   "end": 2691,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -101,8 +101,8 @@
    "why": "effectiveType"
   },
   {
-   "start": 2644,
-   "end": 2994,
+   "start": 2692,
+   "end": 3042,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -110,8 +110,8 @@
    "why": "verdict helper threadGroupKey"
   },
   {
-   "start": 2995,
-   "end": 3117,
+   "start": 3043,
+   "end": 3177,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -119,8 +119,8 @@
    "why": "yearOf"
   },
   {
-   "start": 3118,
-   "end": 3288,
+   "start": 3178,
+   "end": 3374,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -128,8 +128,8 @@
    "why": "monthYear"
   },
   {
-   "start": 3289,
-   "end": 3448,
+   "start": 3375,
+   "end": 3560,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -137,8 +137,8 @@
    "why": "ageLabel"
   },
   {
-   "start": 3449,
-   "end": 3646,
+   "start": 3561,
+   "end": 3758,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -146,8 +146,8 @@
    "why": "spanLabel"
   },
   {
-   "start": 3647,
-   "end": 3883,
+   "start": 3759,
+   "end": 3995,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -155,8 +155,8 @@
    "why": "const AGE_DAY_OPTIONS=[30,90,180,365,730,monthYearFromDays"
   },
   {
-   "start": 3884,
-   "end": 3969,
+   "start": 3996,
+   "end": 4081,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -164,8 +164,8 @@
    "why": "beforeCutoff"
   },
   {
-   "start": 3970,
-   "end": 4053,
+   "start": 4082,
+   "end": 4165,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -173,8 +173,8 @@
    "why": "sinceCutoff"
   },
   {
-   "start": 4054,
-   "end": 4233,
+   "start": 4166,
+   "end": 4345,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -182,8 +182,8 @@
    "why": "ownLikesCap"
   },
   {
-   "start": 4234,
-   "end": 4462,
+   "start": 4346,
+   "end": 4574,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -191,8 +191,8 @@
    "why": "daysSinceDate"
   },
   {
-   "start": 4463,
-   "end": 4717,
+   "start": 4575,
+   "end": 4829,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -200,8 +200,8 @@
    "why": "formatIsoDate"
   },
   {
-   "start": 4718,
-   "end": 4883,
+   "start": 4830,
+   "end": 4995,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -209,8 +209,8 @@
    "why": "finishDate"
   },
   {
-   "start": 4884,
-   "end": 5010,
+   "start": 4996,
+   "end": 5122,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -218,8 +218,8 @@
    "why": "clampWords"
   },
   {
-   "start": 5011,
-   "end": 5253,
+   "start": 5123,
+   "end": 5365,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -227,17 +227,17 @@
    "why": "downloadText"
   },
   {
-   "start": 5254,
-   "end": 5867,
+   "start": 5366,
+   "end": 6070,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
    "tail": "",
-   "why": "const SWEAR_STRONG=[\"shit\",\"fuck\",\"bitch,const SLUR_LIST_SIZE=12;,const SWEAR_MILD=[\"wtf\",\"damn\",\"hell\",\"g,const SWEAR_PRESET=[...SWEAR_STRONG,...S,const ENGAGE_PRESETS=[0,10,100,1000,1000,const LIKES_QUICK_PRESETS=[0,5,10,25,50,,LikesTarget,maskSsn"
+   "why": "const SWEAR_STRONG=[\"fuck\",\"shit\",\"bitch,const SWEAR_MILD=[\"wtf\",\"damn\",\"hell\",\"g,const SWEAR_PRESET=[...SWEAR_STRONG,...S,const SLUR_WORDS=[\"nigger\",\"nigga\",\"fagg,const ENGAGE_PRESETS=[0,10,100,1000,1000,const LIKES_QUICK_PRESETS=[0,5,10,25,50,,LikesTarget,maskSsn"
   },
   {
-   "start": 5868,
-   "end": 5955,
+   "start": 6071,
+   "end": 6158,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -245,8 +245,8 @@
    "why": "escapeRegExp"
   },
   {
-   "start": 5956,
-   "end": 6268,
+   "start": 6159,
+   "end": 6493,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -254,8 +254,8 @@
    "why": "const LEET:Record<string,string>={\"0\":\"o,const WORD_ENDINGS=[\"\",\"s\",\"es\",\"ed\",\"er,const NAME_LIKE=[\"dick\",\"dyke\",\"coon\",\"c,collapseRepeats"
   },
   {
-   "start": 6269,
-   "end": 6705,
+   "start": 6494,
+   "end": 6930,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -263,8 +263,8 @@
    "why": "normToken"
   },
   {
-   "start": 6706,
-   "end": 7852,
+   "start": 6931,
+   "end": 8077,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -272,8 +272,8 @@
    "why": "wordHit"
   },
   {
-   "start": 7853,
-   "end": 8171,
+   "start": 8078,
+   "end": 8396,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -281,8 +281,8 @@
    "why": "yearOptionList"
   },
   {
-   "start": 8172,
-   "end": 8255,
+   "start": 8397,
+   "end": 8480,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -290,8 +290,8 @@
    "why": "handleOf"
   },
   {
-   "start": 8256,
-   "end": 8835,
+   "start": 8481,
+   "end": 9060,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -299,8 +299,8 @@
    "why": "topicTokens"
   },
   {
-   "start": 8836,
-   "end": 9108,
+   "start": 9061,
+   "end": 9333,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -308,8 +308,8 @@
    "why": "topicHit"
   },
   {
-   "start": 9109,
-   "end": 9241,
+   "start": 9334,
+   "end": 9466,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -317,8 +317,8 @@
    "why": "hasTypeFilter"
   },
   {
-   "start": 9242,
-   "end": 9346,
+   "start": 9467,
+   "end": 9571,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -326,8 +326,8 @@
    "why": "hasMediaFilter"
   },
   {
-   "start": 9347,
-   "end": 9526,
+   "start": 9572,
+   "end": 9782,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -335,8 +335,8 @@
    "why": "allTypesOn"
   },
   {
-   "start": 9527,
-   "end": 9820,
+   "start": 9783,
+   "end": 10091,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -344,8 +344,8 @@
    "why": "hasDeleteScope"
   },
   {
-   "start": 9821,
-   "end": 10119,
+   "start": 10092,
+   "end": 10390,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -353,8 +353,8 @@
    "why": "hasActiveRules"
   },
   {
-   "start": 10120,
-   "end": 10233,
+   "start": 10391,
+   "end": 10504,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -362,8 +362,8 @@
    "why": "dailyCap"
   },
   {
-   "start": 10234,
-   "end": 10290,
+   "start": 10505,
+   "end": 10561,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -371,8 +371,35 @@
    "why": "usd"
   },
   {
-   "start": 10755,
-   "end": 12381,
+   "start": 10618,
+   "end": 10675,
+   "kind": "stmt",
+   "phase": "A",
+   "stub": "",
+   "tail": "",
+   "why": "const LOADED_QA:QAId|\"\"=\"\";,const LOADED_KEPT:string[]=[];"
+  },
+  {
+   "start": 10675,
+   "end": 10773,
+   "kind": "stmt",
+   "phase": "B",
+   "stub": "",
+   "tail": "",
+   "why": "const LOADED_LANE:Lane|\"\"=\"\";,const LOADED_PACE:Speed|\"\"=\"\";,const LOADED_COOLING:boolean|null=null;"
+  },
+  {
+   "start": 10829,
+   "end": 10942,
+   "kind": "stmt",
+   "phase": "B",
+   "stub": "",
+   "tail": "",
+   "why": "const LOADED_DELETED=0;,const LOADED_VERIFIED=0;,const LOADED_LEFT=0;,const LOADED_UNCHECKED=0;,const LOADED_LIKES=0;"
+  },
+  {
+   "start": 11594,
+   "end": 13244,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -380,8 +407,8 @@
    "why": "const QUICK:Array<{id:QAId;title:string;,mergeQA"
   },
   {
-   "start": 12382,
-   "end": 12479,
+   "start": 13245,
+   "end": 13342,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -389,8 +416,26 @@
    "why": "keepWordHit"
   },
   {
-   "start": 12480,
-   "end": 15175,
+   "start": 13343,
+   "end": 13522,
+   "kind": "stmt",
+   "phase": "A",
+   "stub": "",
+   "tail": "",
+   "why": "isSelfReply"
+  },
+  {
+   "start": 13523,
+   "end": 13674,
+   "kind": "stmt",
+   "phase": "B",
+   "stub": "",
+   "tail": "",
+   "why": "statusUrl"
+  },
+  {
+   "start": 13675,
+   "end": 16529,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -398,8 +443,8 @@
    "why": "verdict helper scopeParts"
   },
   {
-   "start": 15176,
-   "end": 15818,
+   "start": 16530,
+   "end": 17172,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -407,8 +452,8 @@
    "why": "verdict helper explicitKeep"
   },
   {
-   "start": 15819,
-   "end": 16070,
+   "start": 17173,
+   "end": 17424,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -416,8 +461,8 @@
    "why": "verdict helper isStrongKeep"
   },
   {
-   "start": 16071,
-   "end": 17000,
+   "start": 17425,
+   "end": 18354,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -425,8 +470,8 @@
    "why": "verdict helper computeVerdicts"
   },
   {
-   "start": 17718,
-   "end": 17791,
+   "start": 19061,
+   "end": 19134,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -434,8 +479,8 @@
    "why": "formatEngage"
   },
   {
-   "start": 17792,
-   "end": 17899,
+   "start": 19135,
+   "end": 19242,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -443,8 +488,8 @@
    "why": "likesCapLabel"
   },
   {
-   "start": 17900,
-   "end": 20985,
+   "start": 19243,
+   "end": 22328,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -452,17 +497,8 @@
    "why": "LikesCapPicker"
   },
   {
-   "start": 20986,
-   "end": 23730,
-   "kind": "stmt",
-   "phase": "B",
-   "stub": "",
-   "tail": "",
-   "why": "EngageControl"
-  },
-  {
-   "start": 23731,
-   "end": 24757,
+   "start": 22329,
+   "end": 23355,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -470,80 +506,89 @@
    "why": "HighlightedText"
   },
   {
-   "start": 24895,
-   "end": 25063,
-   "kind": "stmt",
-   "phase": "B",
-   "stub": "",
-   "tail": "",
-   "why": "const _s1:CSSProperties={fontSize:13,fon,const _s2:CSSProperties={fontSize:16,fon"
-  },
-  {
-   "start": 25063,
-   "end": 25237,
+   "start": 23493,
+   "end": 23667,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
    "tail": "",
-   "why": "const _s3:CSSProperties={fontSize:12.5,c,const _s4:CSSProperties={fontSize:13,col"
+   "why": "const _s1:CSSProperties={fontSize:12.5,c,const _s2:CSSProperties={fontSize:13,col"
   },
   {
-   "start": 25237,
-   "end": 25317,
+   "start": 23667,
+   "end": 23747,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
    "tail": "",
-   "why": "const _s5:CSSProperties={fontSize:13,col"
+   "why": "const _s3:CSSProperties={fontSize:13,col"
   },
   {
-   "start": 25317,
-   "end": 25579,
+   "start": 23747,
+   "end": 23842,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
    "tail": "",
-   "why": "const _s6:CSSProperties={fontSize:12.5,c,const _s7:CSSProperties={display:\"flex\",,const _s8:CSSProperties={fontSize:12.5,c"
+   "why": "const _s4:CSSProperties={fontSize:12.5,c"
   },
   {
-   "start": 25714,
-   "end": 25780,
-   "kind": "stmt",
-   "phase": "A",
-   "stub": "",
-   "tail": "",
-   "why": "const _s11:CSSProperties={fontSize:14,co"
-  },
-  {
-   "start": 25780,
-   "end": 25888,
+   "start": 23842,
+   "end": 23920,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
    "tail": "",
-   "why": "const _s12:CSSProperties={fontSize:13,co,const _s13:CSSProperties={marginBottom:6"
+   "why": "const _s5:CSSProperties={fontSize:16,fon"
   },
   {
-   "start": 26146,
-   "end": 26434,
+   "start": 23920,
+   "end": 24087,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
    "tail": "",
-   "why": "const[activeQA,setActiveQA]=useState<QAI,const[openGroups,setOpenGroups]=useState,const[pins,setPins]=useState<string[]>([,const[search,setSearch]=useState(\"\");,const[listView,setListView]=useState<Lis,const[order,setOrder]=useState<Order>(\"o"
+   "why": "const _s6:CSSProperties={display:\"flex\",,const _s7:CSSProperties={fontSize:12.5,c"
   },
   {
-   "start": 26434,
-   "end": 26583,
+   "start": 24157,
+   "end": 24222,
+   "kind": "stmt",
+   "phase": "A",
+   "stub": "",
+   "tail": "",
+   "why": "const _s9:CSSProperties={fontSize:14,col"
+  },
+  {
+   "start": 24222,
+   "end": 24330,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
    "tail": "",
-   "why": "const[speed,setSpeed]=useState<Speed>(\"s,const[lane,setLane]=useState<Lane>(\"free,const[fastSetup,setFastSetup]=useState<F"
+   "why": "const _s10:CSSProperties={fontSize:13,co,const _s11:CSSProperties={marginBottom:6"
   },
   {
-   "start": 26583,
-   "end": 26814,
+   "start": 24602,
+   "end": 24906,
+   "kind": "stmt",
+   "phase": "A",
+   "stub": "",
+   "tail": "",
+   "why": "const[activeQA,setActiveQA]=useState<QAI,const[openGroups,setOpenGroups]=useState,const[pins,setPins]=useState<string[]>(L,const[search,setSearch]=useState(\"\");,const[listView,setListView]=useState<Lis,const[order,setOrder]=useState<Order>(\"o"
+  },
+  {
+   "start": 24906,
+   "end": 25081,
+   "kind": "stmt",
+   "phase": "B",
+   "stub": "",
+   "tail": "",
+   "why": "const[speed,setSpeed]=useState<Speed>(LO,const[lane,setLane]=useState<Lane>(LOADE,const[fastSetup,setFastSetup]=useState<F"
+  },
+  {
+   "start": 25081,
+   "end": 25312,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -551,8 +596,8 @@
    "why": "const[keepDraft,setKeepDraft]=useState(\",const[deleteDraft,setDeleteDraft]=useSta,const[pinDraft,setPinDraft]=useState(\"\"),const[keepFind,setKeepFind]=useState(\"\"),const[ignoredWords,setIgnoredWords]=useS"
   },
   {
-   "start": 26814,
-   "end": 26861,
+   "start": 25312,
+   "end": 25359,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -560,8 +605,8 @@
    "why": "const[wipeConfirm,setWipeConfirm]=useSta"
   },
   {
-   "start": 26861,
-   "end": 26964,
+   "start": 25359,
+   "end": 25462,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -569,17 +614,17 @@
    "why": "const[showFoundSwears,setShowFoundSwears,const[replyQuery,setReplyQuery]=useState"
   },
   {
-   "start": 26964,
-   "end": 27304,
+   "start": 25462,
+   "end": 25696,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
    "tail": "",
-   "why": "const[kitGoogleRecheck,setKitGoogleReche,const[kitWaybackRecheck,setKitWaybackRec,const[exportFmt,setExportFmt]=useState(\",const[exportNote,setExportNote]=useState,const[coolOn,setCoolOn]=useState(false);,const[likesOn,setLikesOn]=useState(false,const[spendLimit,setSpendLimit]=useState"
+   "why": "const[exportFmt,setExportFmt]=useState(\",const[exportNote,setExportNote]=useState,const[coolOn,setCoolOn]=useState(LOADED_,const[likesOn,setLikesOn]=useState(false,const[spendLimit,setSpendLimit]=useState"
   },
   {
-   "start": 27304,
-   "end": 27367,
+   "start": 25696,
+   "end": 25759,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -587,17 +632,17 @@
    "why": "const[likesFocus,setLikesFocus]=useState"
   },
   {
-   "start": 27427,
-   "end": 27601,
+   "start": 25819,
+   "end": 25866,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
    "tail": "",
-   "why": "const[maintOn,setMaintOn]=useState(false,const[autoCont,setAutoCont]=useState(fal,const[rollWin,setRollWin]=useState(\"90\"),const[showFailed,setShowFailed]=useState"
+   "why": "const[showFailed,setShowFailed]=useState"
   },
   {
-   "start": 27649,
-   "end": 27703,
+   "start": 25914,
+   "end": 25968,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -605,8 +650,8 @@
    "why": "const[kitDisconnect,setKitDisconnect]=us"
   },
   {
-   "start": 27842,
-   "end": 28059,
+   "start": 26054,
+   "end": 26271,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -614,8 +659,8 @@
    "why": "const[activeRail,setActiveRail]=useState,layout effect"
   },
   {
-   "start": 28650,
-   "end": 28966,
+   "start": 26862,
+   "end": 27178,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -623,80 +668,62 @@
    "why": "const archiveReady=phase===\"ready\";,const upd=(patch:Partial<Rules>)=>setRul,const setLikesCap=(t:LikesTarget,n:numbe"
   },
   {
-   "start": 29183,
-   "end": 30181,
-   "kind": "stmt",
-   "phase": "B",
-   "stub": "",
-   "tail": "",
-   "why": "const swearStrongActive=SWEAR_STRONG.eve,const swearMildActive=SWEAR_MILD.every((,const toggleSwearStrong=()=>{if(swearStr,const toggleSwearMild=()=>{if(swearMildA"
-  },
-  {
-   "start": 30181,
-   "end": 31029,
+   "start": 27395,
+   "end": 28551,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
    "tail": "",
-   "why": "const qaUnchanged=activeQA!==\"\"&&JSON.st,const qaTitle=qaUnchanged?QUICK.find((q),const verdicts=useMemo(()=>computeVerdic,const qaCounts=useMemo(()=>{const m:Reco,const sortPosts=(list:Post[]):Post[]=>[.,const doomed=useMemo(()=>sortPosts(pool."
+   "why": "const toggleSlurPreset=(on:boolean)=>{co,const qaUnchanged=activeQA!==\"\"&&JSON.st,const qaTitle=qaUnchanged?QUICK.find((q),const verdicts=useMemo(()=>computeVerdic,const qaCounts=useMemo(()=>{const m:Reco,const sortPosts=(list:Post[]):Post[]=>[.,const doomed=useMemo(()=>sortPosts(pool."
   },
   {
-   "start": 31055,
-   "end": 31110,
-   "kind": "stmt",
-   "phase": "A",
-   "stub": "",
-   "tail": "",
-   "why": "const matched=doomed.length;,const kept=scanned-matched;"
-  },
-  {
-   "start": 31110,
-   "end": 31614,
+   "start": 28551,
+   "end": 28607,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
    "tail": "",
-   "why": "const keptByRule=pool.filter((p)=>verdic,const fastCount=doomed.filter((p:Post)=>,const fastReposts=matched-fastCount;,const daily=lane===\"fast\"?4000:dailyCap(,const days=matched===0?0:(lane===\"fast\"?,const fastCost=fastCount*0.01;,const limitUsd=spendLimit===\"\"?Math.ceil"
+   "why": "const noDateInPool=pool.filter((p)=>p.da"
   },
   {
-   "start": 31649,
-   "end": 31913,
-   "kind": "stmt",
-   "phase": "B",
-   "stub": "",
-   "tail": "",
-   "why": "const deletedSoFar=runPhase===\"done\"?Mat,const spentSoFar=deletedSoFar*0.01;,const likesTotal=0;,const likesDays=days+Math.ceil(likesTota,const rulesActive=hasActiveRules(rules,a"
-  },
-  {
-   "start": 31913,
-   "end": 33068,
+   "start": 28669,
+   "end": 28793,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
    "tail": "",
-   "why": "const foundWordRows=useMemo(()=>{const l,const replyHandles=useMemo(()=>{const s=,const topReplied=useMemo(()=>{const m=ne,const swearFound=useMemo(()=>SWEAR_PRESE,const oldestYear=pool.length>0?yearOf(po"
+   "why": "const matched=LOADED_TOTALS?LOADED_TOTAL,const kept=LOADED_TOTALS?LOADED_TOTALS.k"
   },
   {
-   "start": 33068,
-   "end": 33252,
+   "start": 28793,
+   "end": 29413,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
    "tail": "",
-   "why": "const knownPinCount=pins.length+(ARCHIVE,const everythingBlocked=knownPinCount==="
+   "why": "const noDateCount=LOADED_TOTALS?LOADED_T,const keptByRule=pool.filter((p)=>verdic,const fastCount=LOADED_TOTALS?LOADED_TOT,const fastReposts=Math.max(0,matched-fas,const daily=lane===\"fast\"?4000:dailyCap(,const days=matched===0?0:(lane===\"fast\"?,const fastCost=fastCount*0.01;,const limitUsd=spendLimit===\"\"?Math.ceil"
   },
   {
-   "start": 33252,
-   "end": 33363,
+   "start": 29452,
+   "end": 29772,
+   "kind": "stmt",
+   "phase": "B",
+   "stub": "",
+   "tail": "",
+   "why": "const deletedSoFar=LOADED_DELETED;,const verifiedGone=LOADED_VERIFIED;,const leftCount=LOADED_LEFT;,const uncheckedCount=LOADED_UNCHECKED;,const spentSoFar=deletedSoFar*0.01;,const likesTotal=LOADED_LIKES;,const likesDays=days+Math.ceil(likesTota,const rulesActive=hasActiveRules(rules,a"
+  },
+  {
+   "start": 29772,
+   "end": 31087,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
    "tail": "",
-   "why": "const threadExtraKept=pool.filter((p)=>v"
+   "why": "const foundWordRows=useMemo(()=>{const l,const replyHandles=useMemo(()=>{const s=,const topReplied=useMemo(()=>{const m=ne,const swearFound=useMemo(()=>SWEAR_PRESE,const datedDays=pool.filter((p)=>p.daysA,const oldestYear=datedDays.length>0?year,const threadExtraKept=pool.filter((p)=>v"
   },
   {
-   "start": 33363,
-   "end": 33774,
+   "start": 31087,
+   "end": 31498,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -704,8 +731,8 @@
    "why": "const isFullWipe=archiveReady&&matched>0,const wipePhrase=`DELETE ${matched.toLoc,const wipeMatch=/^DELETE ([\\d, ]+) POSTS,const wipeOk=!!wipeMatch&&Number(wipeMat,useEffect(()=>{setWipeConfirm(\"\");},[matched]);"
   },
   {
-   "start": 33774,
-   "end": 35625,
+   "start": 31498,
+   "end": 33352,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -713,8 +740,8 @@
    "why": "const applyQuick=(id:QAId)=>{if(activeQA,const toggleGroup=(g:GroupId)=>setOpenGr,const togglePin=(id:string)=>setPins(pin,const toggleFoundWord=(word:string)=>{if,const addWord=(kind:\"keep\"|\"delete\")=>{c,const addPinByLink=()=>{const m=pinDraft,const scrollPageTop=()=>{const zero=(el:"
   },
   {
-   "start": 35754,
-   "end": 35891,
+   "start": 33481,
+   "end": 33618,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -722,8 +749,8 @@
    "why": "const jumpToAlwaysKeep=()=>{setOpenGroup"
   },
   {
-   "start": 35930,
-   "end": 36233,
+   "start": 33657,
+   "end": 33960,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -731,8 +758,8 @@
    "why": "layout effect"
   },
   {
-   "start": 36233,
-   "end": 37267,
+   "start": 33960,
+   "end": 34993,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -740,8 +767,8 @@
    "why": "const doExport=()=>{const rows=doomed.ma"
   },
   {
-   "start": 37372,
-   "end": 37579,
+   "start": 35098,
+   "end": 35305,
    "kind": "stmt",
    "phase": "A",
    "stub": "if(step===\"archive\")return null;",
@@ -749,8 +776,8 @@
    "why": "archive Next hidden until Pick is built"
   },
   {
-   "start": 37672,
-   "end": 37684,
+   "start": 35398,
+   "end": 35410,
    "kind": "expr",
    "phase": "B",
    "stub": "true",
@@ -758,8 +785,8 @@
    "why": "Pick Next button off"
   },
   {
-   "start": 38034,
-   "end": 40722,
+   "start": 35760,
+   "end": 38448,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -767,8 +794,8 @@
    "why": "const railItems:Array<[string,string]>=s,rail scroll effect"
   },
   {
-   "start": 40848,
-   "end": 41748,
+   "start": 38574,
+   "end": 39474,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -776,17 +803,17 @@
    "why": "const subhead:CSSProperties={fontSize:17,const subhint:CSSProperties={fontSize:13,const fortressRow=(key:\"phone\"|\"email\",n"
   },
   {
-   "start": 42477,
-   "end": 43086,
+   "start": 40202,
+   "end": 41831,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
    "tail": "",
-   "why": "const fortressCard=(<div style={{marginT"
+   "why": "const dataGoes=(<><div style={subhead}>W,const fortressCard=(<div style={{marginT"
   },
   {
-   "start": 43086,
-   "end": 43944,
+   "start": 41831,
+   "end": 42689,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
@@ -794,8 +821,8 @@
    "why": "const paceSafetyNote=(<ul style={{margin"
   },
   {
-   "start": 43944,
-   "end": 50981,
+   "start": 42689,
+   "end": 49726,
    "kind": "stmt",
    "phase": "A",
    "stub": "",
@@ -803,17 +830,17 @@
    "why": "const markStyle:CSSProperties={backgroun,const chip=(label:string,onRemove:()=>vo,const timeSummary=rules.timeMode===\"none,const typeList=[rules.posts?\"Posts\":\"\",r,const allTypesCount=ARCHIVE_CAPS.hasQuot,const groupSummary:Record<GroupId,string,const packed:Partial<Record<GroupId,Retu,const groupBox=(id:GroupId,title:string,,const renderRow=(p:Post,i:number)=>{cons,const visiblePosts=sortPosts(pool.filter,const keepFindHits=useMemo(()=>{const q="
   },
   {
-   "start": 50981,
-   "end": 53131,
+   "start": 49726,
+   "end": 51976,
    "kind": "stmt",
    "phase": "B",
    "stub": "",
    "tail": "",
-   "why": "const numBox=(value:string,label:string,,const countsReady=archiveReady&&step!==\",const finishLine=step===\"run\"?`Done by $,const archiveVsProfileLine=recentOnly?\"R,const archiveVsProfileNote=recentOnly?\"Y,const shortCounts=!archiveReady?\"Counts ,const totalsRows:Array<[string,string,st,totalsRows.push([\"Total\",String(matched),String("
+   "why": "const numBox=(value:string,label:string,,const countsReady=archiveReady&&step!==\",const finishLine=step===\"run\"?`Done by $,const archiveVsProfileLine=recentOnly?\"R,const archiveVsProfileNote=recentOnly?\"Y,const shortCounts=!archiveReady?\"Counts ,const totalsRows:Array<[string,string,string]>=L,if(!LOADED_TOTALS)totalsRows.push([\"Total\",Strin"
   },
   {
-   "start": 58618,
-   "end": 58647,
+   "start": 53843,
+   "end": 53872,
    "kind": "expr",
    "phase": "B",
    "stub": "(id===\"run\"||id===\"review\")",
@@ -821,8 +848,8 @@
    "why": "stepper: Review locked"
   },
   {
-   "start": 58866,
-   "end": 58872,
+   "start": 54091,
+   "end": 54097,
    "kind": "expr",
    "phase": "A",
    "stub": "locked||id===\"pick\"",
@@ -830,8 +857,8 @@
    "why": "stepper: Pick locked"
   },
   {
-   "start": 60033,
-   "end": 60711,
+   "start": 55258,
+   "end": 55936,
    "kind": "jsx",
    "phase": "A",
    "stub": "{null",
@@ -839,8 +866,8 @@
    "why": "section rail"
   },
   {
-   "start": 61041,
-   "end": 61331,
+   "start": 56266,
+   "end": 56556,
    "kind": "jsx",
    "phase": "B",
    "stub": "{null",
@@ -848,8 +875,8 @@
    "why": "step===\"review\""
   },
   {
-   "start": 61513,
-   "end": 62981,
+   "start": 56738,
+   "end": 57219,
    "kind": "jsx",
    "phase": "A",
    "stub": "{null",
@@ -857,8 +884,8 @@
    "why": "SHOW_SIGNIN_DETAILS"
   },
   {
-   "start": 65265,
-   "end": 66322,
+   "start": 58952,
+   "end": 59022,
    "kind": "jsx",
    "phase": "A",
    "stub": "{null",
@@ -866,8 +893,8 @@
    "why": "SHOW_WHERE_DATA"
   },
   {
-   "start": 66330,
-   "end": 85228,
+   "start": 59030,
+   "end": 80226,
    "kind": "jsx",
    "phase": "A",
    "stub": "{null",
@@ -875,8 +902,8 @@
    "why": "step===\"pick\""
   },
   {
-   "start": 85228,
-   "end": 97808,
+   "start": 80226,
+   "end": 90043,
    "kind": "jsx",
    "phase": "B",
    "stub": "{null",
@@ -884,8 +911,8 @@
    "why": "step===\"review\""
   },
   {
-   "start": 97808,
-   "end": 103694,
+   "start": 90043,
+   "end": 95261,
    "kind": "jsx",
    "phase": "B",
    "stub": "{null",
@@ -893,8 +920,8 @@
    "why": "step===\"run\""
   },
   {
-   "start": 103701,
-   "end": 105047,
+   "start": 95268,
+   "end": 96605,
    "kind": "jsx",
    "phase": "B",
    "stub": "{null",
@@ -902,8 +929,8 @@
    "why": "live counts sidebar"
   },
   {
-   "start": 105059,
-   "end": 105954,
+   "start": 96617,
+   "end": 98321,
    "kind": "jsx",
    "phase": "B",
    "stub": "{null",

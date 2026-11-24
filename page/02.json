@@ -37,15 +37,15 @@
 },
 {
 "old_string": "//~@@12@@",
-"new_string": "//~function yearOf(days:number):number{const d=new Date(TODAY.getTime());d.setDate(d.getDate()-days);return d.getFullYear();}"
+"new_string": "//~function yearOf(days:number):number{const d=new Date(TODAY.getTime());d.setDate(d.getDate()-Math.max(0,days));return d.getFullYear();}"
 },
 {
 "old_string": "//~@@13@@",
-"new_string": "//~function monthYear(days:number):string{const d=new Date(TODAY.getTime());d.setDate(d.getDate()-days);return d.toLocaleDateString(\"en-US\",{month:\"short\",year:\"numeric\"});}"
+"new_string": "//~function monthYear(days:number):string{if(days<0)return\"no date\";const d=new Date(TODAY.getTime());d.setDate(d.getDate()-days);return d.toLocaleDateString(\"en-US\",{month:\"short\",year:\"numeric\"});}"
 },
 {
 "old_string": "//~@@14@@",
-"new_string": "//~function ageLabel(days:number):string{if(days>=365)return`${Math.round(days/365)}y ago`;if(days>=30)return`${Math.round(days/30)}mo ago`;return`${days}d ago`;}"
+"new_string": "//~function ageLabel(days:number):string{if(days<0)return\"no date\";if(days>=365)return`${Math.round(days/365)}y ago`;if(days>=30)return`${Math.round(days/30)}mo ago`;return`${days}d ago`;}"
 },
 {
 "old_string": "//~@@15@@",
@@ -81,7 +81,7 @@
 },
 {
 "old_string": "//~@@25@@",
-"new_string": "//~const SWEAR_STRONG=[\"shit\",\"fuck\",\"bitch\",\"asshole\",\"bastard\",\"piss\",\"crap\",\"dick\",\"cunt\",\"motherfucker\",\"bullshit\",\"cock\",\"pussy\",\"whore\",\"slut\"];const SLUR_LIST_SIZE=12;const SWEAR_MILD=[\"wtf\",\"damn\",\"hell\",\"goddamn\"];const SWEAR_PRESET=[...SWEAR_STRONG,...SWEAR_MILD];const ENGAGE_PRESETS=[0,10,100,1000,10000,20000];const LIKES_QUICK_PRESETS=[0,5,10,25,50,100];type LikesTarget=\"posts\"|\"replies\";function maskSsn(s:string):string{return s.replace(/(?<![\\dA-Za-z_])(\\d{3})[ \\-\\u2010-\\u2015.]?(\\d{2})[ \\-\\u2010-\\u2015.]?(\\d{4})(?![\\dA-Za-z_])/g,(_m:string,_a:string,_b:string,last4:string)=>`***-**-${last4}`);}"
+"new_string": "//~const SWEAR_STRONG=[\"fuck\",\"shit\",\"bitch\",\"asshole\",\"bastard\",\"dick\",\"cunt\",\"motherfucker\",\"bullshit\",\"piss\",\"crap\",\"cock\",\"pussy\",\"whore\",\"slut\"];const SWEAR_MILD=[\"wtf\",\"damn\",\"hell\",\"goddamn\"];const SWEAR_PRESET=[...SWEAR_STRONG,...SWEAR_MILD];const SLUR_WORDS=[\"nigger\",\"nigga\",\"faggot\",\"fag\",\"retard\",\"tranny\",\"kike\",\"spic\",\"chink\",\"wetback\",\"dyke\",\"coon\"];const ENGAGE_PRESETS=[0,10,100,1000,10000,20000];const LIKES_QUICK_PRESETS=[0,5,10,25,50,100];type LikesTarget=\"posts\"|\"replies\";function maskSsn(s:string):string{return s.replace(/(?<![\\dA-Za-z_])(\\d{3})[ \\-\\u2010-\\u2015.]?(\\d{2})[ \\-\\u2010-\\u2015.]?(\\d{4})(?![\\dA-Za-z_])/g,(_m:string,_a:string,_b:string,last4:string)=>`***-**-${last4}`);}"
 },
 {
 "old_string": "//~@@26@@",
@@ -89,7 +89,7 @@
 },
 {
 "old_string": "//~@@27@@",
-"new_string": "//~const LEET:Record<string,string>={\"0\":\"o\",\"1\":\"i\",\"3\":\"e\",\"4\":\"a\",\"5\":\"s\",\"7\":\"t\",\"@\":\"a\",\"$\":\"s\",\"!\":\"i\",\"|\":\"i\"};const WORD_ENDINGS=[\"\",\"s\",\"es\",\"ed\",\"er\",\"ers\",\"ing\",\"in\",\"y\",\"ty\",\"ies\"];const NAME_LIKE=[\"dick\",\"dyke\",\"coon\",\"cock\"];function collapseRepeats(s:string):string{return s.replace(/(.)\\1+/g,\"$1\");}"
+"new_string": "//~const LEET:Record<string,string>={\"0\":\"o\",\"1\":\"i\",\"3\":\"e\",\"4\":\"a\",\"5\":\"s\",\"7\":\"t\",\"@\":\"a\",\"$\":\"s\",\"!\":\"i\",\"|\":\"i\"};const WORD_ENDINGS=[\"\",\"s\",\"es\",\"ed\",\"er\",\"ers\",\"ing\",\"in\",\"y\",\"ty\",\"ies\",\"head\",\"heads\",\"face\"];const NAME_LIKE=[\"dick\",\"dyke\",\"coon\",\"cock\"];function collapseRepeats(s:string):string{return s.replace(/(.)\\1+/g,\"$1\");}"
 },
 {
 "old_string": "//~@@28@@",
@@ -114,9 +114,5 @@
 {
 "old_string": "//~@@33@@",
 "new_string": "//~function topicHit(summary:string,topic:string,sourceText?:string):boolean{const t=topic.trim().toLowerCase();if(!t)return false;const tokens=topicTokens(summary,sourceText);if(t.includes(\" \")||t.includes(\"-\"))return tokens.join(\" \").includes(t);return tokens.includes(t);}"
-},
-{
-"old_string": "//~@@34@@",
-"new_string": "//~function hasTypeFilter(r:Rules):boolean{return r.posts||r.replies||r.reposts||(ARCHIVE_CAPS.hasQuoteFields&&r.quotes)||r.community;}"
 }
 ]

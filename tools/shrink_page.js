@@ -64,12 +64,18 @@ function tokenMinify(text) {
 
 // 2. CSS block inside <style>{`...`}</style> (no ${} and no quotes in it; checked)
 function cssMinify(s) {
-  const a = s.indexOf("<style>{`"), b = s.indexOf("`}</style>");
-  if (a < 0 || b < 0) return s;
-  const css = s.slice(a + 9, b);
-  if (/\$\{|["'\\]|\/\*/.test(css)) throw new Error("css block has interpolation, quotes, escapes or comments; refusing");
-  let m = css.replace(/\s+/g, " ").replace(/ ?([{};]) ?/g, "$1").replace(/;}/g, "}").trim();
-  return s.slice(0, a + 9) + m + s.slice(b);
+  let out = "", i = 0;
+  while (true) {
+    const a = s.indexOf("<style>{`", i);
+    if (a < 0) return out + s.slice(i);
+    const b = s.indexOf("`}</style>", a);
+    if (b < 0) throw new Error("unclosed style");
+    const css = s.slice(a + 9, b);
+    if (/\$\{|["'\\]|\/\*/.test(css)) throw new Error("css block has interpolation, quotes, escapes or comments; refusing");
+    const m = css.replace(/\s+/g, " ").replace(/ ?([{};]) ?/g, "$1").replace(/;}/g, "}").trim();
+    out += s.slice(i, a + 9) + m;
+    i = b;
+  }
 }
 
 // 3. dedupe repeated theme-only style objects inside App
