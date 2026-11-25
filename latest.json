@@ -1,6 +1,6 @@
 {
- "version": "1.1.5",
- "tag": "xpc-v1.1.5",
- "manifest_sha256": "90fb1921f3f9ef30415745930574c7403641af510910c9d0a1a12d8b206fc652",
- "notes": "Sign-in opens right away, and the bot requests the archive itself. While X prepares the file, the Page says so in one line and you can set your rules."
+ "version": "1.1.6",
+ "tag": "xpc-v1.1.6",
+ "manifest_sha256": "655ea0b639992e831761707f485f7b495776046621637be0fb24c35ff0e05c69",
+ "notes": "The first page shows up in about a minute and a half, and big archives load in seconds. Replies-only keeps your threads, kept posts never reach the delete list, and every export masks SSN-shaped numbers."
 }
