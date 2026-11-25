@@ -10,7 +10,6 @@ import {
   Table,
   Rows,
   Properties,
-  BulletList,
   Status,
   Segmented,
   Floating,
@@ -43,6 +42,9 @@ const START_STEP: Step = "signin";
 const START_PHASE: HomePhase = "choose";
 const START_RUN: RunPhase = "idle";
 const SIGNED_IN_HANDLE: string = "";
+const SHOW_SIGNIN_DETAILS = true;
+const SHOW_WHERE_DATA = true;
+const SHOW_NEXT_BAR = true;
 const PAGE_STATUS: PageStatus | null = null;
 const PHONE_FORTRESS_URL: string = "https://x.ai/bot/a_4tVB4gwbwFBLkUhkTCW";
 const EMAIL_FORTRESS_URL: string = "https://x.ai/bot/MyKDbPYVwJeJpCNtVTFym";
@@ -67,6 +69,7 @@ type Post = {
   community?: boolean;
   repostOf?: string;
   quoteOf?: string;
+  selfReply?: boolean;
 };
 
 type Rules = {
@@ -98,6 +101,8 @@ type Rules = {
   keepThreads: boolean;
   keepProfilePin: boolean;
   keepMedia: boolean;
+  selfReplies: boolean;
+  deleteSlurs: boolean;
 };
 
 type Verdict = { kind: "delete" | "keep" | "none"; reason: string };
@@ -141,17 +146,19 @@ function threadGroupKey(p: Post, byId?: Map<string, Post>): string {
 
 function yearOf(days: number): number {
   const d = new Date(TODAY.getTime());
-  d.setDate(d.getDate() - days);
+  d.setDate(d.getDate() - Math.max(0, days));
   return d.getFullYear();
 }
 
 function monthYear(days: number): string {
+  if (days < 0) return "no date";
   const d = new Date(TODAY.getTime());
   d.setDate(d.getDate() - days);
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
 function ageLabel(days: number): string {
+  if (days < 0) return "no date";
   if (days >= 365) return `${Math.round(days / 365)}y ago`;
   if (days >= 30) return `${Math.round(days / 30)}mo ago`;
   return `${days}d ago`;
@@ -221,10 +228,10 @@ function downloadText(filename: string, body: string, mime: string) {
   URL.revokeObjectURL(url);
 }
 
-const SWEAR_STRONG = ["shit", "fuck", "bitch", "asshole", "bastard", "piss", "crap", "dick", "cunt", "motherfucker", "bullshit", "cock", "pussy", "whore", "slut"];
-const SLUR_LIST_SIZE = 12;
+const SWEAR_STRONG = ["fuck", "shit", "bitch", "asshole", "bastard", "dick", "cunt", "motherfucker", "bullshit", "piss", "crap", "cock", "pussy", "whore", "slut"];
 const SWEAR_MILD = ["wtf", "damn", "hell", "goddamn"];
 const SWEAR_PRESET = [...SWEAR_STRONG, ...SWEAR_MILD];
+const SLUR_WORDS = ["nigger", "nigga", "faggot", "fag", "retard", "tranny", "kike", "spic", "chink", "wetback", "dyke", "coon"];
 const ENGAGE_PRESETS = [0, 10, 100, 1000, 10000, 20000];
 const LIKES_QUICK_PRESETS = [0, 5, 10, 25, 50, 100];
 type LikesTarget = "posts" | "replies";
@@ -238,7 +245,7 @@ function escapeRegExp(s: string): string {
 }
 
 const LEET: Record<string, string> = { "0": "o", "1": "i", "3": "e", "4": "a", "5": "s", "7": "t", "@": "a", "$": "s", "!": "i", "|": "i" };
-const WORD_ENDINGS = ["", "s", "es", "ed", "er", "ers", "ing", "in", "y", "ty", "ies"];
+const WORD_ENDINGS = ["", "s", "es", "ed", "er", "ers", "ing", "in", "y", "ty", "ies", "head", "heads", "face"];
 const NAME_LIKE = ["dick", "dyke", "coon", "cock"];
 
 function collapseRepeats(s: string): string {
@@ -262,7 +269,7 @@ function wordHit(text: string, word: string): boolean {
   if (!w.startsWith("@") && !/\s/.test(w)) {
     const wl = w.toLowerCase().replace(/^#/, "");
     const forms = new Set(WORD_ENDINGS.map((e: string) => collapseRepeats(wl + e)));
-    const toks = text.match(/#?[\w@$!|*']+/g) || [];
+    const toks = text.match(/#?[\w@$!|*']+(?:-[\w@$!|*']+)*/g) || [];
     for (let i = 0; i < toks.length; i++) {
       const raw = toks[i];
       const n = normToken(raw);
@@ -339,8 +346,8 @@ function hasMediaFilter(r: Rules): boolean {
   return r.mediaPhotos || r.mediaVideos || r.mediaGifs || r.mediaText;
 }
 
-function allTypesOn(): Pick<Rules, "posts" | "replies" | "reposts" | "quotes" | "community"> {
-  return { posts: true, replies: true, reposts: true, quotes: ARCHIVE_CAPS.hasQuoteFields, community: true };
+function allTypesOn(): Pick<Rules, "posts" | "replies" | "selfReplies" | "reposts" | "quotes" | "community"> {
+  return { posts: true, replies: true, selfReplies: true, reposts: true, quotes: ARCHIVE_CAPS.hasQuoteFields, community: true };
 }
 
 function hasDeleteScope(r: Rules): boolean {
@@ -354,6 +361,7 @@ function hasDeleteScope(r: Rules): boolean {
     (ARCHIVE_CAPS.hasReplyCount && r.repliesMax >= 0) ||
     hasMediaFilter(r) ||
     r.replyHandles.length > 0 ||
+    r.deleteSlurs ||
     hasTypeFilter(r)
   );
 }
@@ -377,15 +385,30 @@ function usd(n: number): string {
   return `$${n.toFixed(2)}`;
 }
 
-// No sample posts. The bot fills POOL from the owner's own archive after it loads.
+// No sample posts. The bot fills these from the owner's archive. Clear all rules still uses BASE.
 const POOL: Post[] = [];
+const LOADED_RULES: Rules | null = null;
+const LOADED_QA: QAId | "" = "";
+const LOADED_KEPT: string[] = [];
+const LOADED_LANE: Lane | "" = "";
+const LOADED_PACE: Speed | "" = "";
+const LOADED_COOLING: boolean | null = null;
+const LOADED_FAILED: Array<{ id: string; reason: string }> = [];
+const LOADED_DELETED = 0;
+const LOADED_VERIFIED = 0;
+const LOADED_LEFT = 0;
+const LOADED_UNCHECKED = 0;
+const LOADED_LIKES = 0;
+type LoadedTotals = { scanned: number; matched: number; kept: number; noDate: number; fastCount: number; byType: Array<[string, string, string]> };
+const LOADED_TOTALS: LoadedTotals | null = null;
+const LOADED_PROOF: { recheck: string; final: string } | null = null;
 
 const BASE: Rules = {
   timeMode: "none",
   olderDays: 365,
   olderDate: "",
-  yearFrom: 2023,
-  yearTo: 2026,
+  yearFrom: 0,
+  yearTo: 0,
   protectDays: 0,
   protectDate: "",
   posts: false,
@@ -409,13 +432,15 @@ const BASE: Rules = {
   keepThreads: false,
   keepProfilePin: true,
   keepMedia: false,
+  selfReplies: false,
+  deleteSlurs: false,
 };
 
 const QUICK: Array<{ id: QAId; title: string; detail: string; rules: Partial<Rules> }> = [
   { id: "everything", title: "Delete everything", detail: "Every post, reply, quote post and repost, except posts you mark Keep.", rules: { timeMode: "all", protectDays: 0, protectDate: "", ...allTypesOn() } },
   { id: "oldest", title: "Delete my oldest posts (older than 2 years)", detail: "Everything older than 2 years. Newer posts stay.", rules: { timeMode: "older", olderDays: 730, olderDate: "", protectDays: 0, protectDate: "", ...allTypesOn() } },
-  { id: "era", title: "Delete a past era", detail: "Starts with your oldest two years. Change the range on this card.", rules: { timeMode: "years", yearFrom: 2023, yearTo: 2024, protectDays: 0, protectDate: "", ...allTypesOn() } },
-  { id: "replies", title: "Delete all my replies", detail: "Removes your replies only. Your own posts, quote posts and reposts stay.", rules: { timeMode: "all", posts: false, replies: true, reposts: false, quotes: false, community: false, protectDays: 0, protectDate: "" } },
+  { id: "era", title: "Delete a past era", detail: "Starts with your oldest two years. Change the range on this card.", rules: { timeMode: "years", yearFrom: 0, yearTo: 0, protectDays: 0, protectDate: "", ...allTypesOn() } },
+  { id: "replies", title: "Delete all my replies", detail: "Replies to other people only. Your own threads, posts, quote posts and reposts stay.", rules: { timeMode: "all", posts: false, replies: true, selfReplies: false, reposts: false, quotes: false, community: false, protectDays: 0, protectDate: "" } },
   { id: "reposts", title: "Undo all reposts", detail: "Removes your reposts only.", rules: { timeMode: "all", posts: false, replies: false, reposts: true, quotes: false, community: false, protectDays: 0, protectDate: "" } },
   { id: "best", title: "Delete posts and replies with few likes", detail: "Set a like cap for posts, replies, or both. A dash means that type is left alone. Reposts are not affected.", rules: { timeMode: "all", posts: false, replies: false, reposts: false, quotes: false, community: false, postsLikesMax: -1, repliesLikesMax: -1, keepThreads: false, protectDays: 0, protectDate: "" } },
 ];
@@ -429,9 +454,22 @@ function keepWordHit(p: Post, r: Rules): string {
   return r.keepWords.find((w) => wordHit(p.text, w)) || "";
 }
 
+function isSelfReply(p: Post): boolean {
+  if (p.selfReply) return true;
+  if (p.type !== "reply") return false;
+  const me = handleOf(SIGNED_IN_HANDLE);
+  return me !== "" && handleOf(p.replyTo || "") === me;
+}
+
+function statusUrl(id: string): string {
+  const h = handleOf(SIGNED_IN_HANDLE);
+  return h ? `https://x.com/${h}/status/${id}` : `https://x.com/i/web/status/${id}`;
+}
+
 function scopeParts(p: Post, r: Rules): string[] | null {
   const topic = r.topic.trim();
   const repostOf = handleOf(r.repostOf);
+  if (p.daysAgo < 0) return null;
   if (!hasDeleteScope(r)) return null;
   const parts: string[] = [];
   if (r.timeMode === "all") parts.push("everything");
@@ -446,7 +484,7 @@ function scopeParts(p: Post, r: Rules): string[] | null {
     parts.push(r.yearFrom === r.yearTo ? `from ${r.yearFrom}` : `${r.yearFrom}–${r.yearTo}`);
   }
   const typ = effectiveType(p);
-  const typeOk = p.community ? r.community : typ === "post" ? r.posts : typ === "reply" ? r.replies : typ === "quote" ? r.quotes : r.reposts;
+  const typeOk = p.community ? r.community : isSelfReply(p) ? r.selfReplies : typ === "post" ? r.posts : typ === "reply" ? r.replies : typ === "quote" ? r.quotes : r.reposts;
   if (!typeOk) return null;
   if (!(r.posts && r.replies && r.reposts && r.quotes && r.community)) {
     const t: string[] = [];
@@ -495,10 +533,11 @@ function scopeParts(p: Post, r: Rules): string[] | null {
     if (p.replies > r.repliesMax) return null;
     parts.push(r.repliesMax === 0 ? "no replies received" : `${r.repliesMax} or fewer replies received`);
   }
-  if (r.deleteWords.length > 0) {
+  if (r.deleteWords.length > 0 || r.deleteSlurs) {
     const w = r.deleteWords.find((x) => wordHit(p.text, x));
-    if (!w) return null;
-    parts.push(`contains "${maskSsn(w)}"`);
+    const slur = !w && r.deleteSlurs && SLUR_WORDS.some((x) => wordHit(p.text, x));
+    if (!w && !slur) return null;
+    parts.push(w ? `contains "${maskSsn(w)}"` : "a slur");
   }
   if (topic !== "") {
     if (!topicHit(p.summary, topic, p.text)) return null;
@@ -534,6 +573,33 @@ function isStrongKeep(p: Post, r: Rules, pins: string[]): boolean {
   );
 }
 
+function deleteReason(p: Post, r: Rules, qaTitle: string): string {
+  const w = r.deleteWords.find((x) => wordHit(p.text, x));
+  if (w) return `Word: ${maskSsn(w)}`;
+  if (r.deleteSlurs && SLUR_WORDS.some((x) => wordHit(p.text, x))) return "Word: slur";
+  const repliesOnly = r.replies && !r.posts && !r.reposts && !r.quotes && !r.selfReplies;
+  if (repliesOnly) return "Reply to others";
+  if (r.reposts && !r.posts && !r.replies && !r.quotes) return "Reposts";
+  if (r.timeMode === "older") return r.olderDays === 730 ? "Older than 2 years" : `Older than ${r.olderDays} days`;
+  if (r.timeMode === "years") return r.yearFrom === r.yearTo ? `From ${r.yearFrom}` : `${r.yearFrom}-${r.yearTo}`;
+  if (r.timeMode === "all") return "Delete everything";
+  return qaTitle || "Matches";
+}
+
+function rulesEqual(a: Rules, b: Rules): boolean {
+  const keys = Object.keys(BASE) as Array<keyof Rules>;
+  return keys.every((k) => {
+    const av = a[k];
+    const bv = b[k];
+    if (Array.isArray(av) || Array.isArray(bv)) {
+      const left = Array.isArray(av) ? av : [];
+      const right = Array.isArray(bv) ? bv : [];
+      return left.length === right.length && left.every((item, i) => item === right[i]);
+    }
+    return av === bv;
+  });
+}
+
 function computeVerdicts(pool: Post[], r: Rules, pins: string[], qaTitle: string): Map<string, Verdict> {
   const keptThreads = new Set<string>();
   const byId = new Map<string, Post>(pool.map((p: Post) => [p.id, p] as [string, Post]));
@@ -562,15 +628,14 @@ function computeVerdicts(pool: Post[], r: Rules, pins: string[], qaTitle: string
       out.set(p.id, { kind: "keep", reason: "Keep rule: part of a kept thread" });
       continue;
     }
-    const body = qaTitle || parts.join(" · ");
-    out.set(p.id, { kind: "delete", reason: `Matches: ${body.charAt(0).toUpperCase()}${body.slice(1)}` });
+    out.set(p.id, { kind: "delete", reason: deleteReason(p, r, qaTitle) });
   }
   return out;
 }
 
 const STEP_META: Record<Step, { n: number; label: string; heading: string; hint: string }> = {
   signin: { n: 1, label: "Sign in", heading: "Sign in to X", hint: "You sign in once, yourself, in the bot's own browser. The bot never sees your password." },
-  archive: { n: 2, label: "Archive", heading: "Get your archive", hint: "One click. X emails the file in about 1–3 days, and the bot loads it for you." },
+  archive: { n: 2, label: "Archive", heading: "Get your archive", hint: "X emails the file in about 1–3 days, and the bot loads it for you." },
   pick: { n: 3, label: "Pick", heading: "Pick what goes", hint: "Start with a quick cleanup or set your own rules." },
   review: { n: 4, label: "Review", heading: "Review your cleanup", hint: "Check the totals, pick Free or Fast, download the list, then approve once." },
   run: { n: 5, label: "Run", heading: "Running", hint: "It runs on its own at X's pace. You can close this." },
@@ -702,88 +767,6 @@ function LikesCapPicker(props: { postsCap: number; repliesCap: number; focus: Li
   );
 }
 
-function EngageControl(props: { label: string; value: number; offValue: number; offLabel?: string; onChange: (n: number) => void; disabled?: boolean; hint?: string }) {
-  const theme = useGrokTheme();
-  const off = props.offValue === 0 ? props.value <= 0 : props.value < 0;
-  const apply = (n: number) => {
-    if (props.disabled) return;
-    if (n < 0) {
-      props.onChange(props.offValue === 0 ? 0 : -1);
-      return;
-    }
-    props.onChange(Math.min(1000000, n));
-  };
-  const bump = (dir: 1 | -1) => {
-    if (props.disabled) return;
-    if (off) {
-      if (dir > 0) apply(props.offValue === 0 ? 1 : 0);
-      return;
-    }
-    const next = props.value + dir;
-    if (next < 0) {
-      apply(props.offValue);
-      return;
-    }
-    apply(next);
-  };
-  const onTyped = (v: string) => {
-    const t = v.replace(/[^\d]/g, "");
-    if (t === "") {
-      apply(props.offValue);
-      return;
-    }
-    const n = parseInt(t, 10);
-    if (Number.isFinite(n)) apply(n);
-  };
-  return (
-    <div className="xpc-engage" style={{ opacity: props.disabled ? 0.55 : 1 }}>
-      <div style={{ fontSize: 13, color: theme.text.secondary }}>{props.label}</div>
-      <div className="xpc-engage-row">
-        <button type="button" className="xpc-engage-off" aria-pressed={off} disabled={props.disabled} onClick={() => apply(props.offValue)} style={{ background: off ? theme.fill.accentSubtle : theme.bg.base, border: `${off ? 1.5 : 1}px solid ${off ? theme.border.focus : theme.border.default}`, color: theme.text.primary, fontFamily: theme.font.family }}>
-          {props.offLabel ?? "Off"}
-        </button>
-        <button type="button" className="xpc-engage-step" aria-label="Decrease" disabled={props.disabled || off} onClick={() => bump(-1)} style={{ background: theme.bg.base, border: `1px solid ${theme.border.default}`, color: theme.text.primary, fontFamily: theme.font.family }}>
-          −
-        </button>
-        <input
-          className="xpc-engage-num"
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          aria-label={props.label}
-          disabled={props.disabled}
-          value={off ? "" : String(props.value)}
-          placeholder="Off"
-          onChange={(e: { target: { value: string } }) => onTyped(e.target.value)}
-          style={{ background: theme.bg.base, border: `1px solid ${theme.border.default}`, color: theme.text.primary, fontFamily: theme.font.family }}
-        />
-        <button type="button" className="xpc-engage-step" aria-label="Increase" disabled={props.disabled} onClick={() => bump(1)} style={{ background: theme.bg.base, border: `1px solid ${theme.border.default}`, color: theme.text.primary, fontFamily: theme.font.family }}>
-          +
-        </button>
-      </div>
-      <div className="xpc-engage-chips">
-        {ENGAGE_PRESETS.map((n) => {
-          const on = !off && props.value === n;
-          return (
-            <button
-              key={n}
-              type="button"
-              aria-pressed={on}
-              disabled={props.disabled}
-              onClick={() => apply(n)}
-              className="xpc-engage-chip"
-              style={{ background: on ? theme.fill.accentSubtle : theme.bg.base, border: `${on ? 1.5 : 1}px solid ${on ? theme.border.focus : theme.border.default}`, color: theme.text.primary, fontFamily: theme.font.family }}
-            >
-              {formatEngage(n)}
-            </button>
-          );
-        })}
-      </div>
-      {props.hint ? <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.45 }}>{props.hint}</div> : null}
-    </div>
-  );
-}
-
 function HighlightedText(props: { text: string; words: string[]; markStyle: CSSProperties }) {
   const shown = maskSsn(props.text);
   const list = props.words.filter((w) => w.trim()).sort((a, b) => b.length - a.length);
@@ -829,15 +812,15 @@ export default function App() {
   const [step, setStep] = useState<Step>(START_STEP);
   const [phase, setPhase] = useState<HomePhase>(START_PHASE);
   const [runPhase, setRunPhase] = useState<RunPhase>(START_RUN);
-  const [rules, setRules] = useState<Rules>(BASE);
-  const [activeQA, setActiveQA] = useState<QAId | "">("");
+  const [rules, setRules] = useState<Rules>(LOADED_RULES || BASE);
+  const [activeQA, setActiveQA] = useState<QAId | "">(LOADED_QA);
   const [openGroups, setOpenGroups] = useState<GroupId[]>([]);
-  const [pins, setPins] = useState<string[]>([]);
+  const [pins, setPins] = useState<string[]>(LOADED_KEPT);
   const [search, setSearch] = useState("");
   const [listView, setListView] = useState<ListView>("all");
   const [order, setOrder] = useState<Order>("oldest");
-  const [speed, setSpeed] = useState<Speed>("steady");
-  const [lane, setLane] = useState<Lane>("free");
+  const [speed, setSpeed] = useState<Speed>(LOADED_PACE || "steady");
+  const [lane, setLane] = useState<Lane>(LOADED_LANE || "free");
   const [fastSetup, setFastSetup] = useState<FastSetup>("idle");
   const [keepDraft, setKeepDraft] = useState("");
   const [deleteDraft, setDeleteDraft] = useState("");
@@ -847,22 +830,16 @@ export default function App() {
   const [wipeConfirm, setWipeConfirm] = useState("");
   const [showFoundSwears, setShowFoundSwears] = useState(false);
   const [replyQuery, setReplyQuery] = useState("");
-  const [kitGoogleRecheck, setKitGoogleRecheck] = useState(false);
-  const [kitWaybackRecheck, setKitWaybackRecheck] = useState(false);
   const [exportFmt, setExportFmt] = useState("csv");
   const [exportNote, setExportNote] = useState("");
-  const [coolOn, setCoolOn] = useState(false);
+  const [coolOn, setCoolOn] = useState(LOADED_COOLING === true);
   const [likesOn, setLikesOn] = useState(false);
   const [spendLimit, setSpendLimit] = useState("");
   const [likesFocus, setLikesFocus] = useState<LikesTarget>("posts");
   const [likesLast, setLikesLast] = useState({ posts: 5, replies: 5 });
-  const [maintOn, setMaintOn] = useState(false);
-  const [autoCont, setAutoCont] = useState(false);
-  const [rollWin, setRollWin] = useState("90");
   const [showFailed, setShowFailed] = useState(true);
   const [recentOnly, setRecentOnly] = useState(false);
   const [kitDisconnect, setKitDisconnect] = useState(false);
-  const [failedIds, setFailedIds] = useState<string[]>([]);
   const [narrow, setNarrow] = useState(false);
   const [barHidden, setBarHidden] = useState(false);
   const [activeRail, setActiveRail] = useState("");
@@ -911,33 +888,28 @@ export default function App() {
     }));
   }, [rules.postsLikesMax, rules.repliesLikesMax]);
 
-  const swearStrongActive = SWEAR_STRONG.every((w) => rules.deleteWords.includes(w));
-  const swearMildActive = SWEAR_MILD.every((w) => rules.deleteWords.includes(w));
-  const toggleSwearStrong = () => {
-    if (swearStrongActive) {
-      upd({ deleteWords: rules.deleteWords.filter((w) => !SWEAR_PRESET.includes(w)) });
-      setIgnoredWords(ignoredWords.filter((w) => !SWEAR_PRESET.includes(w)));
+  const toggleSlurPreset = (on: boolean) => {
+    const drop = new Set(SWEAR_PRESET);
+    if (!on) {
+      upd({ deleteSlurs: false, deleteWords: rules.deleteWords.filter((w) => !drop.has(w)) });
       return;
     }
     const next = [...rules.deleteWords];
-    for (const w of SWEAR_STRONG) if (!next.includes(w)) next.push(w);
-    upd({ deleteWords: next });
-    setIgnoredWords(ignoredWords.filter((w) => !SWEAR_STRONG.includes(w)));
-  };
-  const toggleSwearMild = () => {
-    if (swearMildActive) {
-      upd({ deleteWords: rules.deleteWords.filter((w) => !SWEAR_MILD.includes(w)) });
-      setIgnoredWords(ignoredWords.filter((w) => !SWEAR_MILD.includes(w)));
-      return;
-    }
-    const next = [...rules.deleteWords];
-    for (const w of SWEAR_STRONG) if (!next.includes(w)) next.push(w);
-    for (const w of SWEAR_MILD) if (!next.includes(w)) next.push(w);
-    upd({ deleteWords: next });
-    setIgnoredWords(ignoredWords.filter((w) => !SWEAR_PRESET.includes(w)));
+    for (const w of SWEAR_PRESET) if (!next.includes(w)) next.push(w);
+    upd({ deleteSlurs: true, deleteWords: next });
   };
 
-  const qaUnchanged = activeQA !== "" && JSON.stringify(rules) === JSON.stringify(mergeQA(activeQA, rules.keepWords));
+  const datedDays = pool.filter((p) => p.daysAgo >= 0).map((p) => p.daysAgo);
+  const oldestYear = datedDays.length > 0 ? yearOf(Math.max(...datedDays)) : TODAY.getFullYear();
+  const rulesForCard = (id: QAId): Rules => {
+    const next = mergeQA(id, rules.keepWords);
+    if (id === "era") {
+      next.yearFrom = oldestYear;
+      next.yearTo = oldestYear + 1;
+    }
+    return next;
+  };
+  const qaUnchanged = activeQA !== "" && rulesEqual(rules, rulesForCard(activeQA));
   const qaTitle = qaUnchanged ? QUICK.find((q) => q.id === activeQA)?.title || "" : "";
 
   const verdicts = useMemo(() => computeVerdicts(pool, rules, pins, qaTitle), [pool, rules, pins, qaTitle]);
@@ -945,7 +917,7 @@ export default function App() {
   const qaCounts = useMemo(() => {
     const m: Record<string, number> = {};
     for (const q of QUICK) {
-      const v = computeVerdicts(pool, mergeQA(q.id, rules.keepWords), pins, q.title);
+      const v = computeVerdicts(pool, rulesForCard(q.id), pins, q.title);
       let n = 0;
       v.forEach((x) => {
         if (x.kind === "delete") n += 1;
@@ -963,20 +935,25 @@ export default function App() {
     });
 
   const doomed = useMemo(() => sortPosts(pool.filter((p) => verdicts.get(p.id)?.kind === "delete")), [pool, verdicts, order]);
-  const scanned = pool.length;
-  const matched = doomed.length;
-  const kept = scanned - matched;
+  const noDateInPool = pool.filter((p) => p.daysAgo < 0).length;
+  const scanned = LOADED_TOTALS ? LOADED_TOTALS.scanned : pool.length;
+  const matched = LOADED_TOTALS ? LOADED_TOTALS.matched : doomed.length;
+  const kept = LOADED_TOTALS ? LOADED_TOTALS.kept : scanned - matched;
+  const noDateCount = LOADED_TOTALS ? LOADED_TOTALS.noDate : noDateInPool;
   const keptByRule = pool.filter((p) => verdicts.get(p.id)?.kind === "keep").length;
-  const fastCount = doomed.filter((p: Post) => effectiveType(p) !== "repost").length;
-  const fastReposts = matched - fastCount;
+  const fastCount = LOADED_TOTALS ? LOADED_TOTALS.fastCount : doomed.filter((p: Post) => effectiveType(p) !== "repost").length;
+  const fastReposts = Math.max(0, matched - fastCount);
   const daily = lane === "fast" ? 4000 : dailyCap(speed);
   const days = matched === 0 ? 0 : (lane === "fast" ? Math.max(Math.ceil(fastCount / 4000), Math.ceil(fastReposts / dailyCap(speed))) : Math.ceil(matched / daily)) + (coolOn ? 1 : 0);
   const fastCost = fastCount * 0.01;
   const limitUsd = spendLimit === "" ? Math.ceil(fastCost) : Math.max(0, Number(spendLimit) || 0);
-  const failedCount = failedIds.length;
-  const deletedSoFar = runPhase === "done" ? Math.max(0, matched - failedCount) : Math.min(matched, 12);
+  const failedCount = LOADED_FAILED.length;
+  const deletedSoFar = LOADED_DELETED;
+  const verifiedGone = LOADED_VERIFIED;
+  const leftCount = LOADED_LEFT;
+  const uncheckedCount = LOADED_UNCHECKED;
   const spentSoFar = deletedSoFar * 0.01;
-  const likesTotal = 0;
+  const likesTotal = LOADED_LIKES;
   const likesDays = days + Math.ceil(likesTotal / dailyCap(speed));
   const rulesActive = hasActiveRules(rules, activeQA, pins.length);
 
@@ -1015,10 +992,6 @@ export default function App() {
     [pool]
   );
 
-  const oldestYear = pool.length > 0 ? yearOf(pool.reduce((mx, p) => Math.max(mx, p.daysAgo), 0)) : TODAY.getFullYear();
-
-  const knownPinCount = pins.length + (ARCHIVE_CAPS.hasPinFlag && rules.keepProfilePin ? pool.filter((p) => p.profilePin && !pins.includes(p.id)).length : 0);
-  const everythingBlocked = knownPinCount === 0;
   const threadExtraKept = pool.filter((p) => verdicts.get(p.id)?.reason === "Keep rule: part of a kept thread").length;
 
   const isFullWipe = archiveReady && matched > 0 && (activeQA === "everything" || matched >= 10000 || matched / Math.max(1, scanned) > 0.5);
@@ -1037,8 +1010,9 @@ export default function App() {
     }
     const next = mergeQA(id, rules.keepWords);
     if (id === "era") {
-      next.yearFrom = rules.timeMode === "years" ? rules.yearFrom : oldestYear;
-      next.yearTo = rules.timeMode === "years" ? rules.yearTo : TODAY.getFullYear();
+      const from = rules.timeMode === "years" ? rules.yearFrom : oldestYear;
+      next.yearFrom = from;
+      next.yearTo = rules.timeMode === "years" ? rules.yearTo : from + 1;
     }
     setActiveQA(id);
     setRules(next);
@@ -1130,13 +1104,13 @@ export default function App() {
   const doExport = () => {
     const rows = doomed.map((p) => ({
       id: p.id,
-      status_url: `https://x.com/you/status/${p.id}`,
+      status_url: statusUrl(p.id),
       posted: monthYear(p.daysAgo),
       type: p.community ? `community ${p.type}` : p.type,
       likes: p.likes,
       replies: p.replies,
-      reply_to: p.replyTo || "",
-      matched_rule: verdicts.get(p.id)?.reason || "",
+      reply_to: maskSsn(p.replyTo || ""),
+      matched_rule: maskSsn(verdicts.get(p.id)?.reason || ""),
       about: maskSsn(p.summary),
       text: maskSsn(p.text),
     }));
@@ -1289,6 +1263,20 @@ export default function App() {
         {tapLine("Start with recent posts only with the tap card in the chat.")}
       </div>
     </div>
+  );
+  const dataGoes = (
+    <>
+      <div style={subhead}>Where your data goes</div>
+      <Properties
+        items={[
+          { label: "Sign-in", value: "To fetch your archive and later delete posts, you sign in to X once, yourself, in the bot's own browser. The bot never sees your password, and you can sign out of X anytime." },
+          { label: "Your archive", value: "A copy is stored on the bot's computer so it can build your list and carry out the deletes you approve. Media files in the ZIP (the photos and videos themselves) are not imported. Posts that include photos or videos can still be in your cleanup list." },
+          { label: "Sharing", value: "None of your data or information is sold, or shared with third parties or anyone else." },
+          { label: "Deletes", value: "Deletes happen only after you approve your cleanup list." },
+          { label: "After the run", value: "Taking posts off X does not take them off the rest of the internet. After the run, we offer to delete the archive copy from the bot's computer, and we can help with leftover copies on Google and the Wayback Machine." },
+        ]}
+      />
+    </>
   );
   const fortressCard = (
     <div style={{ marginTop: 12, padding: "14px 16px", borderRadius: 12, border: `1px solid ${theme.border.default}`, background: theme.bg.base, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -1468,11 +1456,13 @@ export default function App() {
     ? "Counts appear once your archive loads"
     : step === "run"
       ? runPhase === "done"
-        ? `Verified gone: ${deletedSoFar} of ${deletedSoFar + failedCount} · Still live: ${failedCount}`
-        : `${deletedSoFar} deleted · ${Math.max(0, matched - deletedSoFar)} left · ${failedCount} failed`
+        ? `Verified gone: ${verifiedGone} · Still live: ${failedCount} · Left: ${leftCount} · Couldn't check: ${uncheckedCount}`
+        : `${deletedSoFar} deleted · ${leftCount} left · ${failedCount} failed`
       : `${scanned} scanned · ${kept} keep · ${matched} delete`;
 
-  const totalsRows: Array<[string, string, string]> = (
+  const totalsRows: Array<[string, string, string]> = LOADED_TOTALS
+    ? [...LOADED_TOTALS.byType, ["Total", String(matched), String(kept)]]
+    : (
     [
       ["Posts", (p: Post) => !p.community && effectiveType(p) === "post"],
       ["Replies", (p: Post) => !p.community && effectiveType(p) === "reply"],
@@ -1488,7 +1478,7 @@ export default function App() {
     const del = all.filter((p) => verdicts.get(p.id)?.kind === "delete").length;
     return [label, String(del), String(all.length - del)] as [string, string, string];
   });
-  totalsRows.push(["Total", String(matched), String(kept)]);
+  if (!LOADED_TOTALS) totalsRows.push(["Total", String(matched), String(kept)]);
 
   return (
     <Page
@@ -1506,102 +1496,14 @@ export default function App() {
         .xpc-step-label { font-size: 14px; font-weight: 600; white-space: nowrap; }
         .xpc-shell { display: grid; grid-template-columns: 200px minmax(0, 1fr) 280px; gap: 32px; align-items: start; }
         .xpc-rail, .xpc-summary { position: sticky; top: 24px; }
-        .xpc-quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-        .xpc-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
-        .xpc-groups-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-        .xpc-likes-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
-        .xpc-likes-pick { min-width: 0; width: 100%; box-sizing: border-box; }
-        .xpc-list { max-height: 640px; overflow: auto; border-radius: 16px; }
-        .xpc-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 220px; gap: 16px; align-items: start; padding: 16px 20px; }
-        .xpc-keep { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; }
-        .xpc-text { font-size: 15px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .xpc-about { font-size: 13.5px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .xpc-verdict { text-align: right; }
-        .xpc-totals { width: auto; max-width: 420px; border-collapse: collapse; font-size: 14px; line-height: 1.3; }
-        .xpc-totals th, .xpc-totals td { padding: 5px 16px 5px 0; vertical-align: top; }
-        .xpc-totals th:not(:first-child), .xpc-totals td:not(:first-child) { text-align: right; padding-left: 20px; padding-right: 0; }
-        .xpc-engage { display: flex; flex-direction: column; gap: 8px; }
-        .xpc-engage-row { display: flex; align-items: stretch; gap: 8px; }
-        .xpc-engage-off, .xpc-engage-step, .xpc-engage-chip { min-height: 36px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; }
-        .xpc-engage-off { padding: 0 12px; flex: 0 0 auto; }
-        .xpc-engage-step { min-width: 36px; padding: 0; flex: 0 0 36px; font-size: 16px; line-height: 1; }
-        .xpc-engage-num { flex: 1 1 96px; min-width: 72px; min-height: 36px; border-radius: 10px; font-size: 15px; font-weight: 600; text-align: center; padding: 0 8px; box-sizing: border-box; }
-        .xpc-engage-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-        .xpc-engage-chip { padding: 0 12px; }
-        .xpc-engage-off:disabled, .xpc-engage-step:disabled, .xpc-engage-chip:disabled, .xpc-engage-num:disabled { cursor: not-allowed; }
-        @media (max-width: 1280px) { .xpc-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        h1 { color: #8BE9FF !important; text-shadow: 0 0 6px rgba(110, 193, 255, 0.95), 0 0 18px rgba(74, 163, 224, 0.55), 0 0 36px rgba(110, 193, 255, 0.35); }
         @media (max-width: 1100px) {
           .xpc-shell { grid-template-columns: minmax(0, 1fr); }
           .xpc-rail, .xpc-summary { display: none; }
         }
         @media (max-width: 760px) {
-          .xpc-quick, .xpc-groups { grid-template-columns: minmax(0, 1fr); }
-          .xpc-likes-pair { grid-template-columns: minmax(0, 1fr); }
-          .xpc-row { grid-template-columns: auto minmax(0, 1fr); }
-          .xpc-verdict { grid-column: 2; text-align: left; }
           .xpc-step-label { font-size: 12px; }
           .xpc-wrap { padding: 0 0 112px; }
-        }
-        .xpc-wrap-pickbar { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
-        @media (max-width: 760px) {
-          .xpc-wrap-pickbar { padding: 0 0 calc(80px + env(safe-area-inset-bottom, 0px)); }
-        }
-        .xpc-nextbar {
-          position: fixed;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          z-index: 50;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 10px;
-          box-sizing: border-box;
-          height: calc(48px + env(safe-area-inset-bottom, 0px));
-          max-height: calc(48px + env(safe-area-inset-bottom, 0px));
-          padding: 0 12px env(safe-area-inset-bottom, 0px);
-          transform: translateY(0);
-          transition: transform 0.2s ease, opacity 0.2s ease;
-        }
-        .xpc-nextbar-counts {
-          font-size: 13px;
-          line-height: 1.2;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          min-width: 0;
-        }
-        .xpc-nextbar-hide {
-          transform: translateY(100%);
-          opacity: 0;
-          pointer-events: none;
-        }
-        .xpc-kinds-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 8px 24px;
-          align-items: start;
-        }
-        .xpc-tiers {
-          display: grid;
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-          gap: 12px;
-          margin-top: 16px;
-        }
-        .xpc-tier {
-          border-radius: 14px;
-          padding: 16px 18px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-          min-width: 0;
-        }
-        h1 {
-          color: #8BE9FF !important;
-          text-shadow: 0 0 6px rgba(110, 193, 255, 0.95), 0 0 18px rgba(74, 163, 224, 0.55), 0 0 36px rgba(110, 193, 255, 0.35);
-        }
-        @media (max-width: 760px) {
-          .xpc-kinds-grid, .xpc-tiers { grid-template-columns: minmax(0, 1fr); }
         }
       `}</style>
 
@@ -1669,29 +1571,19 @@ export default function App() {
 
             {step === "signin" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                <div id="sig-start" style={{ ...panel, background: theme.fill.accentSubtle, padding: "28px 28px" }}>
-                  <Rows
-                    rows={[
-                      { title: "1. Open", detail: "The X sign-in window opens below the Page in the chat." },
-                      { title: "2. Sign in", detail: "You type your password and any 2FA code yourself. The bot never sees them." },
-                      { title: "3. Next", detail: "The bot reads your handle from X and moves you on to your archive." },
-                    ]}
-                  />
-                  <div style={{ marginTop: 18, fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Sign in in the X window in the chat. If you already signed in, you're set.</div>
-                </div>
-
-                <div id="sig-data">
-                  <div style={subhead}>Where your data goes</div>
-                  <Properties
-                    items={[
-                      { label: "Sign-in", value: "To fetch your archive and later delete posts, you sign in to X once, yourself, in the bot's own browser. The bot never sees your password, and you can sign out of X anytime." },
-                      { label: "Your archive", value: "A copy is stored on the bot's computer so it can build your list and carry out the deletes you approve. Media files in the ZIP (the photos and videos themselves) are not imported. Posts that include photos or videos can still be in your cleanup list." },
-                      { label: "Sharing", value: "None of your data or information is sold, or shared with third parties or anyone else." },
-                      { label: "Deletes", value: "Deletes happen only after you approve your cleanup list." },
-                      { label: "After the run", value: "Taking posts off X does not take them off the rest of the internet. After the run, we offer to delete the archive copy from the bot's computer, and we can help with leftover copies on Google and the Wayback Machine." },
-                    ]}
-                  />
-                </div>
+                <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Sign in in the X window in the chat. If you already signed in, you're set.</div>
+                {SHOW_SIGNIN_DETAILS && (
+                  <div id="sig-start" style={{ ...panel, background: theme.fill.accentSubtle, padding: "28px 28px" }}>
+                    <Rows
+                      rows={[
+                        { title: "1. Open", detail: "The X sign-in window opens below the Page in the chat." },
+                        { title: "2. Sign in", detail: "You type your password and any 2FA code yourself. The bot never sees them." },
+                        { title: "3. Next", detail: "The bot reads your handle from X and moves you on to your archive." },
+                      ]}
+                    />
+                    <div id="sig-data" style={{ marginTop: 22 }}>{dataGoes}</div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1712,15 +1604,7 @@ export default function App() {
                           {xDownloadLink}
                         </div>
                       </div>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => setPhase("manual")}
-                        style={{ ...panel, minHeight: 80, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, cursor: "pointer", borderStyle: "dashed" }}
-                      >
-                        <span style={{ fontSize: 15, color: theme.text.secondary }}>Already have the file? Drop your archive here</span>
-                        <span style={{ fontSize: 13, color: theme.text.tertiary }}>ZIP or tweets.js · read on the bot's computer</span>
-                      </div>
+                      {tapLine("Tap Drop your archive in chat if you already have the file.")}
                       {recentOnlyOffer}
                     </>
                   )}
@@ -1729,10 +1613,7 @@ export default function App() {
                   )}
                   {phase === "manual" && (
                     <>
-                      <div style={{ ...panel, minHeight: 100, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 6, borderStyle: "dashed" }}>
-                        <span style={{ fontSize: 16, color: theme.text.secondary }}>Drop your archive here</span>
-                        <span style={{ fontSize: 13, color: theme.text.tertiary }}>or click to browse · ZIP or tweets.js</span>
-                      </div>
+                      {tapLine("Tap Drop your archive in chat. The bot reads the ZIP on its computer.")}
                       <div>
                         <Button label="Let the bot fetch it instead" variant="quiet" onClick={() => setPhase("choose")} />
                       </div>
@@ -1758,24 +1639,45 @@ export default function App() {
                   )}
                 </div>
 
-                <div id="arc-data">
-                  <div style={subhead}>Where your data goes</div>
-                  <Properties
-                    items={[
-                      { label: "Sign-in", value: "To fetch your archive and later delete posts, you sign in to X once, yourself, in the bot's own browser. The bot never sees your password, and you can sign out of X anytime." },
-                      { label: "Your archive", value: "A copy is stored on the bot's computer so it can build your list and carry out the deletes you approve. Media files in the ZIP (the photos and videos themselves) are not imported. Posts that include photos or videos can still be in your cleanup list." },
-                      { label: "Sharing", value: "None of your data or information is sold, or shared with third parties or anyone else." },
-                      { label: "Deletes", value: "Deletes happen only after you approve your cleanup list." },
-                      { label: "After the run", value: "Taking posts off X does not take them off the rest of the internet. After the run, we offer to delete the archive copy from the bot's computer, and we can help with leftover copies on Google and the Wayback Machine." },
-                    ]}
-                  />
-                  {fortressCard}
-                </div>
+                {SHOW_WHERE_DATA && (
+                  <div id="arc-data">
+                    {dataGoes}
+                    {fortressCard}
+                  </div>
+                )}
               </div>
             )}
 
             {step === "pick" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+                <style>{`
+                  .xpc-quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+                  .xpc-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+                  .xpc-groups-col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+                  .xpc-likes-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+                  .xpc-likes-pick { min-width: 0; width: 100%; box-sizing: border-box; }
+                  .xpc-list { max-height: 640px; overflow: auto; border-radius: 16px; }
+                  .xpc-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 220px; gap: 16px; align-items: start; padding: 16px 20px; }
+                  .xpc-keep { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: inherit; }
+                  .xpc-text { font-size: 15px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+                  .xpc-about { font-size: 13.5px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                  .xpc-verdict { text-align: right; }
+                  .xpc-engage { display: flex; flex-direction: column; gap: 8px; }
+                  .xpc-engage-row { display: flex; align-items: stretch; gap: 8px; }
+                  .xpc-engage-step, .xpc-engage-chip { min-height: 36px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; }
+                  .xpc-engage-step { min-width: 36px; padding: 0; flex: 0 0 36px; font-size: 16px; line-height: 1; }
+                  .xpc-engage-num { flex: 1 1 96px; min-width: 72px; min-height: 36px; border-radius: 10px; font-size: 15px; font-weight: 600; text-align: center; padding: 0 8px; box-sizing: border-box; }
+                  .xpc-engage-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+                  .xpc-engage-chip { padding: 0 12px; }
+                  .xpc-engage-step:disabled, .xpc-engage-chip:disabled, .xpc-engage-num:disabled { cursor: not-allowed; }
+                  .xpc-kinds-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; align-items: start; }
+                  @media (max-width: 1280px) { .xpc-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+                  @media (max-width: 760px) {
+                    .xpc-quick, .xpc-groups, .xpc-likes-pair, .xpc-kinds-grid { grid-template-columns: minmax(0, 1fr); }
+                    .xpc-row { grid-template-columns: auto minmax(0, 1fr); }
+                    .xpc-verdict { grid-column: 2; text-align: left; }
+                  }
+                `}</style>
                 {!archiveReady && (
                   <div style={{ ...panel, padding: 16, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, justifyContent: "space-between" }}>
                     <span style={{ fontSize: 14, color: theme.text.secondary }}>Set your rules now. Once your X archive is loaded, your real posts and counts will show up here.</span>
@@ -1831,16 +1733,16 @@ export default function App() {
                               <Select
                                 label="From"
                                 value={String(on ? rules.yearFrom : oldestYear)}
-                                onChange={(v: string) => setEraYear(Number(v), on ? rules.yearTo : TODAY.getFullYear())}
+                                onChange={(v: string) => setEraYear(Number(v), on ? rules.yearTo : oldestYear + 1)}
                                 options={yearOptionList([rules.yearFrom, rules.yearTo, oldestYear])}
                               />
                               <Select
                                 label="To"
-                                value={String(on ? rules.yearTo : TODAY.getFullYear())}
+                                value={String(on ? rules.yearTo : oldestYear + 1)}
                                 onChange={(v: string) => setEraYear(on ? rules.yearFrom : oldestYear, Number(v))}
                                 options={yearOptionList([rules.yearFrom, rules.yearTo, oldestYear])}
                               />
-                              <div style={{ fontSize: 12.5, color: theme.text.tertiary, lineHeight: 1.45, flex: "1 1 100%" }}>Once your archive loads, From starts at your first post's year. To stays at this year unless you change it.</div>
+                              <div style={{ fontSize: 12.5, color: theme.text.tertiary, lineHeight: 1.45, flex: "1 1 100%" }}>Starts with your oldest two years. Change either year here.</div>
                             </div>
                           )}
                           {q.id === "best" && (
@@ -1883,7 +1785,7 @@ export default function App() {
                 <div id="pick-rules">
                   <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                     <div style={subhead}>Adjust rules</div>
-                    {(activeQA !== "" || JSON.stringify(rules) !== JSON.stringify({ ...BASE, keepWords: rules.keepWords })) && (
+                    {(activeQA !== "" || !rulesEqual(rules, { ...BASE, keepWords: rules.keepWords })) && (
                       <Button
                         label="Clear all rules"
                         variant="quiet"
@@ -1904,7 +1806,10 @@ export default function App() {
                         <Select
                           label="Time range"
                           value={rules.timeMode as string}
-                          onChange={(v: string) => upd({ timeMode: v as TimeMode })}
+                          onChange={(v: string) => {
+                            if (v === "years" && (rules.yearFrom === 0 || rules.yearTo === 0)) upd({ timeMode: "years", yearFrom: oldestYear, yearTo: oldestYear + 1 });
+                            else upd({ timeMode: v as TimeMode });
+                          }}
                           options={[
                             { value: "none", label: "Not set" },
                             { value: "all", label: "From the beginning" },
@@ -1918,7 +1823,7 @@ export default function App() {
                               label="Older than"
                               value={rules.olderDate ? "custom" : String(rules.olderDays)}
                               onChange={(v: string) => {
-                                if (v === "custom") upd({ olderDate: rules.olderDate || "2023-01-01" });
+                                if (v === "custom") upd({ olderDate: rules.olderDate || "" });
                                 else upd({ olderDays: Number(v), olderDate: "" });
                               }}
                               options={[
@@ -1939,7 +1844,7 @@ export default function App() {
                           label="Never touch the last"
                           value={rules.protectDate ? "custom" : String(rules.protectDays)}
                           onChange={(v: string) => {
-                            if (v === "custom") upd({ protectDate: rules.protectDate || "2026-10-15", protectDays: 0 });
+                            if (v === "custom") upd({ protectDate: rules.protectDate || "", protectDays: 0 });
                             else upd({ protectDays: Number(v), protectDate: "" });
                           }}
                           options={[
@@ -2048,7 +1953,8 @@ export default function App() {
                           >
                             {archiveReady ? `Found in your posts: ${swearFound.length} profanity/slur words` : "Profanity/slur words in your posts appear once your archive loads"}
                           </button>
-                          <div style={{ fontSize: 12.5, color: theme.text.secondary, lineHeight: 1.45, marginBottom: 10 }}>{`Matching also catches endings and disguised spellings (fucking, f*ck, sh1t, #FuckMondays) and a list of ${SLUR_LIST_SIZE} slurs, without hitting words like class or cocktail.`}</div>
+                          <Toggle label={`Profanity and ${SLUR_WORDS.length} slurs, as one group`} value={rules.deleteSlurs} onChange={toggleSlurPreset} />
+                          <div style={{ fontSize: 12.5, color: theme.text.secondary, lineHeight: 1.45, marginBottom: 10 }}>{`The group is the shared list of ${SLUR_WORDS.length} slurs. Matching also catches endings and disguised spellings (fucking, f*ck, sh1t, #FuckMondays), and it skips words like class or cocktail. Slur words are not listed.`}</div>
                           {showFoundSwears && (
                             <div style={{ marginBottom: 10, display: "flex", flexDirection: "column", gap: 8 }}>
                               {swearFound.map((row) => {
@@ -2235,6 +2141,11 @@ export default function App() {
 
             {step === "review" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+                <style>{`
+                  .xpc-totals { width: auto; max-width: 420px; border-collapse: collapse; font-size: 14px; line-height: 1.3; }
+                  .xpc-totals th, .xpc-totals td { padding: 5px 16px 5px 0; vertical-align: top; }
+                  .xpc-totals th:not(:first-child), .xpc-totals td:not(:first-child) { text-align: right; padding-left: 20px; padding-right: 0; }
+                `}</style>
                 {!archiveReady && (
                   <div style={{ ...panel, padding: 16, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, justifyContent: "space-between" }}>
                     <span style={{ fontSize: 14, color: theme.text.secondary }}>Approve stays off until your archive is loaded.</span>
@@ -2368,56 +2279,12 @@ export default function App() {
                       )}
                     </div>
                   )}
-                  <div className="xpc-tiers">
-                    <div className="xpc-tier" style={{ border: `1px solid ${theme.border.default}`, background: theme.bg.subtle }}>
-                      <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>X Post Cleaner · Free</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Speed</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>100–350 actions a day (you pick), shared by deleting and unliking.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Why not faster?</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5, marginBottom: 8 }}>X doesn't publish a browser limit, but accounts that delete too fast get rate-limited, locked or asked to verify. 100–350 a day stays under that.</div>
-                      {paceSafetyNote}
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Cost</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>$0. We never charge you or take a cut.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Setup</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Nothing to set up beyond picking your rules.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>If something goes wrong</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>If X slows things down, it waits and continues on its own. A lock or verification check stops the run until you clear it. Nothing is deleted twice.</div>
-                    </div>
-                    <div className="xpc-tier" style={{ border: `1px solid ${theme.border.default}`, background: theme.bg.subtle }}>
-                      <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>X Post Cleaner · Fast (your key)</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Speed</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>About 4,000 a day. Spend so far and your stop-at limit, shown live.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Limit</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>X's published limit is 50 per 15 minutes (about 4,800/day). We stay a little under it.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Cost</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>X charges your developer key about $0.01 per delete, billed by X to you. We never charge you or take a cut.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Setup</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Your own X developer key.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Deletes</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Posts, replies and quote posts. Reposts and Remove my likes run in the Free lane for now: X's API needs each original post's id, which the archive doesn't include, and API unliking isn't confirmed yet.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>If something goes wrong</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>If X slows things down, it waits and continues. A lock or warning stops the run until you clear it. At your stop-at limit, or if your X credits run out, it stops; top up or raise the limit and it continues where it left off, with nothing deleted twice.</div>
-                    </div>
-                    <div className="xpc-tier" style={{ border: `1px solid ${theme.border.default}`, background: theme.bg.subtle }}>
-                      <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>Other X/Twitter deleting apps and sites</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Speed</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Paid official-API apps vary; cheap plans often cap around 500 deletes a month. Free browser tools are often limited to a few hundred deletes at a time.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Limit</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Free browser tools hit rate limits about every couple hundred deletes and need cooldowns.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Cost</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Paid apps typically charge roughly $8–11 a month, or about $99 lifetime, and use X's official API. Free browser tools don't pay X's per-delete fee.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>Setup</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Paid apps usually have you sign in and pick a plan. Some jobs stall unless you upload an archive. Browser tools run in your browser.</div>
-                      <div style={{ fontSize: 13, fontWeight: 650, color: theme.text.primary, marginTop: 8 }}>If something goes wrong</div>
-                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>Some users report runs freezing or stopping partway, so they have to restart or re-upload.</div>
-                    </div>
-                  </div>
                 </div>
 
                 <div id="rev-sample">
                   <div style={subhead}>Summary</div>
                   <div style={{ fontSize: 16, lineHeight: 1.55, color: theme.text.primary }}>
-                    {archiveReady ? `${matched.toLocaleString("en-US")} will be deleted. ${kept.toLocaleString("en-US")} stay.` : "Counts appear once your archive loads."}
+                    {archiveReady ? `${matched.toLocaleString("en-US")} will be deleted. ${kept.toLocaleString("en-US")} stay.${noDateCount > 0 ? ` ${noDateCount.toLocaleString("en-US")} have no readable date and are left alone.` : ""}${LOADED_TOTALS ? " Totals cover the whole archive. Pick shows a sample, including the Worst 50." : ""}` : "Counts appear once your archive loads."}
                   </div>
                   {archiveReady && matched > 0 && (
                     <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5, marginTop: 6 }}>
@@ -2444,10 +2311,14 @@ export default function App() {
                     <div style={subhead}>Export and cooling-off</div>
                     <div style={{ ...subhint, margin: 0 }}>Deletes are permanent. Download the list first; it has every link, date and the rule that matched.</div>
                   </div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
-                    <Select label="Format" value={exportFmt} onChange={(v: string) => setExportFmt(v)} options={[{ value: "csv", label: "CSV" }, { value: "json", label: "JSON" }]} />
-                    <Button label="Download the delete list" onClick={doExport} disabled={matched === 0} />
-                  </div>
+                  {LOADED_TOTALS ? (
+                    tapLine("Tap Download the delete list in chat.")
+                  ) : (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "flex-end" }}>
+                      <Select label="Format" value={exportFmt} onChange={(v: string) => setExportFmt(v)} options={[{ value: "csv", label: "CSV" }, { value: "json", label: "JSON" }]} />
+                      <Button label="Download the delete list" onClick={doExport} disabled={matched === 0} />
+                    </div>
+                  )}
                   {exportNote !== "" && <div style={{ fontSize: 13, color: theme.text.success }}>{exportNote}</div>}
                   <Toggle label="Cooling-off: nothing is deleted for 24 hours after you approve, so you can change your mind. Off by default." value={coolOn} onChange={setCoolOn} />
                   {coolOn && <div style={{ fontSize: 13, color: theme.text.secondary }}>{`First batch starts ${finishDate(1)}. You can cancel or change rules until then.`}</div>}
@@ -2481,8 +2352,8 @@ export default function App() {
                       </Callout>
                       <Properties
                         items={[
-                          { label: "Today", value: `Day 1 · ${deletedSoFar} of ${Math.min(daily, matched)} · done by ${finishDate(days)}` },
-                          { label: "Daily note", value: `Deleted ${deletedSoFar}. ${failedCount} failed${failedCount ? " (see tray)" : ""}. ${Math.max(0, matched - deletedSoFar)} left.` },
+                          { label: "Today", value: `Deleted ${deletedSoFar}. ${leftCount} left. Done by ${finishDate(days)}.` },
+                          { label: "Daily note", value: `Deleted ${deletedSoFar}. ${failedCount} failed${failedCount ? " (see tray)" : ""}. ${leftCount} left. Couldn't check: ${uncheckedCount}.` },
                           ...(lane === "fast"
                             ? [
                                 { label: "Spend so far", value: `${usd(spentSoFar)} of ${usd(fastCost)} estimate · stops at ${usd(limitUsd)}. X bills you directly.` },
@@ -2495,7 +2366,7 @@ export default function App() {
                   )}
                   {runPhase === "done" && (
                     <Callout tone="success" lead="Run finished">
-                      {`Verified gone: ${deletedSoFar} of ${deletedSoFar + failedCount}. Still live: ${failedCount} (see tray).${lane === "fast" ? ` Spend ${usd(spentSoFar)} of ${usd(fastCost)} estimate.` : ""}`}
+                      {`Verified gone: ${verifiedGone}. Still live: ${failedCount}. Left: ${leftCount}. Couldn't check: ${uncheckedCount}.${lane === "fast" ? ` Spend ${usd(spentSoFar)} of ${usd(fastCost)} estimate.` : ""}`}
                     </Callout>
                   )}
                 </div>
@@ -2506,9 +2377,9 @@ export default function App() {
                     <Table
                       columns={["Check", "When", "Result"]}
                       rows={[
-                        ["Right after the run", "Today", `Verified gone: ${deletedSoFar} of ${deletedSoFar + failedCount}. Still live: ${failedCount}`],
-                        ["Re-check", finishDate(2), "Scheduled"],
-                        ["Final re-check", finishDate(7), "Scheduled"],
+                        ["Right after the run", "Today", `Verified gone: ${verifiedGone}. Still live: ${failedCount}. Couldn't check: ${uncheckedCount}.`],
+                        ["Re-check", LOADED_PROOF ? LOADED_PROOF.recheck : "Scheduled", "Scheduled"],
+                        ["Final re-check", LOADED_PROOF ? LOADED_PROOF.final : "Scheduled", "Scheduled"],
                       ]}
                     />
                   </div>
@@ -2524,15 +2395,15 @@ export default function App() {
                         <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5, flex: 1 }}>The bot files Google's Remove Outdated Content requests for deleted post URLs. You sign in to Google once. Removal isn't guaranteed.</div>
                         <div style={{ fontSize: 13, color: theme.text.secondary }}>Bot files the requests after you sign in to Google.</div>
                         {tapLine("File removal requests with the tap card in the chat.")}
-                        <Toggle label="Recheck in 30 days" value={kitGoogleRecheck} onChange={setKitGoogleRecheck} />
+                        {tapLine("Tap Recheck in 30 days in chat.")}
                       </div>
                       <div style={{ borderRadius: 14, border: `1px solid ${theme.border.default}`, background: theme.bg.subtle, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
                         <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>Wayback Machine</div>
                         <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5, flex: 1 }}>The bot finds archived copies of your deleted posts, shows short clickable links, and prepares a removal-request email for you to review and send.</div>
                         <div style={{ fontSize: 13, color: theme.text.tertiary }}>Links to archived copies appear here after the run.</div>
                         <div style={{ fontSize: 13, color: theme.text.secondary }}>Bot finds the copies and drafts the email. You review it and press Send.</div>
-                        {tapLine("Prepare the removal email with the tap card in the chat.")}
-                        <Toggle label="Recheck in 30 days" value={kitWaybackRecheck} onChange={setKitWaybackRecheck} />
+                        {tapLine("Prepare removal email with the tap card in the chat.")}
+                        {tapLine("Tap Recheck in 30 days in chat.")}
                       </div>
                       <div style={{ borderRadius: 14, border: `1px solid ${theme.border.default}`, background: theme.bg.subtle, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }}>
                         <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>Personal info (phone, address)</div>
@@ -2542,22 +2413,18 @@ export default function App() {
                     <div>
                       {tapLine("Delete the archive copy from the bot's computer with the tap card in the chat.")}
                     </div>
-                    {!maintOn ? (
-                      <div style={{ ...panel, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
-                        <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>Disconnect when you're done</div>
-                        <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>After a one-time cleanup, you can disconnect access. We never do this unless you ask.</div>
-                        <Button label={kitDisconnect ? "Walkthrough open" : "Walk me through disconnecting"} onClick={() => setKitDisconnect(true)} />
-                        {kitDisconnect && (
-                          <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>
-                            {lane === "fast"
-                              ? "Open X Settings → Security and account access → Apps and sessions, and revoke the developer app you created (you can also remove it in console.x.com)."
-                              : "No third-party app was added for the Free lane. Sign out of X in the bot's browser if you want to disconnect."}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div style={{ fontSize: 13, color: theme.text.tertiary, lineHeight: 1.45 }}>Disconnect is available after you turn maintenance off.</div>
-                    )}
+                    <div style={{ ...panel, padding: 16, display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ fontSize: 16, fontWeight: 650, color: theme.text.primary }}>Disconnect when you're done</div>
+                      <div style={{ fontSize: 14, color: theme.text.secondary, lineHeight: 1.5 }}>After a one-time cleanup, you can disconnect access. We never do this unless you ask.</div>
+                      <Button label={kitDisconnect ? "Walkthrough open" : "Walk me through disconnecting"} onClick={() => setKitDisconnect(true)} />
+                      {kitDisconnect && (
+                        <div style={{ fontSize: 13, color: theme.text.secondary, lineHeight: 1.5 }}>
+                          {lane === "fast"
+                            ? "Open X Settings → Security and account access → Apps and sessions, and revoke the developer app you created (you can also remove it in console.x.com)."
+                            : "No third-party app was added for the Free lane. Sign out of X in the bot's browser if you want to disconnect."}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -2573,7 +2440,7 @@ export default function App() {
                       {showFailed && (
                         <Table
                           columns={["Link", "Why"]}
-                          rows={failedIds.map((id, i) => [`https://x.com/you/status/${id}`, i === 0 ? "Button didn't respond" : i === 1 ? "X asked us to slow down" : "Still visible after delete"])}
+                          rows={LOADED_FAILED.map((row) => [statusUrl(row.id), row.reason])}
                         />
                       )}
                     </>
@@ -2582,23 +2449,9 @@ export default function App() {
 
                 <div id="run-more">
                   <Section heading="Maintenance (optional)" collapsible defaultOpen={false}>
-                    <Toggle
-                      label="Weekly digest after this cleanup finishes"
-                      value={maintOn}
-                      onChange={(v: boolean) => {
-                        setMaintOn(v);
-                        if (!v) setAutoCont(false);
-                      }}
-                    />
-                    <Toggle label="Auto-continue without asking each week" value={autoCont} onChange={setAutoCont} disabled={!maintOn} />
-                    {maintOn && (
-                      <Select
-                        label="Rolling cleanup: keep only the last"
-                        value={rollWin}
-                        onChange={(v: string) => setRollWin(v)}
-                        options={[{ value: "off", label: "Off" }, { value: "30", label: "30 days" }, { value: "90", label: "90 days" }, { value: "365", label: "1 year" }]}
-                      />
-                    )}
+                    {tapLine("Tap Weekly digest in chat.")}
+                    {tapLine("Tap Auto-continue in chat.")}
+                    {tapLine("Tap Rolling cleanup in chat.")}
                   </Section>
                 </div>
               </div>
@@ -2611,8 +2464,8 @@ export default function App() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
                   {step === "run"
                     ? runPhase === "done"
-                      ? [numBox(String(deletedSoFar), "Verified gone", theme.text.primary), numBox(String(failedCount), "Still live", failedCount ? theme.text.warning : theme.text.primary), numBox("0", "Left", theme.text.primary)]
-                      : [numBox(String(deletedSoFar), "Deleted", theme.text.primary), numBox(String(Math.max(0, matched - deletedSoFar)), "Left", theme.text.primary), numBox(String(failedCount), "Failed", failedCount ? theme.text.warning : theme.text.primary)]
+                      ? [numBox(String(verifiedGone), "Verified gone", theme.text.primary), numBox(String(failedCount), "Still live", failedCount ? theme.text.warning : theme.text.primary), numBox(String(leftCount), "Left", theme.text.primary)]
+                      : [numBox(String(deletedSoFar), "Deleted", theme.text.primary), numBox(String(leftCount), "Left", theme.text.primary), numBox(String(failedCount), "Failed", failedCount ? theme.text.warning : theme.text.primary)]
                     : [numBox(String(scanned), "Scanned", theme.text.primary), numBox(String(kept), "Keep", theme.text.success), numBox(String(matched), "Delete", matched ? theme.text.warning : theme.text.primary)]}
                 </div>
                 {step !== "run" && (
@@ -2628,7 +2481,15 @@ export default function App() {
         </div>
       </div>
 
-      {narrow && primary && step !== "review" ? (
+      {SHOW_NEXT_BAR && (narrow && primary && step !== "review" ? (
+        <>
+        <style>{`
+          .xpc-wrap-pickbar { padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); }
+          .xpc-nextbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; display: flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; height: calc(48px + env(safe-area-inset-bottom, 0px)); max-height: calc(48px + env(safe-area-inset-bottom, 0px)); padding: 0 12px env(safe-area-inset-bottom, 0px); transform: translateY(0); transition: transform 0.2s ease, opacity 0.2s ease; }
+          .xpc-nextbar-counts { font-size: 13px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+          .xpc-nextbar-hide { transform: translateY(100%); opacity: 0; pointer-events: none; }
+          @media (max-width: 760px) { .xpc-wrap-pickbar { padding: 0 0 calc(80px + env(safe-area-inset-bottom, 0px)); } }
+        `}</style>
         <div
           className={barHidden ? "xpc-nextbar xpc-nextbar-hide" : "xpc-nextbar"}
           role="region"
@@ -2658,11 +2519,12 @@ export default function App() {
             {primary.label}
           </button>
         </div>
+        </>
       ) : (
         <Floating edge="bottom" align="end">
           <BackToTop />
         </Floating>
-      )}
+      ))}
     </Page>
   );
 }

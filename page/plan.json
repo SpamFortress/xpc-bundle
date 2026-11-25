@@ -1,15 +1,15 @@
 {
  "result": "page.min.tsx",
- "result_sha256": "f056770f6b0f0142a481244bdbe06b5b4b80283c87d717c17aa27ada2b53c568",
- "first_page_bytes": 34442,
+ "result_sha256": "686f374f0b6a400d100ed34d5685d5f2f69f05de16a64951ab4129b0a86d1d25",
+ "first_page_bytes": 14598,
  "steps": [
   {
    "step": 1,
    "tool": "WriteCanvas",
    "stage": "first page",
    "file": "page/01-first.tsx",
-   "bytes": 34442,
-   "sha256_after": "b7613f7486936a6d909ce212ad005efce3a673f6628ae3b0796806c1f00e7fdb"
+   "bytes": 14598,
+   "sha256_after": "c7c54a3f4778ec24edadd7b8694c61dec6083832e48f12736fd30e9e58aeca00"
   },
   {
    "step": 2,
@@ -18,9 +18,9 @@
    "phase": "A",
    "kind": "fill",
    "file": "page/02.json",
-   "bytes": 9215,
-   "edits": 21,
-   "sha256_after": "01249534d9c3a86f5d61fbcdbb43ae9d95a39218d27a5a646677e5281a173ce8"
+   "bytes": 8842,
+   "edits": 29,
+   "sha256_after": "604e3fa7060f6176c0618620d8ba313d5412e78206e0601c7328f86f85b9f90c"
   },
   {
    "step": 3,
@@ -29,9 +29,9 @@
    "phase": "A",
    "kind": "fill",
    "file": "page/03.json",
-   "bytes": 9397,
-   "edits": 18,
-   "sha256_after": "a6cc6cfeb3f1888acc494596c81e6a0e00d99f0c928a4d239950081b7c4cb8bc"
+   "bytes": 9316,
+   "edits": 14,
+   "sha256_after": "08fbf5c6a706544bd78185c6603f22186e109722f5672d313cb651eb1b666280"
   },
   {
    "step": 4,
@@ -40,9 +40,9 @@
    "phase": "A",
    "kind": "fill",
    "file": "page/04.json",
-   "bytes": 9457,
-   "edits": 3,
-   "sha256_after": "923734356b984ff11b3e5baeefe87bcd1aa5f236b8cddbcc51d247702535c9ee"
+   "bytes": 9401,
+   "edits": 17,
+   "sha256_after": "e3de3c1cb0d0d088f789910590fe7c3cd99033fb89aca2a87d3a5d6fac4ddb03"
   },
   {
    "step": 5,
@@ -51,9 +51,9 @@
    "phase": "A",
    "kind": "fill",
    "file": "page/05.json",
-   "bytes": 9465,
-   "edits": 1,
-   "sha256_after": "6bc4d8a58d7e6c7a87c2350df29a8cc10f6cbc1265c861df8bbff8590b0a7108"
+   "bytes": 9433,
+   "edits": 9,
+   "sha256_after": "9ae3d68362ffa52fa65c9f30c01d13024e844eea2ddb9ddbd8b78ef1039659f1"
   },
   {
    "step": 6,
@@ -62,53 +62,53 @@
    "phase": "A",
    "kind": "fill",
    "file": "page/06.json",
-   "bytes": 5511,
-   "edits": 1,
-   "sha256_after": "00d17ba23e3eb27a4b7f2bef4e3aaa28ed2601ba35e5a573132f2f4ee18978b1"
+   "bytes": 9445,
+   "edits": 6,
+   "sha256_after": "715427bbadf80b77eca7b0ad5e254c448481c3fa34568222047a46b66a8a3176"
   },
   {
    "step": 7,
    "tool": "EditCanvas",
-   "stage": "Pick screen finish",
+   "stage": "Pick screen",
    "phase": "A",
-   "kind": "finish",
+   "kind": "fill",
    "file": "page/07.json",
-   "bytes": 558,
-   "edits": 7,
-   "sha256_after": "c039ea27f50b12b753262c16577e0f1df400a9d891dd88fcca93a200e6e485ad"
+   "bytes": 9465,
+   "edits": 1,
+   "sha256_after": "14d92339c8ef64b365b2dedf183d6fd8f097fc8923c729d799db6e01918e44e8"
   },
   {
    "step": 8,
    "tool": "EditCanvas",
-   "stage": "Review and Run",
-   "phase": "B",
+   "stage": "Pick screen",
+   "phase": "A",
    "kind": "fill",
    "file": "page/08.json",
-   "bytes": 9385,
-   "edits": 21,
-   "sha256_after": "03f0522a5aad703a6fc2f7db59de36211812a6a42379ea2124a34f480f0e67e0"
+   "bytes": 9464,
+   "edits": 1,
+   "sha256_after": "d5cf5694345f15e202134d4959f485f55812b59ee8a1407d56a8adcc2f79f016"
   },
   {
    "step": 9,
    "tool": "EditCanvas",
-   "stage": "Review and Run",
-   "phase": "B",
+   "stage": "Pick screen",
+   "phase": "A",
    "kind": "fill",
    "file": "page/09.json",
-   "bytes": 9381,
-   "edits": 22,
-   "sha256_after": "0ac6cda209c073a9d3bb57ba914d45432ba7d3490a946e7139a6e9a315771569"
+   "bytes": 1903,
+   "edits": 1,
+   "sha256_after": "12fe8612cdbe604fca9f1778d3d0e21a2abbed8d550f720906893ef6d3e0890b"
   },
   {
    "step": 10,
    "tool": "EditCanvas",
-   "stage": "Review and Run",
-   "phase": "B",
-   "kind": "fill",
+   "stage": "Pick screen finish",
+   "phase": "A",
+   "kind": "finish",
    "file": "page/10.json",
-   "bytes": 9465,
-   "edits": 1,
-   "sha256_after": "cf00775e4dea9bbfad23a6e165ef034bf57ea1ce1cf3c43e3ad53cf4028e7dc5"
+   "bytes": 558,
+   "edits": 7,
+   "sha256_after": "4f3964744c9ed4450c761913c6e48d041cb84a6ea0a4330028c788d11ba3488f"
   },
   {
    "step": 11,
@@ -117,22 +117,55 @@
    "phase": "B",
    "kind": "fill",
    "file": "page/11.json",
-   "bytes": 8942,
-   "edits": 2,
-   "sha256_after": "401234220952a95761e5f9dc4a1c6ebf2ab449f05c6736b778826af7fb3986aa"
+   "bytes": 9357,
+   "edits": 28,
+   "sha256_after": "ba8fa497b16c84af6798365df26363743126c1193e94b0f0fa4736c601bdec93"
   },
   {
    "step": 12,
    "tool": "EditCanvas",
+   "stage": "Review and Run",
+   "phase": "B",
+   "kind": "fill",
+   "file": "page/12.json",
+   "bytes": 9453,
+   "edits": 4,
+   "sha256_after": "449e55516aef4fe834e4f1ed3708c878e07d5b0d4d9c3f4c2e7e42d78859d8c0"
+  },
+  {
+   "step": 13,
+   "tool": "EditCanvas",
+   "stage": "Review and Run",
+   "phase": "B",
+   "kind": "fill",
+   "file": "page/13.json",
+   "bytes": 9453,
+   "edits": 4,
+   "sha256_after": "229d4a1960cb4384ccc1c745ed999cad761243b214a3271b31af6a0d7a6e9fce"
+  },
+  {
+   "step": 14,
+   "tool": "EditCanvas",
+   "stage": "Review and Run",
+   "phase": "B",
+   "kind": "fill",
+   "file": "page/14.json",
+   "bytes": 784,
+   "edits": 1,
+   "sha256_after": "b89fea4325edd751bdd336d97c27244186e07a50e9a1a85349db5b32addddde2"
+  },
+  {
+   "step": 15,
+   "tool": "EditCanvas",
    "stage": "Review and Run finish",
    "phase": "B",
    "kind": "finish",
-   "file": "page/12.json",
-   "bytes": 718,
-   "edits": 9,
-   "sha256_after": "f056770f6b0f0142a481244bdbe06b5b4b80283c87d717c17aa27ada2b53c568"
+   "file": "page/15.json",
+   "bytes": 538,
+   "edits": 7,
+   "sha256_after": "686f374f0b6a400d100ed34d5685d5f2f69f05de16a64951ab4129b0a86d1d25"
   }
  ],
- "pick_ready_after": 7,
- "full_page_after": 12
+ "pick_ready_after": 10,
+ "full_page_after": 15
 }

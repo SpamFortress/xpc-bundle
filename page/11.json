@@ -1,10 +1,114 @@
 [
 {
-"old_string": "//^@@82@@",
-"new_string": "//^>Some users report runs freezing or stopping partway, so they have to restart or re-upload.</div></div></div></div><div id=\"rev-sample\"><div style={subhead}>Summary</div><div style={{fontSize:16,lineHeight:1.55,color:theme.text.primary}}>{archiveReady?`${matched.toLocaleString(\"en-US\")} will be deleted. ${kept.toLocaleString(\"en-US\")} stay.`:\"Counts appear once your archive loads.\"}</div>{archiveReady&&matched>0&&(<div style={{fontSize:14,color:theme.text.secondary,lineHeight:1.5,marginTop:6}}>{totalsRows.filter((row)=>row[0]!==\"Total\"&&row[1]!==\"0\"&&row[1]!==\"n/a\").map((row)=>`${row[1]} ${row[0].toLowerCase()}`).join(\" · \")}</div>)}<div style={{marginTop:12}}><Button label=\"Keep or change anything in Pick\" variant=\"quiet\" onClick={()=>{setListView(\"delete\");goStep(\"pick\");}}/></div></div><div id=\"rev-export\" style={{display:\"flex\",flexDirection:\"column\",gap:14}}><div><div style={subhead}>Export and cooling-off</div><div style={{...subhint,margin:0}}>Deletes are permanent. Download the list first; it has every link, date and the rule that matched.</div></div><div style={{display:\"flex\",flexWrap:\"wrap\",gap:12,alignItems:\"flex-end\"}}><Select label=\"Format\" value={exportFmt} onChange={(v:string)=>setExportFmt(v)} options={[{value:\"csv\",label:\"CSV\"},{value:\"json\",label:\"JSON\"}]}/><Button label=\"Download the delete list\" onClick={doExport} disabled={matched===0}/></div>{exportNote!==\"\"&&<div style={{fontSize:13,color:theme.text.success}}>{exportNote}</div>}<Toggle label=\"Cooling-off: nothing is deleted for 24 hours after you approve, so you can change your mind. Off by default.\" value={coolOn} onChange={setCoolOn}/>{coolOn&&<div style={_s12}>{`First batch starts ${finishDate(1)}. You can cancel or change rules until then.`}</div>}</div><div id=\"rev-more\"><Section heading=\"More options\" collapsible defaultOpen={false}><Toggle label=\"Remove my likes (unlike posts I liked)\" value={likesOn} onChange={setLikesOn}/><div style={{fontSize:13,color:theme.text.secondary,lineHeight:1.45,marginTop:-6}}>Separate from deleting your posts. Off unless you turn it on. Runs in the Free browser lane at a slower, safe pace.</div>{likesOn&&(<><Text>{likesTotal>0?`Unliking uses the same daily limit as deleting: your posts first, then likes. ${likesTotal.toLocaleString()} likes from like.js, done by ${finishDate(likesDays)}. Some likes on deleted or protected posts can't be reached; we list any that stick.`:\"Unliking uses the same daily limit as deleting: your posts first, then likes. Your like count appears once your archive loads.\"}</Text></>)}</Section></div><div id=\"rev-approve\" style={{paddingTop:4}}>{tapLine(\"Approve this cleanup with the tap card in the chat.\")}</div></div>)}"
+"old_string": "//^@@0@@",
+"new_string": "//^type Speed=\"steady\"|\"faster\"|\"fastest\";type Lane=\"free\"|\"fast\";type FastSetup=\"idle\"|\"guide\"|\"manual\"|\"ready\";"
+},
+{
+"old_string": "//^@@4@@",
+"new_string": "//^const SHOW_NEXT_BAR=true;"
+},
+{
+"old_string": "//^@@7@@",
+"new_string": "//^const ARCHIVE_POST_COUNT=0;const PROFILE_POST_COUNT_LABEL:string=\"\";"
+},
+{
+"old_string": "//^@@22@@",
+"new_string": "//^function finishDate(d:number):string{const t=new Date();t.setDate(t.getDate()+d);return t.toLocaleDateString(\"en-US\",{weekday:\"short\",month:\"short\",day:\"numeric\"});}"
+},
+{
+"old_string": "//^@@24@@",
+"new_string": "//^function downloadText(filename:string,body:string,mime:string){const blob=new Blob([body],{type:mime});const url=URL.createObjectURL(blob);const a=document.createElement(\"a\");a.href=url;a.download=filename;a.click();URL.revokeObjectURL(url);}"
+},
+{
+"old_string": "//^@@38@@",
+"new_string": "//^function hasActiveRules(r:Rules,qa:QAId|\"\",keptCount:number):boolean{if(qa!==\"\")return true;if(keptCount>0)return true;if(hasDeleteScope(r))return true;if(r.keepMedia||r.keepThreads||r.keepWords.length>0)return true;if(r.protectDays!==BASE.protectDays||r.protectDate!==\"\")return true;return false;}"
+},
+{
+"old_string": "//^@@39@@",
+"new_string": "//^function dailyCap(speed:Speed):number{if(speed===\"faster\")return 200;if(speed===\"fastest\")return 350;return 100;}"
+},
+{
+"old_string": "//^@@40@@",
+"new_string": "//^function usd(n:number):string{return`$${n.toFixed(2)}`;}"
+},
+{
+"old_string": "//^@@42@@",
+"new_string": "//^const LOADED_LANE:Lane|\"\"=\"\";const LOADED_PACE:Speed|\"\"=\"\";const LOADED_COOLING:boolean|null=null;"
+},
+{
+"old_string": "//^@@43@@",
+"new_string": "//^const LOADED_DELETED=0;const LOADED_VERIFIED=0;const LOADED_LEFT=0;const LOADED_UNCHECKED=0;const LOADED_LIKES=0;"
+},
+{
+"old_string": "//^@@44@@",
+"new_string": "//^const LOADED_PROOF:{recheck:string;final:string}|null=null;"
+},
+{
+"old_string": "//^@@48@@",
+"new_string": "//^function statusUrl(id:string):string{const h=handleOf(SIGNED_IN_HANDLE);return h?`https://x.com/${h}/status/${id}`:`https://x.com/i/web/status/${id}`;}"
+},
+{
+"old_string": "//^@@60@@",
+"new_string": "//^const _s3:CSSProperties={fontSize:13,color:theme.text.secondary,lineHeight:1.5};"
+},
+{
+"old_string": "//^@@62@@",
+"new_string": "//^const _s5:CSSProperties={fontSize:16,fontWeight:650,color:theme.text.primary};"
+},
+{
+"old_string": "//^@@65@@",
+"new_string": "//^const _s10:CSSProperties={fontSize:13,color:theme.text.secondary};const _s11:CSSProperties={marginBottom:6};"
+},
+{
+"old_string": "//^@@67@@",
+"new_string": "//^const[speed,setSpeed]=useState<Speed>(LOADED_PACE||\"steady\");const[lane,setLane]=useState<Lane>(LOADED_LANE||\"free\");const[fastSetup,setFastSetup]=useState<FastSetup>(\"idle\");"
+},
+{
+"old_string": "//^@@69@@",
+"new_string": "//^const[wipeConfirm,setWipeConfirm]=useState(\"\");"
+},
+{
+"old_string": "//^@@71@@",
+"new_string": "//^const[exportFmt,setExportFmt]=useState(\"csv\");const[exportNote,setExportNote]=useState(\"\");const[coolOn,setCoolOn]=useState(LOADED_COOLING===true);const[likesOn,setLikesOn]=useState(false);const[spendLimit,setSpendLimit]=useState(\"\");"
+},
+{
+"old_string": "//^@@73@@",
+"new_string": "//^const[showFailed,setShowFailed]=useState(true);"
+},
+{
+"old_string": "//^@@74@@",
+"new_string": "//^const[kitDisconnect,setKitDisconnect]=useState(false);"
+},
+{
+"old_string": "//^@@78@@",
+"new_string": "//^const noDateInPool=pool.filter((p)=>p.daysAgo<0).length;"
+},
+{
+"old_string": "//^@@80@@",
+"new_string": "//^const noDateCount=LOADED_TOTALS?LOADED_TOTALS.noDate:noDateInPool;const keptByRule=pool.filter((p)=>verdicts.get(p.id)?.kind===\"keep\").length;const fastCount=LOADED_TOTALS?LOADED_TOTALS.fastCount:doomed.filter((p:Post)=>effectiveType(p)!==\"repost\").length;const fastReposts=Math.max(0,matched-fastCount);const daily=lane===\"fast\"?4000:dailyCap(speed);const days=matched===0?0:(lane===\"fast\"?Math.max(Math.ceil(fastCount/4000),Math.ceil(fastReposts/dailyCap(speed))):Math.ceil(matched/daily))+(coolOn?1:0);const fastCost=fastCount*0.01;const limitUsd=spendLimit===\"\"?Math.ceil(fastCost):Math.max(0,Number(spendLimit)||0);"
+},
+{
+"old_string": "//^@@81@@",
+"new_string": "//^const deletedSoFar=LOADED_DELETED;const verifiedGone=LOADED_VERIFIED;const leftCount=LOADED_LEFT;const uncheckedCount=LOADED_UNCHECKED;const spentSoFar=deletedSoFar*0.01;const likesTotal=LOADED_LIKES;const likesDays=days+Math.ceil(likesTotal/dailyCap(speed));const rulesActive=hasActiveRules(rules,activeQA,pins.length);"
 },
 {
 "old_string": "//^@@83@@",
-"new_string": "//^{step===\"run\"&&(<div style={{display:\"flex\",flexDirection:\"column\",gap:28}}><div id=\"run-progress\" style={{display:\"flex\",flexDirection:\"column\",gap:16}}>{runPhase===\"running\"&&(<><Callout tone=\"info\" lead=\"Running, you can leave\">Deletes continue at the daily pace. If X slows things down, we wait and continue on our own.</Callout><Properties items={[{label:\"Today\",value:`Day 1 · ${deletedSoFar} of ${Math.min(daily,matched)} · done by ${finishDate(days)}`},{label:\"Daily note\",value:`Deleted ${deletedSoFar}. ${failedCount} failed${failedCount?\" (see tray)\":\"\"}. ${Math.max(0,matched-deletedSoFar)} left.`},...(lane===\"fast\"?[{label:\"Spend so far\",value:`${usd(spentSoFar)} of ${usd(fastCost)} estimate · stops at ${usd(limitUsd)}. X bills you directly.`},]:[]),{label:\"Lock or verification check\",value:\"The run stops and we tell you. It continues after you clear it.\"},]}/></>)}{runPhase===\"done\"&&(<Callout tone=\"success\" lead=\"Run finished\">{`Verified gone: ${deletedSoFar} of ${deletedSoFar+failedCount}. Still live: ${failedCount} (see tray).${lane===\"fast\"?` Spend ${usd(spentSoFar)} of ${usd(fastCost)} estimate.`:\"\"}`}</Callout>)}</div>{runPhase===\"done\"&&(<div id=\"run-proof\"><div style={subhead}>Proof pass</div><Table columns={[\"Check\",\"When\",\"Result\"]} rows={[[\"Right after the run\",\"Today\",`Verified gone: ${deletedSoFar} of ${deletedSoFar+failedCount}. Still live: ${failedCount}`],[\"Re-check\",finishDate(2),\"Scheduled\"],[\"Final re-check\",finishDate(7),\"Scheduled\"],]}/></div>)}{runPhase===\"done\"&&(<div id=\"run-kit\" style={{display:\"flex\",flexDirection:\"column\",gap:12}}><div style={subhead}>After-cleanup kit</div><div style={{fontSize:16,color:theme.text.primary,lineHeight:1.55}}>Deleting on X doesn't remove copies on Google or the Wayback Machine.</div><div style={{display:\"grid\",gridTemplateColumns:\"repeat(auto-fit, minmax(240px, 1fr))\",gap:12}}><div style={{borderRadius:14,border:`1px solid ${theme.border.default}`,background:theme.bg.subtle,padding:\"16px 18px\",display:\"flex\",flexDirection:\"column\",gap:10}}><div style={_s2}>Remove outdated results</div><div style={{fontSize:14,color:theme.text.secondary,lineHeight:1.5,flex:1}}>The bot files Google's Remove Outdated Content requests for deleted post URLs. You sign in to Google once. Removal isn't guaranteed.</div><div style={_s12}>Bot files the requests after you sign in to Google.</div>{tapLine(\"File removal requests with the tap card in the chat.\")}<Toggle label=\"Recheck in 30 days\" value={kitGoogleRecheck} onChange={setKitGoogleRecheck}/></div><div style={{borderRadius:14,border:`1px solid ${theme.border.default}`,background:theme.bg.subtle,padding:\"16px 18px\",display:\"flex\",flexDirection:\"column\",gap:10}}><div style={_s2}>Wayback Machine</div><div style={{fontSize:14,color:theme.text.secondary,lineHeight:1.5,flex:1}}>The bot finds archived copies of your deleted posts, shows short clickable links, and prepares a removal-request email for you to review and send.</div><div style={_s9}>Links to archived copies appear here after the run.</div><div style={_s12}>Bot finds the copies and drafts the email. You review it and press Send.</div>{tapLine(\"Prepare the removal email with the tap card in the chat.\")}<Toggle label=\"Recheck in 30 days\" value={kitWaybackRecheck} onChange={setKitWaybackRecheck}/></div><div style={{borderRadius:14,border:`1px solid ${theme.border.default}`,background:theme.bg.subtle,padding:\"16px 18px\",display:\"flex\",flexDirection:\"column\",gap:10}}><div style={_s2}>Personal info (phone, address)</div>{fortressCard}</div></div><div>{tapLine(\"Delete the archive copy from the bot's computer with the tap card in the chat.\")}</div>{!maintOn?(<div style={{...panel,padding:16,display:\"flex\",flexDirection:\"column\",gap:10}}><div style={_s2}>Disconnect when you're done</div><div style={_s0}>After a one-time cleanup, you can disconnect access. We never do this unless you ask.</div><Button label={kitDisconnect?\"Walkthrough open\":\"Walk me through disconnecting\"} onClick={()=>setKitDisconnect(true)}/>{kitDisconnect&&(<div style={_s5}>{lane===\"fast\"?\"Open X Settings → Security and account access → Apps and sessions, and revoke the developer app you created (you can also remove it in console.x.com).\":\"No third-party app was added for the Free lane. Sign out of X in the bot's browser if you want to disconnect.\"}</div>)}</div>):(<div style={{fontSize:13,color:theme.text.tertiary,lineHeight:1.45}}>Disconnect is available after you turn maintenance off.</div>)}</div>)}<div id=\"run-tray\" style={{display:\"flex\",flexDirection:\"column\",gap:12}}><div style={subhead}>{failedCount>0?`Failure tray · ${failedCount} need a manual tap`:\"Failure tray is clear\"}</div>{failedCount>0&&(<><div style={_s11}>These didn't delete automatically. Open each link on X and delete it yourself if you still want it gone.</div><div style={{display:\"flex\",gap:10,flexWrap:\"wrap\"}}><Button label={showFailed?\"Hide links\":\"Show links\"} onClick={()=>setShowFailed(!showFailed)}/></div>{tapLine(\"Retry the failed posts with the tap card in the chat.\")}{showFailed&&(<Table columns={[\"Link\",\"Why\"]} rows={failedIds.map((id,i)=>[`https://x.com/you/status/${id}`,i===0?\"Button didn't respond\":i===1?\"X asked us to slow down\":\"Still visible after delete\"])}/>)}</>)}</div><div id=\"run-more\"><Section heading=\"Maintenance (optional)\" collapsible defaultOpen={false}><Toggle label=\"Weekly digest after this cleanup finishes\" value={maintOn} onChange={(v:boolean)=>{setMaintOn(v);if(!v)setAutoCont(false);}}/><Toggle label=\"Auto-continue without asking each week\" value={autoCont} onChange={setAutoCont} disabled={!maintOn}/>{maintOn&&(<Select label=\"Rolling cleanup: keep only the last\" value={rollWin} onChange={(v:string)=>setRollWin(v)} options={[{value:\"off\",label:\"Off\"},{value:\"30\",label:\"30 days\"},{value:\"90\",label:\"90 days\"},{value:\"365\",label:\"1 year\"}]}/>)}</Section></div></div>)}"
+"new_string": "//^const isFullWipe=archiveReady&&matched>0&&(activeQA===\"everything\"||matched>=10000||matched/Math.max(1,scanned)>0.5);const wipePhrase=`DELETE ${matched.toLocaleString(\"en-US\")} POSTS`;const wipeMatch=/^DELETE ([\\d, ]+) POSTS?$/.exec(wipeConfirm.trim().toUpperCase().replace(/\\s+/g,\" \"));const wipeOk=!!wipeMatch&&Number(wipeMatch[1].replace(/[, ]/g,\"\"))===matched;useEffect(()=>{setWipeConfirm(\"\");},[matched]);"
+},
+{
+"old_string": "//^@@87@@",
+"new_string": "//^const doExport=()=>{const rows=doomed.map((p)=>({id:p.id,status_url:statusUrl(p.id),posted:monthYear(p.daysAgo),type:p.community?`community ${p.type}`:p.type,likes:p.likes,replies:p.replies,reply_to:maskSsn(p.replyTo||\"\"),matched_rule:maskSsn(verdicts.get(p.id)?.reason||\"\"),about:maskSsn(p.summary),text:maskSsn(p.text),}));if(exportFmt===\"json\"){downloadText(\"xpc-delete-list.json\",JSON.stringify({scanned,kept,to_delete:matched,posts:rows},null,2),\"application/json\");setExportNote(`Downloaded JSON with ${matched} posts.`);} else{const q=(s:string)=>`\"${s.replace(/\"/g,'\"\"')}\"`;const header=\"id,status_url,posted,type,likes,replies,reply_to,matched_rule,about,text\";const safe=(s:string)=>(/^[=+\\-@\\t\\r]/.test(s)?`'${s}`:s);const lines=rows.map((r)=>[`\"=\"\"${r.id}\"\"\"`,r.status_url,r.posted,r.type,r.likes,r.replies,r.reply_to,q(safe(r.matched_rule)),q(safe(r.about)),q(safe(r.text))].join(\",\"));downloadText(\"xpc-delete-list.csv\",[header,...lines].join(\"\\n\"),\"text/csv\");setExportNote(`Downloaded CSV with ${matched} posts.`);}};"
+},
+{
+"old_string": "//^@@89@@",
+"new_string": "//^!rulesActive"
+},
+{
+"old_string": "//^@@93@@",
+"new_string": "//^const paceSafetyNote=(<ul style={{margin:0,paddingLeft:18,fontSize:14,color:theme.text.secondary,lineHeight:1.45}}><li style={_s11}>Soft stops (rate limits, cooldowns) restart on their own, with nothing deleted twice. If that happens twice in one day, the run continues the next day one pace slower.</li><li style={_s11}>But every limit or warning adds to X's record of your account. Repeated ones can turn into temporary locks, phone or ID checks, or a suspension.</li><li style={_s11}>A lock or verification check needs you to step in. We'll tell you right away, and the run resumes after you clear it. A suspension can't be undone by us.</li><li style={_s11}>That's why steady is usually faster overall than fast with stops.</li><li>Pace options: Steady 100/day (default), Faster 200/day, Fastest ~350/day (higher chance of limits and checks).</li></ul>);"
+},
+{
+"old_string": "//^@@95@@",
+"new_string": "//^const numBox=(value:string,label:string,color:string)=>(<div key={label} style={_s12}><div style={{fontSize:26,fontWeight:650,letterSpacing:\"-0.02em\",color}}>{value}</div><div style={{fontSize:13,color:theme.text.secondary,marginTop:2}}>{label}</div></div>);const countsReady=archiveReady&&step!==\"archive\"&&step!==\"signin\";const finishLine=step===\"run\"?`Done by ${finishDate(Math.max(1,days-1))}`:matched===0?\"Pick a cleanup to see a finish date\":`Done by ${finishDate(days)} · ${lane===\"fast\"?\"about 4,000\":String(daily)} a day`;const archiveVsProfileLine=recentOnly?\"Recent only · not your full history. This list is only about the last 3,200 posts X can show now.\":`Found in archive vs. on your profile: ${ARCHIVE_POST_COUNT.toLocaleString(\"en-US\")} in the archive, ${PROFILE_POST_COUNT_LABEL} on your profile.`;const archiveVsProfileNote=recentOnly?\"Your official archive is still the way to clean your full history.\":\"The list only covers what's in the archive. X's profile number can include older posts that aren't in this file, and it can lag after deletes.\";const shortCounts=!archiveReady?\"Counts appear once your archive loads\":step===\"run\"?runPhase===\"done\"?`Verified gone: ${verifiedGone} · Still live: ${failedCount} · Left: ${leftCount} · Couldn't check: ${uncheckedCount}`:`${deletedSoFar} deleted · ${leftCount} left · ${failedCount} failed`:`${scanned} scanned · ${kept} keep · ${matched} delete`;const totalsRows:Array<[string,string,string]>=LOADED_TOTALS?[...LOADED_TOTALS.byType,[\"Total\",String(matched),String(kept)]]:([[\"Posts\",(p:Post)=>!p.community&&effectiveType(p)===\"post\"],[\"Replies\",(p:Post)=>!p.community&&effectiveType(p)===\"reply\"],[\"Reposts\",(p:Post)=>effectiveType(p)===\"repost\"],[\"Quotes\",(p:Post)=>!p.community&&effectiveType(p)===\"quote\"],[\"Community\",(p:Post)=>!!p.community],]as Array<[string,(p:Post)=>boolean]>).map(([label,f])=>{if(label===\"Quotes\"&&!ARCHIVE_CAPS.hasQuoteFields){return[label,\"n/a\",\"not available from this archive\"]as[string,string,string];} const all=pool.filter(f);const del=all.filter((p)=>verdicts.get(p.id)?.ki\n//^@@95@@"
 }
 ]

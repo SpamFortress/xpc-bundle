@@ -32,7 +32,8 @@ if (!app) throw new Error("App not found");
   if (ts.isJsxExpression(n) && n.expression && ts.isBinaryExpression(n.expression) && n.expression.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken) {
     const left = n.expression.left.getText(sf), right = n.expression.right.getText(sf);
     let phase = null;
-    if (left === 'step==="pick"') phase = "A";
+    if (left === 'step==="pick"' || left === "SHOW_SIGNIN_DETAILS" || left === "SHOW_WHERE_DATA" || left === "SHOW_LIVE_COUNTS") phase = "A";
+    else if (left === "SHOW_NEXT_BAR") phase = "B";
     else if (left === 'step==="review"' || left === 'step==="run"' || (left === "archiveReady" && right.includes('id="pick-posts"'))) phase = "B";
     if (phase) { forced.push({ start: n.getStart(sf), end: n.end, kind: "jsx", phase, stub: "{null", tail: "}", why: left }); return; }
   }
@@ -64,6 +65,47 @@ sf.statements.forEach((s) => {
   else if (t0 === "Post[]" && s.name.text === "computeVerdicts") stub = "{return new Map()";
   if (stub) forced.push({ start: s.body.getStart(sf), end: s.body.end, kind: "body", phase: "B", stub, tail: "}", why: "post-only body: " + s.name.text });
 });
+
+// Page 1 keeps the archive view, stepper, styles, and status. The counts sidebar,
+// section rail, and mobile next bar come back in phase A so the first write stays small.
+function pushElement(classFrag, phase, why) {
+  function walk(n) {
+    if (ts.isJsxOpeningElement(n) || ts.isJsxSelfClosingElement(n)) {
+      if (n.getText(sf).includes(classFrag)) {
+        const el = n.parent;
+        if (el && el.getStart && el.end > el.getStart(sf)) {
+          forced.push({ start: el.getStart(sf), end: el.end, kind: "jsx", phase, stub: "{null", tail: "}", why });
+          return;
+        }
+      }
+    }
+    ts.forEachChild(n, walk);
+  }
+  walk(app.body);
+}
+pushElement('className="xpc-rail"', "A", "section rail");
+pushElement('className="xpc-summary"', "B", "live counts sidebar");
+app.body.statements.forEach((s) => {
+  const raw = s.getText(sf);
+  if (raw.startsWith("useEffect") && raw.includes("railItems.map")) {
+    forced.push({ start: s.getStart(sf), end: s.end, kind: "stmt", phase: "A", stub: "", tail: "", why: "rail scroll effect" });
+  }
+  if (raw.startsWith("const totalsRows") || raw.startsWith("if(!LOADED_TOTALS)") || raw.startsWith("if (!LOADED_TOTALS)") || raw.startsWith("totalsRows.push") || (raw.startsWith("useEffect") && raw.includes("setWipeConfirm"))) {
+    forced.push({ start: s.getStart(sf), end: s.end, kind: "stmt", phase: "B", stub: "", tail: "", why: raw.slice(0, 48) });
+  }
+  if (raw.startsWith("useEffect") && (raw.includes("setNarrow") || raw.includes("scrollPageTop"))) {
+    forced.push({ start: s.getStart(sf), end: s.end, kind: "stmt", phase: "A", stub: "", tail: "", why: "layout effect" });
+  }
+});
+const verdictHelpers = new Set(["isStrongKeep", "threadGroupKey", "scopeParts", "explicitKeep", "computeVerdicts"]);
+sf.statements.forEach((s) => {
+  if (ts.isFunctionDeclaration(s) && s.name && verdictHelpers.has(s.name.text)) {
+    forced.push({ start: s.getStart(sf), end: s.end, kind: "stmt", phase: "A", stub: "", tail: "", why: "verdict helper " + s.name.text });
+  }
+});
+const forcedKept = forced.filter((f) => !forced.some((o) => o !== f && o.start <= f.start && o.end >= f.end && (o.start < f.start || o.end > f.end)));
+forced.length = 0;
+forcedKept.forEach((f) => forced.push(f));
 
 // candidate statements
 const cands = [];
@@ -106,6 +148,21 @@ cands.forEach((s, i) => { if (!keptStage1.has(i)) regions.push({ start: s.getSta
 const inside = (r, o) => r.start >= o.start && r.end <= o.end;
 regions = regions.filter((s) => !forced.some((f) => inside(s, f)));
 regions = regions.concat(forced.filter((f) => !regions.some((s) => inside(f, s))));
+const candRegion = new Map();
+cands.forEach((s, i) => {
+  const hit = regions.find((r) => r.start === s.getStart(sf) && r.end === s.end);
+  if (hit) candRegion.set(i, hit);
+});
+let promoted = true;
+while (promoted) {
+  promoted = false;
+  for (const [pos, target] of refs) {
+    const host = regions.find((r) => pos >= r.start && pos < r.end);
+    if (!host || host.phase !== "A") continue;
+    const dest = candRegion.get(target);
+    if (dest && dest.phase === "B") { dest.phase = "A"; promoted = true; }
+  }
+}
 regions.sort((a, b) => a.start - b.start);
 const merged = [];
 for (const r of regions) {
